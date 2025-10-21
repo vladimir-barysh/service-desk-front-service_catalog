@@ -1,0 +1,192 @@
+export class tableDataClass {
+  mainName: string | undefined;
+  id: number | undefined;
+}
+
+export class rolesTableDataClass {
+  department: string | undefined;
+  role: string | undefined;
+  roleName: string | undefined;
+  id: number | undefined;
+}
+
+
+export class rightsTableDataClass {
+  name: string | undefined;
+  access: string | undefined;
+  description: string | undefined;
+  id: number | undefined;
+}
+
+
+export const rights: worktypesTableDataClass[] = [
+
+]
+
+export class worktypesTableDataClass {
+  departmentName: string | undefined;
+  typeName: string | undefined;
+  groupName: string | undefined;
+  note: string | undefined;
+  id: number | undefined;
+}
+
+export const worktypes: worktypesTableDataClass[] = [
+
+  {
+    'departmentName': 'АО "Алтайэнергосбыт"',
+    'typeName': 'Предоставление доступа',
+    'groupName': '1С: Предприятие',
+    'note': '',
+    'id': 1,
+  },
+  {
+    'departmentName': 'АО "Алтайэнергосбыт"',
+    'typeName': 'Добавление в группу для отображения базы в списке',
+    'groupName': 'Администратор',
+    'note': '',
+    'id': 2,
+  },
+]
+
+export const roles: rolesTableDataClass[] = [
+
+  {
+    'department': 'АО "Алтайэнергосбыт"',
+    'role': 'Куратор от ИТ',
+    'roleName': 'Петров Александр Аркадьевич',
+    'id': 1,
+  },
+  {
+    'department': 'АО "Алтайэнергосбыт"',
+    'role': 'Функциональный заказчик',
+    'roleName': 'Гусев Алексей Сергеевич',
+    'id': 2,
+  },
+  {
+    'department': 'АО "Алтайэнергосбыт"',
+    'role': 'Сервис-менеджер',
+    'roleName': 'Тимошенко Николай Александрович',
+    'id': 3,
+  },
+
+]
+
+
+export const scales: tableDataClass[] = [
+
+  {
+    'mainName': 'Корпоративный',
+    'id': 1,
+  },
+  {
+    'mainName': 'Сегмент',
+    'id': 2,
+  },
+  {
+    'mainName': 'Локальный',
+    'id': 3,
+  },
+
+]
+
+export const influences: tableDataClass[] = [
+
+  {
+    'mainName': 'Критичное',
+    'id': 1,
+  },
+  {
+    'mainName': 'Среднее',
+    'id': 2,
+  },
+  {
+    'mainName': 'Слабое',
+    'id': 3,
+  },
+
+]
+
+export const humansAll: tableDataClass[] = [
+
+  {
+    'mainName': 'Мелихова Марина Вячеславовна',
+    'id': 1,
+  },
+  {
+    'mainName': 'Чувашова Юлия Сергеевна',
+    'id': 2,
+  },
+  {
+    'mainName': 'Петров Александр Аркадьевич',
+    'id': 3,
+  },
+  {
+    'mainName': 'Головин Тимофей Алексеевич',
+    'id': 4,
+  },
+  {
+    'mainName': 'Самойленко Александр Сергеевич',
+    'id': 5,
+  },
+  {
+    'mainName': 'Мелихова Марина Вячеславовна',
+    'id': 6,
+  },
+  {
+    'mainName': 'Чувашова Юлия Сергеевна',
+    'id': 7,
+  },
+  {
+    'mainName': 'Петров Александр Аркадьевич',
+    'id': 8,
+  },
+  {
+    'mainName': 'Головин Тимофей Алексеевич',
+    'id': 9,
+  },
+  {
+    'mainName': 'Самойленко Александр Сергеевич',
+    'id': 10,
+  },
+  {
+    'mainName': 'Мелихова Марина Вячеславовна',
+    'id': 11,
+  },
+  {
+    'mainName': 'Чувашова Юлия Сергеевна',
+    'id': 12,
+  },
+  {
+    'mainName': 'Петров Александр Аркадьевич',
+    'id': 13,
+  },
+  {
+    'mainName': 'Головин Тимофей Алексеевич',
+    'id': 14,
+  },
+  {
+    'mainName': 'Самойленко Александр Сергеевич',
+    'id': 15,
+  },
+
+]
+export const humansChoose: tableDataClass[] = [];
+
+export const servicesChoose: tableDataClass[] = [];
+export const servicesAll: tableDataClass[] = [
+
+
+  {
+    'mainName': 'Предоставление доступа',
+    'id': 1,
+  },
+  {
+    'mainName': 'Добавление в группу для отображения базы в списке',
+    'id': 2,
+  },
+  {
+    'mainName': 'Изменение квоты',
+    'id': 3,
+  },
+]

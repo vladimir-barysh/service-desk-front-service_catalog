@@ -1,0 +1,9 @@
+$darkColor: #32415c;
+
+.box {
+    height: 100%;
+    position: fixed;
+    z-index: 1;
+    overflow-x: hidden;
+    background-color: $darkColor;
+}
