@@ -4,7 +4,7 @@ import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable }
 import { data, type Request } from './makeData';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
-import { Add, Check, Clear, Build, Note } from '@mui/icons-material';
+import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
@@ -85,7 +85,7 @@ export function SupportAllPage() {
   const colorRow = (row: MRT_Row<Request>) => {
     if (row.getIsSelected())
     {
-      return 'rgba(34,139,230,0.2)';
+      return 'rgba(23, 139, 241, 0.2)';
     }
 
     // Получаем тип заявки из данных строки
@@ -224,7 +224,7 @@ export function SupportAllPage() {
               Отклонить заявку
             </Button>
           </Grid2>
-                    <Grid2 size="auto">
+            <Grid2 size="auto">
             <Button
               variant="contained"
               color="warning"
@@ -234,7 +234,7 @@ export function SupportAllPage() {
               Отложить заявку
             </Button>
           </Grid2>
-                    <Grid2 size="auto">
+            <Grid2 size="auto">
             <Button
               variant="contained"
               color="success"
@@ -244,7 +244,7 @@ export function SupportAllPage() {
               Закрыть заявку
             </Button>
           </Grid2>
-                    <Grid2 size="auto">
+          <Grid2 size="auto">
             <Button
               variant="contained"
               color="inherit"
@@ -253,13 +253,24 @@ export function SupportAllPage() {
               На контроль
             </Button>
           </Grid2>
-                    <Grid2 size="auto">
+          <Grid2 size="auto">
             <Button
               variant="contained"
               color="inherit"
               size={'small'}
             >
               Подтвердить заявку
+            </Button>
+          </Grid2>
+          <Grid2 size="auto">
+            <Button
+              variant="contained"
+              color="inherit"
+              startIcon={<Save />}
+              size={'small'}
+              fullWidth={true}
+            >
+              В Excel
             </Button>
           </Grid2>
         </Grid2>

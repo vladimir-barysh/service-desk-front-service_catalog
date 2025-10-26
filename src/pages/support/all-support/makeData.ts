@@ -41,7 +41,7 @@ export const data: Request[] = [
         service: undefined,
     },
         {
-        requestNumber: '000008',
+        requestNumber: '000009',
         dateRegistration: '06.06.25 8.30',
         dateDesired: '30.09.25 8.30',
         dateSolution: undefined,
@@ -54,7 +54,7 @@ export const data: Request[] = [
         service: undefined,
     },
             {
-        requestNumber: '000008',
+        requestNumber: '000001',
         dateRegistration: '26.10.25 8.30',
         dateDesired: '29.10.25 8.30',
         dateSolution: undefined,
@@ -67,7 +67,7 @@ export const data: Request[] = [
         service: undefined,
     },
             {
-        requestNumber: '000008',
+        requestNumber: '000003',
         dateRegistration: '09.09.25 8.30',
         dateDesired: '10.10.25 8.30',
         dateSolution: undefined,
