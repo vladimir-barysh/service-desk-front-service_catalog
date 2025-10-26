@@ -232,11 +232,11 @@ export const ItcatalogCreateDialog = (props: {
 
         </DialogContentText>
         <TabContext value={value}>
-        <TabList onChange={handleChange} centered>
-          <Tab label="ИТ-Услуга" value="1"/>
-          <Tab label="Связанные сервисы" value="2"/>
-          <Tab label="Роли пользователей услуги" value="3"/>
-        </TabList>
+          <TabList onChange={handleChange} centered>
+            <Tab label="ИТ-Услуга" value="1"/>
+            <Tab label="Связанные сервисы" value="2"/>
+            <Tab label="Роли пользователей услуги" value="3"/>
+          </TabList>
           <TabPanel value="1" sx={{padding: "0px"}}>
             <ItcatalogFirstTab
               serviceNumber={props.serviceNumber}
