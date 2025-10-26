@@ -27,13 +27,14 @@ export const RequestCreateZNODialog = (props: {
         setIsCreateDialogOpen(true);
     }
     const onCreateDialogClose = () => {
-    setIsCreateDialogOpen(false);
-  }
+        setIsCreateDialogOpen(false);
+    }
   return (
     <div>
     <ChooseServiceCreateDialog
            isOpen={isCreateDialogOpen}
            onClose={onCreateDialogClose}
+           onSelect={(sys) =>{}}
     />    
     <Dialog
       open={props.isOpen}
