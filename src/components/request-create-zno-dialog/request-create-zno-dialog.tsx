@@ -1,31 +1,40 @@
 import React from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  //FormControl,
-  //FormHelperText,
-  //FormLabel,
-  //InputLabel,
-  //TextField,
   Box,
   Button,
   Grid2
 } from '@mui/material';
 import { Input, Textarea, Text } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
+import { ChooseServiceCreateDialog } from '../itservice-choose';
 
 export const RequestCreateZNODialog = (props: {
   isOpen: boolean;
   onClose: any;
 }) => {
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
     const handleClose = () => {
         props.onClose();
     };
 
+    function CreateDialog() {
+        setIsCreateDialogOpen(true);
+    }
+    const onCreateDialogClose = () => {
+    setIsCreateDialogOpen(false);
+  }
   return (
     <div>
+    <ChooseServiceCreateDialog
+           isOpen={isCreateDialogOpen}
+           onClose={onCreateDialogClose}
+    />    
     <Dialog
       open={props.isOpen}
       onClose={handleClose}
@@ -44,6 +53,7 @@ export const RequestCreateZNODialog = (props: {
                     color="primary"
                     size={'small'}
                     fullWidth={true}
+                    onClick={CreateDialog}
                     >
                     Выберите ИТ-сервис
                     </Button>
@@ -157,6 +167,7 @@ export const RequestCreateZNODialog = (props: {
             </Box>
         </DialogContent>
     </Dialog>
+    
     </div>
   );
 }
