@@ -5,6 +5,7 @@ import { Box } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import SplitButton, { Test } from '../../../components/split-button/split-button.component';
 import { RequestCreateDialog } from '../../../components';
+import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 
 const rows = [
   {
@@ -19,15 +20,26 @@ const rows = [
 
 export function RequestsInWorkPage() {
   const [requestType, setRequestType] = useState(0);
+  const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const onRequestTypeSelect = (selected: any) => {
     setRequestType(selected);
-    setIsCreateDialogOpen(true);
+    if (selected === "Заявка на обслуживание") {
+      createZNODialog();
+    }
+    else{
+      setIsCreateDialogOpen(true);
+    }
+  }
+
+  function createZNODialog() {
+    setIsCreateDialogZNOOpen(true);
   }
 
   const onCreateDialogClose = () => {
     setIsCreateDialogOpen(false);
+    setIsCreateDialogZNOOpen(false);
   }
 
   useEffect(() => {
@@ -49,6 +61,10 @@ export function RequestsInWorkPage() {
      <RequestCreateDialog
        isOpen={isCreateDialogOpen}
        requestName={requestType.toString()}
+       onClose={onCreateDialogClose}
+     />
+     <RequestCreateZNODialog
+       isOpen={isCreateDialogZNOOpen}
        onClose={onCreateDialogClose}
      />
      <DataGrid
