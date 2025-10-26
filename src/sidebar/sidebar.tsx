@@ -54,8 +54,20 @@ export function LeftSidebar() {
               icon={<Reorder />}
             >Все</MenuItem>
           </SubMenu>
-          <SubMenu label="Поддержка"></SubMenu>
-          <SubMenu label="Задачи"></SubMenu>
+          <SubMenu label="Поддержка" defaultOpen={true}>
+            <MenuItem
+              component={<Link to={'/support/all'}/>}
+              active={location.pathname.includes('/support/all')}
+              icon={<Reorder />}
+            >Все</MenuItem>
+          </SubMenu>
+          <SubMenu label="Задачи"defaultOpen={true}>
+            <MenuItem
+              component={<Link to={'/tasks/my-all'}/>}
+              active={location.pathname.includes('/tasks/my-all')}
+              icon={<Reorder />}
+            >Мои (все)</MenuItem>
+          </SubMenu>
           <SubMenu label="Настройки каталога ИТ-услуг" defaultOpen={true}>
             <MenuItem
               component={<Link to={'/services_catalog/tree'} />}
