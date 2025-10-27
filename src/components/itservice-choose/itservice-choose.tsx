@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, react/prop-types */
 import * as React from 'react';
 import {
   MantineReactTable,
@@ -8,11 +9,11 @@ import {
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 
-import { systems as allSystems, type ItSystem } from './makeData';
+import { systems as allSystems, ItSystemStatus, type ItSystem } from './makeData';
 
 export type ChooseServiceCreateDialogProps = {
   isOpen: boolean;
-  onClose: () => void;                       // можно оставить any, но лучше так
+  onClose: () => void;
   onSelect?: (s: ItSystem | null) => void;
 };
 
@@ -23,7 +24,7 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
 }) => {
   // берём из makeData и фильтруем выведенные из эксплуатации
   const data = React.useMemo(
-    () => allSystems.filter((s) => s.status !== 'decommissioned'),
+    () => allSystems.filter((s) => s.status !== ItSystemStatus.Inactive),
     []
   );
 
@@ -41,7 +42,6 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
         </span>
       ),
     },
-    { header: 'Группа', accessorKey: 'group', enableHiding: false },
     { header: 'Статус', accessorKey: 'status', enableHiding: false },
   ], []);
 
@@ -52,6 +52,12 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
     () => (selectedId ? data.find((d) => d.id === selectedId) ?? null : null),
     [selectedId, data]
   );
+
+  const handleConfirm = () => {
+    if (!selected) return;
+    onSelect?.(selected);
+    onClose();
+  }
 
   const table = useMantineReactTable<ItSystem>({
     columns,
@@ -74,9 +80,8 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
 
     initialState: {
       pagination: { pageIndex: 0, pageSize: 100 },
-      grouping: ['group'],          // группы каталога
       expanded: true,
-      columnVisibility: { group: false, status: false },
+      columnVisibility: { status: false },
     },
 
     mantineTableBodyRowProps: ({ row }) => ({
@@ -113,12 +118,9 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
         <Button
           variant="contained"
           disabled={!selected}
-          onClick={() => onSelect?.(selected)}
+          onClick={handleConfirm}
         >
           Выбрать
-        </Button>
-        <Button variant="outlined" onClick={() => onSelect?.(null)}>
-          Очистить
         </Button>
         <Button color="inherit" onClick={onClose}>
           Отмена
