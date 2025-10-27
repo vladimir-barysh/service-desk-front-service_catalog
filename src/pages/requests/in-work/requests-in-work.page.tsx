@@ -22,7 +22,7 @@ const rows = [
 export function RequestsInWorkPage() {
   const [requestType, setRequestType] = useState(0);
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
-  const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(true);
+  const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const onRequestTypeSelect = (selected: any) => {
