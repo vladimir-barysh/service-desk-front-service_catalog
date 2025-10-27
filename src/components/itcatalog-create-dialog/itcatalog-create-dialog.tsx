@@ -105,11 +105,8 @@ export const ItcatalogCreateDialog = (props: {
       const department_name = table.getSelectedRowModel().rows[0]['original']['department'];
       const role_name = table.getSelectedRowModel().rows[0]['original']['role'];
       const user_name = table.getSelectedRowModel().rows[0]['original']['roleName'];
-      // @ts-ignore
       setDepartmentName(department_name);
-      // @ts-ignore
       setRoleName(role_name);
-      // @ts-ignore
       setUserName(user_name);
       setIsRoleCreateDialogOpen(true);
     }
@@ -188,7 +185,6 @@ export const ItcatalogCreateDialog = (props: {
         handleClick();
       }
       else {
-        // @ts-ignore
         const humanId = TableDelete.getTableEntity().getSelectedRowModel().rows[0]['original']['id'];
         const foundElement = TableDelete.getTableData().find(el => el.id === humanId);
         if (foundElement) {

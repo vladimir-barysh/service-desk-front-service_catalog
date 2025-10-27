@@ -22,13 +22,11 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
   onClose,
   onSelect,
 }) => {
-  // берём из makeData и фильтруем выведенные из эксплуатации
   const data = React.useMemo(
     () => allSystems.filter((s) => s.status !== ItSystemStatus.Inactive),
     []
   );
 
-  // единственная видимая колонка — «Наименование»
   const columns = React.useMemo<MRT_ColumnDef<ItSystem>[]>(() => [
     {
       header: 'Наименование',
@@ -45,7 +43,6 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
     { header: 'Статус', accessorKey: 'status', enableHiding: false },
   ], []);
 
-  // контролируем выбор (не ссылаемся на table в его инициализаторе)
   const [rowSelection, setRowSelection] = React.useState<MRT_RowSelectionState>({});
   const selectedId = React.useMemo(() => Object.keys(rowSelection)[0] ?? null, [rowSelection]);
   const selected = React.useMemo(
@@ -76,6 +73,7 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
     enableExpanding: false,
     enableHiding: false,
     enableDensityToggle: false,
+    enableBottomToolbar: false,
     positionToolbarAlertBanner: 'none',
 
     initialState: {

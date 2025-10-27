@@ -9,7 +9,7 @@ import {
   Button,
   Grid2
 } from '@mui/material';
-import { Input, Textarea, Text, CloseButton } from '@mantine/core';
+import { Input, Textarea, Text, CloseButton, FileInput } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { ItSystem } from '../itservice-choose/makeData';
@@ -76,6 +76,7 @@ export const RequestCreateZNODialog = (props: {
                     withSeconds={false} 
                     onPointerEnterCapture={undefined} 
                     onPointerLeaveCapture={undefined}
+                    clearable
                     variant='filled'
                     locale='ru'  
                     />
@@ -152,16 +153,14 @@ export const RequestCreateZNODialog = (props: {
                 // onChange={(e) => setValue(e.currentTarget.value)}
                 />
             </Input.Wrapper>
-            <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" paddingTop="15px">
+            <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" >
                 <Grid2 size={3}>
-                    <Button
-                    variant="contained"
-                    color="primary"
-                    size={'small'}
-                    fullWidth={true}
-                    >
-                    Добавить файл
-                    </Button>
+                    <FileInput
+                    label="Прикрепить файл"
+                    variant="filled"
+                    size='md'
+                    multiple
+                    />
                 </Grid2>
             </Grid2>
             <Box>
