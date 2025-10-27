@@ -8,6 +8,7 @@ import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
+import { SupportGeneralDialog } from '../../../components';
 
 export function SupportAllPage() {
   const columns = useMemo<MRT_ColumnDef<Request>[]>(
@@ -150,6 +151,20 @@ export function SupportAllPage() {
     return desiredDate < today;
   };
 
+  // Обработчик двойного клика
+  const handleRowDoubleClick = (row: MRT_Row<Request>) => {
+    setSelectedRequest(row.original);
+    setIsDialogOpen(true);
+  };
+
+  // Обработчик закрытия диалога
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setSelectedRequest(null);
+  };
+
+  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType] = useState(0);
 
   useEffect(() => {
@@ -188,8 +203,15 @@ export function SupportAllPage() {
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
       }
     }),
-  })
-
+    // Добавляем обработчик двойного клика на строку
+    mantineTableBodyRowProps: ({ row }) => ({
+      onDoubleClick: () => handleRowDoubleClick(row),
+      sx: {
+        cursor: 'pointer',
+      },
+    }),
+  });
+  
   return (
     <div>
         <Box height={50}>
@@ -275,8 +297,11 @@ export function SupportAllPage() {
           </Grid2>
         </Grid2>
       </Box>
-      <MantineReactTable
-        table={table}
+      <MantineReactTable table={table}/>
+      <SupportGeneralDialog
+        isOpen={isDialogOpen}
+        request={selectedRequest}
+        onClose={handleDialogClose}
       />
     </div>
   );
