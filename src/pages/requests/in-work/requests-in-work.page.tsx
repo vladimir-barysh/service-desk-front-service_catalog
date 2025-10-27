@@ -3,7 +3,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { ruRU } from '@mui/x-data-grid/locales';
 import { Box } from '@mui/material';
 import { Add } from '@mui/icons-material';
-import SplitButton, { Test } from '../../../components/split-button/split-button.component';
+import SplitButton from '../../../components/split-button/split-button.component';
 import { RequestCreateDialog } from '../../../components';
 import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
@@ -58,7 +58,6 @@ export function RequestsInWorkPage() {
 
   return (
    <div>
-     <Test click={onRequestTypeSelect} req={requestType}></Test>
      <Box height={50}>
        <SplitButton
          buttonText={'Создать заявку'}

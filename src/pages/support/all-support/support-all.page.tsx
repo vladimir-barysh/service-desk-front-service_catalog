@@ -9,8 +9,16 @@ import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { SupportGeneralDialog } from '../../../components';
+import SplitButton from '../../../components/split-button/split-button.component';
+import { RequestCreateDialog } from '../../../components';
+import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
+import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
 
 export function SupportAllPage() {
+  const [requestTypeDialog, setRequestType] = useState(0);
+    const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
+    const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const columns = useMemo<MRT_ColumnDef<Request>[]>(
     () => [
       {
@@ -106,6 +114,34 @@ export function SupportAllPage() {
         return 'hsla(0, 88%, 72%, 1.00)';
     }
   };
+
+  const onRequestTypeSelect = (selected: any) => {
+    setRequestType(selected);
+    if (selected === "Заявка на обслуживание") {
+      createZNODialog();
+    }
+    else if (selected === "Заявка на доступ") {
+      createZNDDialog();
+    }
+    else {
+      setIsCreateDialogOpen(true);
+    }
+  }
+  function createZNDDialog() {
+    setIsCreateDialogZNDOpen(true);
+  }
+  function createZNODialog() {
+    setIsCreateDialogZNOOpen(true);
+  }
+  const onCreateDialogClose = () => {
+    setIsCreateDialogOpen(false);
+    setIsCreateDialogZNOOpen(false);
+    setIsCreateDialogZNDOpen(false);
+  }
+  useEffect(() => {
+      console.debug('111' + requestTypeDialog);
+    }, [requestTypeDialog]
+  );
 
   // Парсер даты
   function parseDate(dateString: string): Date | null {
@@ -215,16 +251,28 @@ export function SupportAllPage() {
   return (
     <div>
         <Box height={50}>
+          <RequestCreateDialog
+                    isOpen={isCreateDialogOpen}
+                    requestName={requestType.toString()}
+                    onClose={onCreateDialogClose}
+                  />
+                  <RequestCreateZNODialog
+                    isOpen={isCreateDialogZNOOpen}
+                    onClose={onCreateDialogClose}
+                  />
+                  <RequestCreateZNDDialog
+                    isOpen={isCreateDialogZNDOpen}
+                    onClose={onCreateDialogClose}
+                  />
         <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left">
           <Grid2 size="auto">
-            <Button
-              variant="contained"
-              color="primary"
+            <SplitButton
+              buttonText={'Создать заявку'}
+              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение', 'Инцидент']}
               startIcon={<Add />}
               size={'small'}
-            >
-              Создать заявку
-            </Button>
+              onSelect={onRequestTypeSelect}
+            />
           </Grid2>
           <Grid2 size="auto">
             <Button
