@@ -1,3 +1,21 @@
 {
-  "extends": ["eslint:recommended", "plugin:react/recommended"]
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react", "react-hooks"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "no-undef": "off",
+        "react/prop-types": "off"
+      }
+    }
+  ],
+  "settings": {
+    "react": { "version": "detect" }
+  }
 }

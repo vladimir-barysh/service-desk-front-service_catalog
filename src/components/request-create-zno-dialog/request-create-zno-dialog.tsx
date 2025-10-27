@@ -9,15 +9,17 @@ import {
   Button,
   Grid2
 } from '@mui/material';
-import { Input, Textarea, Text } from '@mantine/core';
+import { Input, Textarea, Text, CloseButton } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
+import { ItSystem } from '../itservice-choose/makeData';
 
 export const RequestCreateZNODialog = (props: {
   isOpen: boolean;
   onClose: any;
 }) => {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [chosen, setChosen] = React.useState<ItSystem | null>(null);
 
     const handleClose = () => {
         props.onClose();
@@ -27,13 +29,17 @@ export const RequestCreateZNODialog = (props: {
         setIsCreateDialogOpen(true);
     }
     const onCreateDialogClose = () => {
-    setIsCreateDialogOpen(false);
-  }
+        setIsCreateDialogOpen(false);
+    }
   return (
     <div>
     <ChooseServiceCreateDialog
            isOpen={isCreateDialogOpen}
            onClose={onCreateDialogClose}
+           onSelect={(s) =>{
+            setChosen(s);
+
+           }}
     />    
     <Dialog
       open={props.isOpen}
@@ -81,7 +87,17 @@ export const RequestCreateZNODialog = (props: {
                 </Grid2>
                 <Grid2 size={3}>
                     <Input.Wrapper>
-                           <Input variant='filled'/>
+                           <Input 
+                           variant='filled' 
+                           value={chosen?.name ?? ""}
+                           readOnly
+                           rightSection={
+                            <CloseButton
+                                aria-label="Clear input"
+                                onClick={() => setChosen(null)}
+                                style={{ display: chosen ? undefined : 'none' }}
+                            />}
+                           />
                     </Input.Wrapper>
                 </Grid2>
             </Grid2>  
@@ -91,7 +107,17 @@ export const RequestCreateZNODialog = (props: {
                 </Grid2>
                 <Grid2 size={3}>
                     <Input.Wrapper>
-                           <Input variant='filled'/>
+                           <Input 
+                           variant='filled'
+                           value={chosen?.name ?? ""}
+                           readOnly
+                           rightSection={
+                            <CloseButton
+                                aria-label="Clear input"
+                                onClick={() => setChosen(null)}
+                                style={{ display: chosen ? undefined : 'none' }}
+                            />}
+                           />
                     </Input.Wrapper>
                 </Grid2>
             </Grid2>
