@@ -159,6 +159,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
             variant="contained"
             tabIndex={-1}
             startIcon={<CloudUploadIcon />}
+            disabled={request?.status === 'Закрыта'}
           >
             Добавить файл
             <VisuallyHiddenInput
