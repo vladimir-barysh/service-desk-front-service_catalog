@@ -50,7 +50,7 @@ export const RequestCreateZNDDialog = (props: {
     const [checked, setChecked] = useState(false);
 
     const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
-    // колонки (мемоизируем, чтобы не пересоздавались)
+    
     const columns = React.useMemo<MRT_ColumnDef<rolesDataClass>[]>(() => [
     { 
         accessorKey: 'roleName', header: 'Роль', size: 100,minSize: 20, maxSize: 100,

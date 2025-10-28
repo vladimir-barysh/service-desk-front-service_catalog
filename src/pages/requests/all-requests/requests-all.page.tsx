@@ -13,7 +13,7 @@ import SplitButton from '../../../components/split-button/split-button.component
 import { RequestCreateDialog } from '../../../components';
 import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
-import { IconPencil, IconSquareRoundedArrowDown } from '@tabler/icons-react';
+import { IconPencil } from '@tabler/icons-react';
 
 export function RequestsAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
