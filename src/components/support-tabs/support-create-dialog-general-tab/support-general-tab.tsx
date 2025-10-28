@@ -1,12 +1,14 @@
 import React from 'react';
-import { Grid2, TextField, Box, Typography } from '@mui/material';
+import { Grid2, TextField, Box, Typography, Button } from '@mui/material';
 import { Request } from './makeData';
 
 interface SupportGeneralFirstTabProps {
-  request: Request | null;
+  isOpen: boolean;
+    request: Request | null;
+    onClose: () => void;
 }
 
-export function SupportGeneralTab({ request }: SupportGeneralFirstTabProps) {
+export function SupportGeneralTab({ request, onClose }: SupportGeneralFirstTabProps) {
   if (!request) {
     return <Typography>Заявка не выбрана</Typography>;
   }
@@ -69,6 +71,29 @@ export function SupportGeneralTab({ request }: SupportGeneralFirstTabProps) {
           />
         </Grid2>
       </Grid2>
+      <Box>
+        <Box position="absolute" bottom="15px" width="stretch">
+          <Grid2 container spacing={3} direction={'row'} alignItems="center" justifyContent="center">
+            <Grid2 size={3}>
+              <Button
+                variant="contained"
+                color="primary"
+                size={'small'}
+                fullWidth={true}
+              > Сохранить </Button>
+            </Grid2>
+            <Grid2 size={3} offset={{md:3}}>
+              <Button
+                variant="contained"
+                color="inherit"
+                size={'small'}
+                fullWidth={true}
+                onClick={onClose}
+              > Отмена </Button>
+            </Grid2>
+          </Grid2>
+        </Box>
+      </Box>
     </Box>
   );
 }

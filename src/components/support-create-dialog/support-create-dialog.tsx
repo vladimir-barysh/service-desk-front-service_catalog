@@ -53,10 +53,10 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
                 <Tab label="История" value="6"/>
                 </TabList>
                 <TabPanel value="1" sx={{ padding: "0px" }}>
-                <SupportGeneralTab request={request} />
+                <SupportGeneralTab isOpen={true} request={request} onClose={handleClose}/>
                 </TabPanel>
                 <TabPanel value="2" sx={{ padding: "0px" }}>
-                <SupportFilesTab/>
+                <SupportFilesTab request={request}/>
                 </TabPanel>
                 <TabPanel value="3" sx={{ padding: "0px" }}>
                 <SupportCoordinationTab/>
@@ -72,29 +72,6 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
                 </TabPanel>
           </TabContext>
           
-          <Box>
-            <Box position="absolute" bottom="15px" width="stretch">
-              <Grid2 container spacing={3} direction={'row'} alignItems="center" justifyContent="center">
-                <Grid2 size={3}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size={'small'}
-                    fullWidth={true}
-                  > Сохранить </Button>
-                </Grid2>
-                <Grid2 size={3} offset={{md:3}}>
-                  <Button
-                    variant="contained"
-                    color="inherit"
-                    size={'small'}
-                    fullWidth={true}
-                    onClick={handleClose}
-                  > Закрыть </Button>
-                </Grid2>
-              </Grid2>
-            </Box>
-          </Box>
         </DialogContent>
       </Dialog>
     </div>
