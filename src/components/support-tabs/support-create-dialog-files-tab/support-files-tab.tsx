@@ -1,25 +1,16 @@
 import React from 'react';
 import { useState } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Box,
-  Button,
-  Grid2,
-  styled
+  Dialog, DialogContent,
+  DialogContentText, DialogTitle,
+  Box, Button, Grid2, styled
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { Input, Textarea, Text, CloseButton, FileInput } from '@mantine/core';
-import { DateTimePicker } from '@mantine/dates';
-import { Delete, DeleteForever } from '@mui/icons-material';
+import { Text } from '@mantine/core';
+import { Delete } from '@mui/icons-material';
 import {
-  MantineReactTable,
-  useMantineReactTable,
-  type MRT_RowSelectionState,
-  type MRT_ColumnDef,
-  type MRT_Row,
+  MantineReactTable, useMantineReactTable,
+  type MRT_ColumnDef, type MRT_Row,
 } from 'mantine-react-table';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 
@@ -121,7 +112,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
     },
     mantineTableContainerProps: {
       style: {
-      maxHeight: 240,
+      maxHeight: 450,
       overflowY: 'auto',
       },
     },
