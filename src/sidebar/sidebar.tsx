@@ -5,7 +5,7 @@ import { Badge, Box } from '@mui/material';
 import { ModeEdit, TaskAlt, ChecklistRtl, 
   Reorder, Groups, Folder, 
   LanOutlined, Storage, SettingsSuggest, 
-  Home, InfoOutlined, PersonOutlined, 
+  HomeOutlined, InfoOutlined, PersonOutlined, 
   ViewListOutlined, EngineeringOutlined, 
   SupportAgentOutlined
 } from '@mui/icons-material'
@@ -39,7 +39,7 @@ export function LeftSidebar() {
           <MenuItem
             component={<Link to={'/home/home.page'} />}
             active={location.pathname.includes('/home/home.page')}
-            icon={<Home />}
+            icon={<HomeOutlined />}
             style={{height: '35px',
             marginLeft: '-20px',
             width: '330px'
