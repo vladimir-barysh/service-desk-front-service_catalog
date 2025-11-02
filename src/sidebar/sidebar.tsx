@@ -17,6 +17,14 @@ const color = '#909fbbff';
 
 export function LeftSidebar() {
   const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const status = params.get('status');
+
+  const isSupportAll = location.pathname === '/support/all';
+  const isNewActive  = isSupportAll && status === 'Новая';
+  const isAllActive  = isSupportAll && !status; // нет параметра status
+  const isNAgredActive = isSupportAll && status !== '';
+
   return (
     <Box className={'box'}>
       <Sidebar style={{width: '100%' }}>
@@ -67,17 +75,17 @@ export function LeftSidebar() {
           }}
           icon = {<SupportAgentOutlined/>}>
             <MenuItem
-              component={<Link to={'/requests/in-work'} />} // Поменять
-              active={location.pathname.includes('/requests/in-work')}  // Поменять
+              component={<Link to={'/support/all?status=' + encodeURIComponent('Новая')} />} // Поменять
+              active={isNewActive}  // Поменять
               suffix={<Badge badgeContent={433} color="primary"></Badge>}
             >Новые заявки</MenuItem>
             <MenuItem
               component={<Link to={'/support/all'}/>}
-              active={location.pathname.includes('/support/all')}
+              active={isAllActive}
               suffix={<Badge badgeContent={433} color="primary"></Badge>}
             >Заявки (все)</MenuItem>
             <MenuItem
-              component={<Link to={'/requests/on-confirm'} />}  // Поменять
+              component={<Link to={'/support/all?status=' + encodeURIComponent('Новая')} />}  // Поменять
               active={location.pathname.includes('/requests/on-confirm')} // Поменять
               suffix={<Badge badgeContent={999} color="warning"></Badge>}
             >Заявки (не согласованные)</MenuItem>
@@ -97,6 +105,7 @@ export function LeftSidebar() {
             >Мои заявки</MenuItem>
             
           </SubMenu>
+
           <SubMenu label="Задачи"
           defaultOpen={true}
           style={{height: '35px',
