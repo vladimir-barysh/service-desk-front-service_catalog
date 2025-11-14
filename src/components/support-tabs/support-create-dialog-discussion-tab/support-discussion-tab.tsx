@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { Box, Button as MUIButton, Grid2 } from "@mui/material";
 import { Card, Group, Text, Textarea, ScrollArea, Divider, Anchor, Badge } from "@mantine/core";
 import { IconEdit, IconPlus, IconCheck, IconX } from "@tabler/icons-react";
-import { Request, data } from '../support-create-dialog-general-tab/makeData';
+import { Request, data } from '../../../pages/support/all-support/makeData';
 import { Message, seed } from './makeData';
 
 type DiscussionProps = {

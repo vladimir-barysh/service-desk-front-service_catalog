@@ -15,7 +15,7 @@ import {
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 
 import { fileDataClass, files } from './makeData';
-import { Request } from '../support-create-dialog-general-tab/makeData';
+import { Request } from '../../../pages/support/all-support/makeData';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',

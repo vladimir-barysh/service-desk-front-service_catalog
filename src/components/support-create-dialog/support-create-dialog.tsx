@@ -9,7 +9,7 @@ import {
   Tab,
 } from '@mui/material';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { Request } from './makeData';
+import { Request } from '../../pages/support/all-support/makeData';
 import { SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab, 
     SupportFilesTab, SupportHistoryTab, SupportTasksTab} from '../support-tabs';
 
