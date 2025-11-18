@@ -3,13 +3,10 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  Button,
-  Grid2,
-  Box,
   Tab,
 } from '@mui/material';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { Request } from './makeData';
+import { Request } from '../../pages/support/all-support/makeData';
 import { SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab, 
     SupportFilesTab, SupportHistoryTab, SupportTasksTab} from '../support-tabs';
 
@@ -59,10 +56,10 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
                 <SupportFilesTab request={request}/>
                 </TabPanel>
                 <TabPanel value="3" sx={{ padding: "0px" }}>
-                <SupportCoordinationTab/>
+                <SupportCoordinationTab request={request}/>
                 </TabPanel>
                 <TabPanel value="4" sx={{ padding: "0px" }}>
-                <SupportTasksTab/>
+                <SupportTasksTab request={request}/>
                 </TabPanel>
                 <TabPanel value="5" sx={{ padding: "0px" }}>
                 <SupportDiscussionTab/>
