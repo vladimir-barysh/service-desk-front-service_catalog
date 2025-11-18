@@ -1,86 +1,145 @@
-import React, {useRef} from 'react';
+import React, { useState } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
+import { SchemaNode, schemaData } from './makeData';
+import { RedirectTaskDialog, RedirectData } from '../../../components';
 
+// Пропсы для компонента
+interface BlockSchemaProps {
+  data: SchemaNode[];
+  selectedNode: SchemaNode | null;
+  onNodeSelect: (node: SchemaNode | null) => void;
+}
+
+// Функция для блок схемы
+const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => {
+  // Рекурсивная функция отрисовки узлов
+  const renderNode = (node: SchemaNode, level = 0) => {
+    const indent = level * 100;
+    const isSelected = selectedNode?.id === node.id;
+    
+    return (
+      <Box key={node.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2}}>
+        {/* Блок */}
+        <Paper 
+          sx={{ 
+            p: 1, 
+            minWidth: 200, 
+            textAlign: 'center', 
+            backgroundColor: isSelected ? 'primary.light' : 'primary.main', 
+            color: 'white', 
+            mb: 2, 
+            ml: `${indent}px`,
+            cursor: 'pointer',
+            border: '2px solid #1976d2',
+            '&:hover': {
+              backgroundColor: isSelected ? 'none' : 'primary.dark',
+            }
+          }}
+          onClick={() => {
+            // Если блок уже выбран, снимаем выделение, иначе выбираем
+            if (isSelected) {
+              onNodeSelect(null);
+            } else {
+              onNodeSelect(node);
+            }
+          }}
+        >
+          <Typography variant="body2">
+            {node.title}
+          </Typography>
+        </Paper>
+
+        {/* Дочерние элементы */}
+        {node.children && (
+          <Box>
+            {node.children.map(child => renderNode(child, level + 1))}
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  return (
+    <Box>
+      {data.map(node => renderNode(node))}
+    </Box>
+  );
+};
+
+// Основная функция
 export function SupportTasksTab() {
+  const [selectedNode, setSelectedNode] = useState<SchemaNode | null>(null);
+  const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
+
+  const handleNodeSelect = (node: SchemaNode | null) => {
+    setSelectedNode(node);
+  };
+
+  const handleRedirectClick = () => {
+    if (selectedNode) {
+      setRedirectDialogOpen(true);
+    }
+  };
+
+  const handleRedirectSave = (data: RedirectData) => {
+    console.log('Данные перенаправления:', data);
+    setRedirectDialogOpen(false);
+    // Здесь логика сохранения перенаправления
+  };
+
+  const handleRedirectClose = () => {
+    setRedirectDialogOpen(false);
+  };
+
   return (
     <Box sx={{ p: 2 }}>
       {/* Верхние кнопки действий */}
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 1, 
-        mb: 3,
-        flexWrap: 'wrap'
-      }}>
+      <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
+        <Button variant="contained" color="primary" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
+          Создать задачу
+        </Button>
+        <Button variant="contained" color="inherit" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
+          Создать подзадачу
+        </Button>
         <Button 
-          variant="contained"
-          color="primary" 
-          size="small"
-          sx={{ flex: '1 1 auto', minWidth: '120px' }}
-        > Создать задачу </Button>
-        <Button 
-          variant="contained"
+          variant="contained" 
           color="inherit" 
-          size="small"
+          size="small" 
           sx={{ flex: '1 1 auto', minWidth: '120px' }}
-        > Создать подзадачу </Button>
-        <Button 
-          variant="contained"
-          color="inherit"
-          size="small"
-          sx={{ flex: '1 1 auto', minWidth: '120px' }}
-        > Перенаправить задачу </Button>
-        <Button 
-          variant="contained"
-          color="warning" 
-          size="small"
-          sx={{ flex: '1 1 auto', minWidth: '120px' }}
-        > Отложить задачу </Button>
-        <Button 
-          variant="contained"
-          color="success" 
-          size="small"
-          sx={{ flex: '1 1 auto', minWidth: '120px' }}
-        > Закрыть задачу </Button>
+          onClick={handleRedirectClick}
+          disabled={!selectedNode}
+        >
+          Перенаправить задачу
+        </Button>
+        <Button variant="contained" color="warning" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
+          Отложить задачу
+        </Button>
+        <Button variant="contained" color="success" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
+          Закрыть задачу
+        </Button>
       </Box>
 
       {/* Блок-схема */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-        {/* Задача диспетчера */}
-        <Paper sx={{ p: 1, minWidth: 200, textAlign: 'center', backgroundColor: 'primary.main', color: 'white'}}>
-          <Typography variant="body2">Задача диспетчера</Typography>
-        </Paper>
+      <BlockSchema 
+        data={schemaData} 
+        selectedNode={selectedNode}
+        onNodeSelect={handleNodeSelect}
+      />
 
-          {/* Стрелка от Задача диспетчера до Исполнитель 2 */}
-  <Box sx={{
-    position: 'absolute',
-    top: '40px', // отступ от верха Задача диспетчера
-    left: '100px', // начальная позиция стрелки
-    width: '2px',
-    height: '80px', // высота стрелки
-    backgroundColor: 'grey.400',
-    zIndex: 1
-  }} />
+      {/* Диалог перенаправления задачи */}
+      <RedirectTaskDialog
+        open={redirectDialogOpen}
+        onClose={handleRedirectClose}
+        onSave={handleRedirectSave}
+        currentExecutor={selectedNode?.title || ''}
+      />
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2  , ml: '100px'}}>
-          {/* Исполнитель 1 */}
-          <Paper sx={{ p: 1, minWidth: 200, textAlign: 'center', backgroundColor: 'primary.main', color: 'white'}}>
-            <Typography variant="body2">Исполнитель 1</Typography>
-          </Paper>
-          
-
-          {/* Исполнитель 2 */}
-          <Paper sx={{ p: 1, minWidth: 200, textAlign: 'center', backgroundColor: 'primary.main', color: 'white'}}>
-            <Typography variant="body2">Исполнитель 2</Typography>
-          </Paper>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2  , ml: '100px'}}>
-            {/* Исполнитель 3 */}
-            <Paper sx={{ p: 1, minWidth: 200, textAlign: 'center', backgroundColor: 'primary.main', color: 'white'}}>
-              <Typography variant="body2">Исполнитель 3</Typography>
-            </Paper>
-          </Box>
-        </Box>
-      </Box>
+      {/* Информация о выделенном облоке */}
+      {selectedNode && (
+        <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+          Выбран: {selectedNode.title}
+        </Typography>
+      )}
     </Box>
   );
 }

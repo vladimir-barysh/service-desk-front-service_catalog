@@ -3,9 +3,6 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  Button,
-  Grid2,
-  Box,
   Tab,
 } from '@mui/material';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
