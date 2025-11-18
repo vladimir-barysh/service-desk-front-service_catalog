@@ -1,10 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import {
-  Dialog, DialogContent,
-  DialogContentText, DialogTitle,
-  Box, Button, Grid2, styled
-} from '@mui/material';
+import { Button, Grid2, styled } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { Text } from '@mantine/core';
 import { Delete } from '@mui/icons-material';
