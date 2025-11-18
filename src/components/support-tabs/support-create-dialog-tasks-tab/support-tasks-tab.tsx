@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
 import { SchemaNode, schemaData } from './makeData';
-import { RedirectTaskDialog, RedirectData } from '../../../components';
+import { RedirectTaskDialog, RedirectData, PostponeTaskDialog, PostponeData } from '../../../components';
+import { Request } from '../../../pages/support/all-support/makeData';
 
-// Пропсы для компонента
+// Пропсы для компонентов
 interface BlockSchemaProps {
   data: SchemaNode[];
   selectedNode: SchemaNode | null;
   onNodeSelect: (node: SchemaNode | null) => void;
+}
+
+interface SupportTasksTabProps {
+  request: Request | null;
 }
 
 // Функция для блок схемы
@@ -67,9 +72,11 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
 };
 
 // Основная функция
-export function SupportTasksTab() {
+export function SupportTasksTab({ request }: SupportTasksTabProps) {
+  // Состояния компонентов
   const [selectedNode, setSelectedNode] = useState<SchemaNode | null>(null);
   const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
+  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
 
   const handleNodeSelect = (node: SchemaNode | null) => {
     setSelectedNode(node);
@@ -81,14 +88,30 @@ export function SupportTasksTab() {
     }
   };
 
+  const handlePostponeClick = () => {
+    setPostponeDialogOpen(true);
+  };
+
   const handleRedirectSave = (data: RedirectData) => {
     console.log('Данные перенаправления:', data);
     setRedirectDialogOpen(false);
-    // Здесь логика сохранения перенаправления
+  };
+
+  const handlePostponeSave = (data: PostponeData) => {
+    console.log('Данные откладывания:', data);
+    // Здесь обновляем request с новой датой
+    if (request) {
+      // request.postponeDate = data.postponeUntil; // Раскомментировать когда добавите поле в Request
+    }
+    setPostponeDialogOpen(false);
   };
 
   const handleRedirectClose = () => {
     setRedirectDialogOpen(false);
+  };
+
+  const handlePostponeClose = () => {
+    setPostponeDialogOpen(false);
   };
 
   return (
@@ -111,7 +134,13 @@ export function SupportTasksTab() {
         >
           Перенаправить задачу
         </Button>
-        <Button variant="contained" color="warning" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
+        <Button 
+          variant="contained" 
+          color="warning" 
+          size="small" 
+          sx={{ flex: '1 1 auto', minWidth: '120px' }}
+          onClick={handlePostponeClick}
+        >
           Отложить задачу
         </Button>
         <Button variant="contained" color="success" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
@@ -134,7 +163,15 @@ export function SupportTasksTab() {
         currentExecutor={selectedNode?.title || ''}
       />
 
-      {/* Информация о выделенном облоке */}
+      {/* Диалог откладывания задачи */}
+      <PostponeTaskDialog
+        open={postponeDialogOpen}
+        onClose={handlePostponeClose}
+        onSave={handlePostponeSave}
+        currentDate={request?.dateDesired} // Передаем текущую дату из request
+      />
+
+      {/* Вывод выбранного блока */}
       {selectedNode && (
         <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
           Выбран: {selectedNode.title}
