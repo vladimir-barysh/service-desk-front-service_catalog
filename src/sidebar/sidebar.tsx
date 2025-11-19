@@ -14,6 +14,13 @@ import '../styles/sidebar.scss';
 const activeColor = '#455980ff';
 const backgroundColor = '#32415c';
 const color = '#909fbbff';
+const params = new URLSearchParams(location.search);
+  const status = params.get('status');
+
+  const isSupportAll = location.pathname === '/support/all';
+  const isNewActive  = isSupportAll && status === 'Новая';
+  const isAllActive  = isSupportAll && !status; // нет параметра status
+  const isNAgredActive = isSupportAll && status !== '';
 
 export function LeftSidebar() {
   const location = useLocation();
@@ -67,8 +74,8 @@ export function LeftSidebar() {
           }}
           icon = {<SupportAgentOutlined/>}>
             <MenuItem
-              component={<Link to={'/requests/in-work'} />} // Поменять
-              active={location.pathname.includes('/requests/in-work')}  // Поменять
+              component={<Link to={'/support/all?status=' + encodeURIComponent('Новая')} />} // Поменять
+              active={isNewActive}  // Поменять
               suffix={<Badge badgeContent={433} color="primary"></Badge>}
             >Новые заявки</MenuItem>
             <MenuItem
@@ -95,8 +102,8 @@ export function LeftSidebar() {
               component={<Link to={'/requests/success'} />}   // Поменять
               active={location.pathname.includes('/requests/success')}  // Поменять
             >Мои заявки</MenuItem>
-            
           </SubMenu>
+
           <SubMenu label="Задачи"
           defaultOpen={true}
           style={{height: '35px',

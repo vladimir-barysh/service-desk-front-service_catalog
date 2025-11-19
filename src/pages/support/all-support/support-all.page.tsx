@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable } from 'mantine-react-table';
+import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
+import { useSearchParams } from 'react-router-dom';
 import { data, type Request } from './makeData';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
@@ -16,9 +17,28 @@ import { RequestCreateZNDDialog } from '../../../components/request-create-znd-d
 
 export function SupportAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
-    const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
-    const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
+  const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  // фильтр по статусу
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
+  const [searchParams] = useSearchParams();
+  const urlStatus = searchParams.get('status');
+
+  const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState)=>MRT_ColumnFiltersState)) => {
+    const next = typeof updater === 'function' ? updater(columnFilters) : updater;
+    if (urlStatus) {
+      // жёстко фиксируем фильтр по статусу из URL
+      const rest = next.filter(f => f.id !== 'status');
+      setColumnFilters([...rest, { id: 'status', value: urlStatus }]);
+    } else {
+      setColumnFilters(next);
+    }
+  };
+
+  const tableKey = urlStatus ? `locked-${urlStatus}` : 'all';
+
   const columns = useMemo<MRT_ColumnDef<Request>[]>(
     () => [
       {
@@ -49,6 +69,19 @@ export function SupportAllPage() {
         accessorKey: 'status',
         type: 'string',
         width: 200,
+        filterFn: 'equals',
+        // прячем/блокируем фильтр визуально, когда есть urlStatus
+        enableColumnFilter: !urlStatus,
+        mantineFilterTextInputProps: {
+          disabled: !!urlStatus,
+          readOnly: !!urlStatus,
+          placeholder: urlStatus ? `Зафиксировано: ${urlStatus}` : 'Фильтр по статусу',
+        },
+        mantineFilterSelectProps: {
+          disabled: !!urlStatus,
+          readOnly: !!urlStatus,
+          value: ""
+        },
       },
       {
         header: 'Заголовок',
@@ -87,7 +120,7 @@ export function SupportAllPage() {
         width: 150,
       },
     ],
-    [],
+    [urlStatus],
   );
 
   // Цвет заливки строки
@@ -139,8 +172,12 @@ export function SupportAllPage() {
     setIsCreateDialogZNDOpen(false);
   }
   useEffect(() => {
+    setColumnFilters((prev) => {
+      const rest = prev.filter(f => f.id !== 'status');
+      return urlStatus ? [...rest, {id: 'status', value: urlStatus}] : rest;
+    });
       console.debug('111' + requestTypeDialog);
-    }, [requestTypeDialog]
+    }, [urlStatus]
   );
 
   // Парсер даты
@@ -204,8 +241,13 @@ export function SupportAllPage() {
   const [requestType] = useState(0);
 
   useEffect(() => {
-    console.debug('111' + requestType);
-  }, [requestType]);
+    setColumnFilters((prev) => {
+      const rest = prev.filter(f => f.id !== 'status');
+      return urlStatus ? [...rest, {id: 'status', value: urlStatus}] : rest;
+    });
+      console.debug('111' + requestTypeDialog);
+    }, [urlStatus]
+  );
 
   // Создание таблицы
   const table = useMantineReactTable({
@@ -228,6 +270,8 @@ export function SupportAllPage() {
       columnVisibility: {'mrt-row-select': false},
       showColumnFilters:true,
     },
+    state: {columnFilters},
+    onColumnFiltersChange: handleFiltersChange,
     mantineTableContainerProps: { sx: { maxHeight: 800 } },
     mantineTableBodyCellProps:({row}) => ({
       onClick: row.getToggleSelectedHandler(),
@@ -345,7 +389,7 @@ export function SupportAllPage() {
           </Grid2>
         </Grid2>
       </Box>
-      <MantineReactTable table={table}/>
+      <MantineReactTable key={tableKey} table={table} />
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         request={selectedRequest}
