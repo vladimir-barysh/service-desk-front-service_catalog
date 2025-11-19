@@ -240,14 +240,14 @@ export function SupportAllPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType] = useState(0);
 
-  useEffect(() => {
+  /*useEffect(() => {
     setColumnFilters((prev) => {
       const rest = prev.filter(f => f.id !== 'status');
       return urlStatus ? [...rest, {id: 'status', value: urlStatus}] : rest;
     });
       console.debug('111' + requestTypeDialog);
     }, [urlStatus]
-  );
+  );*/
 
   // Создание таблицы
   const table = useMantineReactTable({

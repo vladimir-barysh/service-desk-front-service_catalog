@@ -20,7 +20,7 @@ const params = new URLSearchParams(location.search);
   const isSupportAll = location.pathname === '/support/all';
   const isNewActive  = isSupportAll && status === 'Новая';
   const isAllActive  = isSupportAll && !status; // нет параметра status
-  const isNAgredActive = isSupportAll && status !== '';
+  const isNAgreedActive = isSupportAll && status !== '';
 
 export function LeftSidebar() {
   const location = useLocation();
@@ -80,7 +80,7 @@ export function LeftSidebar() {
             >Новые заявки</MenuItem>
             <MenuItem
               component={<Link to={'/support/all'}/>}
-              active={location.pathname.includes('/support/all')}
+              active={isAllActive}
               suffix={<Badge badgeContent={433} color="primary"></Badge>}
             >Заявки (все)</MenuItem>
             <MenuItem
