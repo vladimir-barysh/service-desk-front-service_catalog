@@ -10,8 +10,8 @@ interface SupportGeneralFirstTabProps {
 
 export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
   const [editableRequest, setEditableRequest] = useState<Request | null>(request);
-  const isEditing = useState(true);                    // флаг режима редактирования
-  const [hasChanges, setHasChanges] = useState(false); // флаг наличия изменений
+  const isEditing = !editableRequest?.status?.includes('Закрыта');              // флаг режима редактирования
+  const [hasChanges, setHasChanges] = useState(false);                          // флаг наличия изменений
 
   if (!editableRequest) {
     return <Typography>Заявка не выбрана</Typography>;
@@ -77,6 +77,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
             locale='ru'
             size="md"
             styles={{ input: {minHeight: '40px'}}}
+            readOnly={!isEditing}
           />
         </Grid2>
 
@@ -264,6 +265,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 locale='ru'
                 size="md"
                 styles={{ input: {minHeight: '40px'}}}
+                readOnly={!isEditing}
               />
             </Grid2>
           </Grid2>
@@ -284,6 +286,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 locale='ru'
                 size="md"
                 styles={{ input: {minHeight: '40px'}}}
+                readOnly={!isEditing}
               />
             </Grid2>
           </Grid2>
@@ -304,6 +307,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 locale='ru'
                 size="md"
                 styles={{ input: {minHeight: '40px'}}}
+                readOnly={!isEditing}
               />
             </Grid2>
           </Grid2>
@@ -342,6 +346,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
               locale='ru'
               size="md"
               styles={{ input: {minHeight: '40px'}}}
+              readOnly={!isEditing}
             />
             </Grid2>
           </Grid2>
