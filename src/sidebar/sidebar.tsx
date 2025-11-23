@@ -1,6 +1,6 @@
-import React from "react";
+import React, {useMemo} from "react";
 import { Menu, MenuItem, Sidebar, SubMenu } from 'react-pro-sidebar';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Badge, Box } from '@mui/material';
 import { ModeEdit, TaskAlt, ChecklistRtl, 
   Reorder, Groups, Folder, 
@@ -10,20 +10,44 @@ import { ModeEdit, TaskAlt, ChecklistRtl,
   SupportAgentOutlined
 } from '@mui/icons-material'
 import '../styles/sidebar.scss';
+import { data, type Request } from '../pages/support/all-support/makeData';
+import { stat } from "fs";
 
 const activeColor = '#455980ff';
 const backgroundColor = '#32415c';
 const color = '#909fbbff';
-const params = new URLSearchParams(location.search);
+
+function useRequestCounts() {
+  return useMemo(() => {
+    const newCount = data.filter(item => item.status === 'Новая').length;
+    const allCount = data.filter(item => item.status !== 'Закрыта').length;
+    const nAgreedCount = data.filter(item => item.status === 'Не согласовано').length;
+    const nConfirmedCount = data.filter(item => item.status === 'Возобновлена').length;
+    const onControlCount = data.filter(item => item.status === 'На контроле').length;
+    return {
+      newCount,
+      allCount,
+      nAgreedCount,
+      nConfirmedCount,
+      onControlCount
+    };
+  }, [data]);
+}
+
+export function LeftSidebar() {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
   const status = params.get('status');
 
   const isSupportAll = location.pathname === '/support/all';
   const isNewActive  = isSupportAll && status === 'Новая';
-  const isAllActive  = isSupportAll && !status; // нет параметра status
-  const isNAgreedActive = isSupportAll && status !== '';
+  const isAllActive  = isSupportAll && !status;
+  const isNAgreedActive = isSupportAll && status === 'nAgreed';
+  const isNConfirmedActive = isSupportAll && status === 'nConfirmed';
+  const isOnControlActive = isSupportAll && status === 'onControl';
 
-export function LeftSidebar() {
-  const location = useLocation();
+  const { newCount, allCount, nAgreedCount, nConfirmedCount, onControlCount } = useRequestCounts();
+
   return (
     <Box className={'box'}>
       <Sidebar style={{width: '100%' }}>
@@ -74,33 +98,33 @@ export function LeftSidebar() {
           }}
           icon = {<SupportAgentOutlined/>}>
             <MenuItem
-              component={<Link to={'/support/all?status=' + encodeURIComponent('Новая')} />} // Поменять
+              component={<Link to={'/support/all?status=Новая'} />} // Поменять
               active={isNewActive}  // Поменять
-              suffix={<Badge badgeContent={433} color="primary"></Badge>}
+              suffix={<Badge badgeContent={newCount} color="primary"></Badge>}
             >Новые заявки</MenuItem>
             <MenuItem
               component={<Link to={'/support/all'}/>}
               active={isAllActive}
-              suffix={<Badge badgeContent={433} color="primary"></Badge>}
+              suffix={<Badge badgeContent={allCount} color="warning"></Badge>}
             >Заявки (все)</MenuItem>
             <MenuItem
-              component={<Link to={'/requests/on-confirm'} />}  // Поменять
-              active={location.pathname.includes('/requests/on-confirm')} // Поменять
-              suffix={<Badge badgeContent={999} color="warning"></Badge>}
+              component={<Link to={'/support/all?status=nAgreed'}/>}
+              active={isNAgreedActive}
+              suffix={<Badge badgeContent={nAgreedCount} color="primary"></Badge>}
             >Заявки (не согласованные)</MenuItem>
             <MenuItem
-              component={<Link to={'/requests/success'} />}   // Поменять
-              active={location.pathname.includes('/requests/success')}  // Поменять
-              suffix={<Badge badgeContent={999} color="warning"></Badge>}
+              component={<Link to={'/support/all?status=nConfirmed'}/>}
+              active={isNConfirmedActive}
+              suffix={<Badge badgeContent={nConfirmedCount} color="warning"></Badge>}
             >Заявки (не подтвержденные)</MenuItem>
             <MenuItem
-              component={<Link to={'/requests/success'} />}   // Поменять
-              active={location.pathname.includes('/requests/success')}  // Поменять
-              suffix={<Badge badgeContent={433} color="primary"></Badge>}
+              component={<Link to={'/support/all?status=onControl'}/>}
+              active={isOnControlActive}
+              suffix={<Badge badgeContent={onControlCount} color="primary"></Badge>}
             >Заявки (на контроле)</MenuItem>
             <MenuItem
-              component={<Link to={'/requests/success'} />}   // Поменять
-              active={location.pathname.includes('/requests/success')}  // Поменять
+              component={<Link to={'/support/all'}/>}
+              active={isAllActive}
             >Мои заявки</MenuItem>
           </SubMenu>
 
