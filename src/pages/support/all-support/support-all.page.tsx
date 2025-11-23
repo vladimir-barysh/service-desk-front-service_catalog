@@ -99,7 +99,7 @@ export function SupportAllPage() {
       {
         header: '№ заявки',
         accessorKey: 'requestNumber',
-        maxSize: 120,
+        maxSize: 90,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по №',
         },
@@ -129,7 +129,7 @@ export function SupportAllPage() {
         header: 'Дата решения заявки',
         accessorKey: 'dateSolution',
         type: 'string',
-        maxSize: 210,
+        maxSize: 160,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по дате решения',
@@ -139,9 +139,8 @@ export function SupportAllPage() {
         header: 'Статус',
         accessorKey: 'status',
         type: 'string',
-        maxSize: 160,
+        maxSize: 150,
         enableResizing: false,
-        filterFn: 'equals',
         // Блокируем фильтр если есть URL параметры
         enableColumnFilter: !urlStatus,
         mantineFilterTextInputProps: {
@@ -158,8 +157,8 @@ export function SupportAllPage() {
         header: 'Заголовок',
         accessorKey: 'header',
         type: 'string',
-        minSize: 175,
-        width: 175,
+        maxSize: 130,
+        enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по заголовку',
         },
@@ -168,7 +167,7 @@ export function SupportAllPage() {
         header: 'Тип запроса',
         accessorKey: 'requestType',
         type: 'string',
-        maxSize: 160,
+        maxSize: 100,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по запросу',
@@ -178,7 +177,8 @@ export function SupportAllPage() {
         header: 'Инициатор',
         accessorKey: 'initiator',
         type: 'string',
-        width: 160,
+        maxSize: 150,
+        enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по инициатору',
         },
@@ -187,7 +187,8 @@ export function SupportAllPage() {
         header: 'Пользователь',
         accessorKey: 'user',
         type: 'string',
-        width: 150,
+        maxSize: 150,
+        enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по пользователю',
         },
@@ -196,7 +197,7 @@ export function SupportAllPage() {
         header: 'IT-сервис (модуль)',
         accessorKey: 'itModule',
         type: 'string',
-        maxSize: 180,
+        maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по IT-сервису',
@@ -206,7 +207,8 @@ export function SupportAllPage() {
         header: 'Услуга',
         accessorKey: 'service',
         type: 'string',
-        width: 150,
+        maxSize: 130,
+        enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по услуге',
         },
@@ -338,18 +340,38 @@ export function SupportAllPage() {
     enableSelectAll:false,
     enableHiding:false,
     enableColumnResizing:true,
+    layoutMode:'grid',
+    columnResizeMode:'onChange',
     filterFromLeafRows:true,
     enableColumnActions:false,
     localization:MRT_Localization_RU,
     initialState:{
-      density: 'md',
+      density: 'xs',
       pagination: { pageIndex: 0, pageSize: 100 },
       columnVisibility: {'mrt-row-select': false},
       showColumnFilters:true,
     },
     state: {columnFilters},
     onColumnFiltersChange: handleFiltersChange,
+
+    mantineTableProps: {
+      fontSize: '11px',
+    },
+
     mantineTableContainerProps: { sx: { maxHeight: 800 } },
+
+    mantineTableHeadCellProps: {
+      style: {
+        fontSize: '13px',
+        fontWeight: 600,
+        padding: '10px 4px',
+      },
+    },
+
+    mantineFilterTextInputProps: {
+      size: 'xs',
+    },
+
     mantineTableBodyCellProps:({row}) => ({
       onClick: row.getToggleSelectedHandler(),
       sx: {
