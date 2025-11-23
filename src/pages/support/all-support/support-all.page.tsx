@@ -1,93 +1,218 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable } from 'mantine-react-table';
+import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
+import { useSearchParams } from 'react-router-dom';
 import { data, type Request } from './makeData';
-import React, { useEffect, useState } from 'react';
-import { Grid2 } from '@mui/material';
+import React, { useEffect, useState, useCallback } from 'react';
+import { createTheme, Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
+import { Center, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { SupportGeneralDialog } from '../../../components';
 import SplitButton from '../../../components/split-button/split-button.component';
 import { RequestCreateDialog } from '../../../components';
 import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
+import { url } from 'inspector';
 
 export function SupportAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
-    const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
-    const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
+  const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [hideClosed, setHideClosed] = useState(true);
+
+  // фильтр по статусу
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
+  const [searchParams] = useSearchParams();
+  const urlStatus = searchParams.get('status');
+
+  const clearAllFilters = () => {
+    setColumnFilters([]);
+  };
+
+  // Функция для получения данных с учетом всех фильтров
+  const filteredData = useMemo(() => {
+    let result = data;
+    
+    // Фильтр по статусу из URL
+    if (urlStatus === 'Новая') { 
+      result = result.filter(item => item.status === urlStatus);
+    }
+    else if (urlStatus === 'nAgreed') {
+      result = result.filter(item => item.status === 'Не согласовано' || item.status === 'Закрыта');
+    }
+    else if (urlStatus === 'nConfirmed') {
+      result = result.filter(item => item.status === 'Возобновлена' || item.status === 'Закрыта');
+    }
+    else if (urlStatus === 'onControl') {
+      result = result.filter(item => item.status === 'На контроле' || item.status === 'Закрыта');
+    }
+    else {
+      clearAllFilters();
+    }
+    // Фильтр по чекбоксу "Скрыть закрытые"
+    if (hideClosed) {
+      result = result.filter(item => item.status !== 'Закрыта');
+    }
+    
+    return result;
+  }, [urlStatus, hideClosed]);
+
+  
+
+  const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
+    if (urlStatus) {
+      return;
+    } 
+    const next = typeof updater === 'function' ? updater(columnFilters) : updater;
+    setColumnFilters(next);
+  };
+
+  // Эффект для синхронизации URL параметров с состоянием фильтров
+  useEffect(() => {
+    setColumnFilters((prev) => {
+      let newFilters = prev.filter(f => f.id !== 'status');
+      
+      // Добавляем фильтр из URL если есть
+      if (urlStatus === 'nAgreed' || urlStatus === 'nConfirmed' || urlStatus === 'onControl') {
+        return newFilters;
+      }
+      else if (urlStatus) {
+        newFilters = [...newFilters, { id: 'status', value: urlStatus }];
+      }
+      
+      return newFilters;
+    });
+  }, [urlStatus, hideClosed]);
+
+  useEffect(() => {
+    setHideClosed(true);
+  }, [location.pathname, location.search]); // Сбрасываем при изменении пути или параметров
+
+  const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
+
   const columns = useMemo<MRT_ColumnDef<Request>[]>(
     () => [
       {
         header: '№ заявки',
         accessorKey: 'requestNumber',
-        maxSize: 110,
+        maxSize: 120,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по №',
+        },
+        enableResizing: false,
       },
       {
         header: 'Дата регистрации',
         accessorKey: 'dateRegistration',
         type: 'string',
-        minSize: 170,
+        maxSize: 175,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по дате регистрации',
+        },
       },
       {
         header: 'Желаемый срок',
         accessorKey: 'dateDesired',
         type: 'string',
-        width: 170,
+        maxSize: 165,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по желаемому сроку',
+        },
       },
       {
         header: 'Дата решения заявки',
         accessorKey: 'dateSolution',
         type: 'string',
-        width: 170,
+        maxSize: 210,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по дате решения',
+        },
       },
       {
         header: 'Статус',
         accessorKey: 'status',
         type: 'string',
-        width: 200,
+        maxSize: 160,
+        enableResizing: false,
+        filterFn: 'equals',
+        // Блокируем фильтр если есть URL параметры
+        enableColumnFilter: !urlStatus,
+        mantineFilterTextInputProps: {
+          disabled: !!urlStatus,
+          readOnly: !!urlStatus,
+          placeholder: urlStatus ? `Зафиксировано: ${urlStatus}` : 'Фильтр по статусу',
+        },
+        mantineFilterSelectProps: {
+          disabled: !!urlStatus || hideClosed,
+          readOnly: !!urlStatus || hideClosed,
+        },
       },
       {
         header: 'Заголовок',
         accessorKey: 'header',
         type: 'string',
-        width: 150,
+        minSize: 175,
+        width: 175,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по заголовку',
+        },
       },
       {
         header: 'Тип запроса',
         accessorKey: 'requestType',
         type: 'string',
-        width: 160,
+        maxSize: 160,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по запросу',
+        },
       },
       {
         header: 'Инициатор',
         accessorKey: 'initiator',
         type: 'string',
-        width: 150,
+        width: 160,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по инициатору',
+        },
       },
       {
         header: 'Пользователь',
         accessorKey: 'user',
         type: 'string',
         width: 150,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по пользователю',
+        },
       },
       {
         header: 'IT-сервис (модуль)',
         accessorKey: 'itModule',
         type: 'string',
-        width: 150,
+        maxSize: 180,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по IT-сервису',
+        },
       },
       {
         header: 'Услуга',
         accessorKey: 'service',
         type: 'string',
         width: 150,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по услуге',
+        },
       },
     ],
-    [],
+    [urlStatus],
   );
 
   // Цвет заливки строки
@@ -138,10 +263,8 @@ export function SupportAllPage() {
     setIsCreateDialogZNOOpen(false);
     setIsCreateDialogZNDOpen(false);
   }
-  useEffect(() => {
-      console.debug('111' + requestTypeDialog);
-    }, [requestTypeDialog]
-  );
+
+  
 
   // Парсер даты
   function parseDate(dateString: string): Date | null {
@@ -203,14 +326,10 @@ export function SupportAllPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType] = useState(0);
 
-  useEffect(() => {
-    console.debug('111' + requestType);
-  }, [requestType]);
-
   // Создание таблицы
   const table = useMantineReactTable({
     columns: columns,
-    data: data,
+    data: filteredData,
     enableExpanding: false,
     enableTopToolbar:false,
     enableRowSelection:true,
@@ -228,6 +347,8 @@ export function SupportAllPage() {
       columnVisibility: {'mrt-row-select': false},
       showColumnFilters:true,
     },
+    state: {columnFilters},
+    onColumnFiltersChange: handleFiltersChange,
     mantineTableContainerProps: { sx: { maxHeight: 800 } },
     mantineTableBodyCellProps:({row}) => ({
       onClick: row.getToggleSelectedHandler(),
@@ -264,7 +385,7 @@ export function SupportAllPage() {
                     isOpen={isCreateDialogZNDOpen}
                     onClose={onCreateDialogClose}
                   />
-        <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left">
+        <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left">
           <Grid2 size="auto">
             <SplitButton
               buttonText={'Создать заявку'}
@@ -343,9 +464,19 @@ export function SupportAllPage() {
               В Excel
             </Button>
           </Grid2>
+          <Grid2 size="auto" alignContent="center">
+            <Checkbox
+              disabled={urlStatus==="Новая" ? true : false}
+              checked={hideClosed}
+              onChange={(event) => setHideClosed(event.currentTarget.checked)}
+              label="Скрыть закрытые заявки"
+              size="md"
+            />
+          </Grid2>
         </Grid2>
       </Box>
-      <MantineReactTable table={table}/>
+
+      <MantineReactTable key={tableKey} table={table} />
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         request={selectedRequest}
