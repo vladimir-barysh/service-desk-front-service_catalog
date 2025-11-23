@@ -251,7 +251,7 @@ export function RequestsAllPage() {
   
   return (
     <div>
-        <Box height={50}>
+      <Box height={50}>
         <RequestCreateDialog
           isOpen={isCreateDialogOpen}
           requestName={requestType.toString()}
@@ -265,7 +265,7 @@ export function RequestsAllPage() {
           isOpen={isCreateDialogZNDOpen}
           onClose={onCreateDialogClose}
         />
-        <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left">
+        <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
               buttonText={'Создать заявку'}
@@ -316,8 +316,11 @@ export function RequestsAllPage() {
             </Button>
           </Grid2>
         </Grid2>
+
+        <MantineReactTable table={table}/>
+
       </Box>
-      <MantineReactTable table={table}/>
+      
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         request={selectedRequest}

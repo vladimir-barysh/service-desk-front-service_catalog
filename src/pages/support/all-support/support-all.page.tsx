@@ -394,21 +394,21 @@ export function SupportAllPage() {
   
   return (
     <div>
-        <Box height={50}>
-          <RequestCreateDialog
-                    isOpen={isCreateDialogOpen}
-                    requestName={requestType.toString()}
-                    onClose={onCreateDialogClose}
-                  />
-                  <RequestCreateZNODialog
-                    isOpen={isCreateDialogZNOOpen}
-                    onClose={onCreateDialogClose}
-                  />
-                  <RequestCreateZNDDialog
-                    isOpen={isCreateDialogZNDOpen}
-                    onClose={onCreateDialogClose}
-                  />
-        <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left">
+      <Box height={50}>
+        <RequestCreateDialog
+          isOpen={isCreateDialogOpen}
+          requestName={requestType.toString()}
+          onClose={onCreateDialogClose}
+        />
+        <RequestCreateZNODialog
+          isOpen={isCreateDialogZNOOpen}
+          onClose={onCreateDialogClose}
+        />
+        <RequestCreateZNDDialog
+          isOpen={isCreateDialogZNDOpen}
+          onClose={onCreateDialogClose}
+        />
+        <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
               buttonText={'Создать заявку'}
@@ -499,9 +499,12 @@ export function SupportAllPage() {
             </MantineProvider>
           </Grid2>
         </Grid2>
+
+        <MantineReactTable key={tableKey} table={table} />
+
       </Box>
 
-      <MantineReactTable key={tableKey} table={table} />
+      
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         request={selectedRequest}
