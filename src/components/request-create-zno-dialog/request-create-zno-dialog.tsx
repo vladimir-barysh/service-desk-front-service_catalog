@@ -7,12 +7,38 @@ import {
   DialogTitle,
   Box,
   Button,
-  Grid2
+  Grid2,
+  Chip,
+  Paper
 } from '@mui/material';
-import { Input, Textarea, Text, CloseButton, FileInput } from '@mantine/core';
+import { Input, Textarea, Text, CloseButton } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
+
+import { styled } from '@mui/material/styles';
+import { Close } from '@mui/icons-material';
+
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { ItSystem } from '../itservice-choose/makeData';
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
+
+const FileListContainer = styled(Paper)(({ theme }) => ({
+  height: '60px',
+  overflow: 'auto',
+  padding: theme.spacing(1),
+  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.background.default,
+}));
 
 export const RequestCreateZNODialog = (props: {
   isOpen: boolean;
@@ -31,6 +57,30 @@ export const RequestCreateZNODialog = (props: {
     const onCreateDialogClose = () => {
         setIsCreateDialogOpen(false);
     }
+
+    const [files, setFiles] = useState<File[]>([]);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = event.target.files;
+        if (selectedFiles) {
+        const newFiles = Array.from(selectedFiles);
+        setFiles(prev => [...prev, ...newFiles]);
+        }
+        // Сбрасываем значение input чтобы можно было выбрать те же файлы снова
+        event.target.value = '';
+    };
+
+    const handleRemoveFile = (index: number) => {
+        setFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
   return (
     <div>
     <ChooseServiceCreateDialog
@@ -153,40 +203,81 @@ export const RequestCreateZNODialog = (props: {
                 // onChange={(e) => setValue(e.currentTarget.value)}
                 />
             </Input.Wrapper>
-            <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" >
-                <Grid2 size={3}>
-                    <FileInput
-                    label="Прикрепить файл"
-                    variant="filled"
-                    size='md'
-                    multiple
-                    />
-                </Grid2>
-            </Grid2>
-            <Box>
-                <Box position="absolute" bottom="20px" width="stretch">
-                    <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left">
-                    <Grid2 size={3} >
-                        <Button
+            <Grid2 container spacing={3} direction={'row'} paddingTop="15px" alignItems="left" justifyContent="left" >
+                <Grid2 size={3} paddingTop="15px">
+                    <Button
+                        component="label"
+                        role={undefined}
                         variant="contained"
+                        tabIndex={-1}
                         color="primary"
                         size={'small'}
                         fullWidth={true}
                         >
-                        Сохранить
-                        </Button>
-                    </Grid2>
-                    <Grid2 size={3}>
-                        <Button
-                        variant="contained"
-                        color="inherit"
-                        size={'small'}
-                        fullWidth={true}
-                        onClick={handleClose}
-                        >
-                        Отмена
-                        </Button>
-                    </Grid2>
+                        Прикрепить файлы
+                        <VisuallyHiddenInput
+                            type="file"
+                            onChange={handleFileChange}
+                            multiple
+                        />
+                    </Button>
+                </Grid2>
+
+                <Grid2 size={9}>
+                    <FileListContainer elevation={1}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, minHeight: '40px', maxHeight: '100px', alignItems: 'center'}}>
+                            {files.map((file, index) => (
+                                <Chip
+                                key={index}
+                                label={`${file.name} (${formatFileSize(file.size)})`}
+                                onDelete={() => handleRemoveFile(index)}
+                                deleteIcon={<Close />}
+                                variant="outlined"
+                                color="primary"
+                                sx={{ 
+                                    maxWidth: '200px',
+                                    '& .MuiChip-label': {
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    }
+                                }}
+                                />
+                            ))}
+                            {files.length === 0 && (
+                                <Box sx={{ color: 'text.secondary'}}>
+                                    Здесь будут отображаться прикрепленные файлы
+                                </Box>
+                            )}
+                        </Box>
+                    </FileListContainer>
+                </Grid2>
+
+            </Grid2>
+            <Box>
+                <Box position="absolute" bottom="20px" width="stretch">
+                    <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left">
+                        <Grid2 size={3} >
+                            <Button
+                            variant="contained"
+                            color="primary"
+                            size={'small'}
+                            fullWidth={true}
+                            >
+                            Сохранить
+                            </Button>
+                        </Grid2>
+                        <Grid2 size={3}>
+                            <Button
+                            variant="contained"
+                            color="inherit"
+                            size={'small'}
+                            fullWidth={true}
+                            onClick={handleClose}
+                            >
+                            Отмена
+                            </Button>
+                        </Grid2>
                     </Grid2>
                 </Box>
             </Box>
