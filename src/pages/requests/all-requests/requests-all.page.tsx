@@ -118,7 +118,7 @@ export function RequestsAllPage() {
 
   const onRequestTypeSelect = (selected: any) => {
     setRequestType(selected);
-    if (selected === "Заявка на обслуживание") {
+    if (selected === "Заявка на обслуживание" || selected === "Инцидент") {
       createZNODialog();
     }
     else if (selected === "Заявка на доступ") {

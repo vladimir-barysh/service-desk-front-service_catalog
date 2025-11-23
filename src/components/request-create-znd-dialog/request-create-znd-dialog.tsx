@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,6 @@ export const RequestCreateZNDDialog = (props: {
 }) => {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [chosen, setChosen] = React.useState<ItSystem | null>(null);
-    const [value, setValue] = useState('');
     const [selected, setSelected] = useState<tableDataClass | null>(null);
     const [search, setSearch] = useState("");
     const shouldFilterOptions = !employees.some((item) => item.mainName?.toLowerCase() === search.toLowerCase().trim());
@@ -49,8 +48,20 @@ export const RequestCreateZNDDialog = (props: {
     const employeeOptions = employees.map((emp) => ({ value: emp.mainName || "", label: emp.mainName || ""}));
     const [checked, setChecked] = useState(false);
 
+    //
+    const [reqType, setReqType] = useState<string>('');
+    const [accessType, setAccessType] = useState<string>('');
     const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
-    
+    const isFormValid = useMemo(() => {
+        return (
+            reqType !== '' &&
+            chosen !== null &&
+            selected !== null &&
+            accessType !== '' &&
+            Object.keys(rowSelection).length > 0
+        );
+    }, [reqType, chosen, selected, accessType, rowSelection]);
+
     const columns = React.useMemo<MRT_ColumnDef<rolesDataClass>[]>(() => [
     { 
         accessorKey: 'roleName', header: 'Роль', size: 100,minSize: 20, maxSize: 100,
@@ -70,16 +81,49 @@ export const RequestCreateZNDDialog = (props: {
     },], []);
     const data = React.useMemo(() => roles, []);
 
-    const handleClose = () => {
-        props.onClose();
-    };
-
     function CreateDialog() {
         setIsCreateDialogOpen(true);
     }
     const onCreateDialogClose = () => {
         setIsCreateDialogOpen(false);
     }
+
+    const handleClose = () => {
+        setChecked(false);
+        setReqType('');
+        setAccessType('');
+        setChosen(null);
+        setSelected(null);
+        setRowSelection({});
+        props.onClose();
+    };
+
+    const handleSave = () => {
+        if (!isFormValid) {
+            alert('Пожалуйста, заполните все обязательные поля');
+            return;
+        }
+
+        const formData = {
+            service: chosen,
+            requestType: reqType,
+            accessType: accessType,
+            employee: selected,
+            roles: Object.keys(rowSelection).map((rowId) => data.find((role) => String(role.id) === rowId)),
+        };
+
+        console.log('Данные для сохранения:', formData);
+        
+        handleClose();
+    };
+
+    const handleReqTypeChange = (value: string) => {
+        setReqType(value);
+    };
+    const handleAccessTypeChange = (value: string) => {
+        setAccessType(value);
+    }
+
     const handleSelect = (value: string | null) => {
         if (!value) return;
         const found = employees.find((e) => e.mainName === value) || null;
@@ -113,7 +157,7 @@ export const RequestCreateZNDDialog = (props: {
         mantinePaperProps: { withBorder: true, shadow: 'xs' },
         mantineTableContainerProps: {
             style: {
-            maxHeight: 240,     // высота области прокрутки (подбери под строки)
+            maxHeight: 150,
             overflowY: 'auto',
             },
         },
@@ -134,19 +178,32 @@ export const RequestCreateZNDDialog = (props: {
       fullWidth={true}
       maxWidth="lg"
     >
-        <DialogTitle>Создание заявки на доступ</DialogTitle>
-
         <DialogContent sx={{minHeight: '70vh', minWidth: '75vh', padding:"20x"}}>
-            <DialogContentText>
-            </DialogContentText>
-            <Grid2 container spacing={3} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="15px">
+            
+            <Box fontSize='25px' fontWeight='700' marginBottom='10px'>
+                Регистрация ЗНД
+            </Box>
+            <Box fontSize='15px' fontWeight='500' sx={{color: 'error.main'}}>
+                Пункты с * обязательны к заполнению
+            </Box>
+            <Grid2 container spacing={3} direction={'row'} alignItems="center" justifyContent="left" paddingTop='5px' paddingBottom="10px">
                 <Grid2 size={2}>
-                    <Text fw={600}>Вид заявки:</Text>
+                    <Text fw={600}>Вид заявки *:</Text>
                 </Grid2>
-                <Radio.Group withAsterisk >
-                    <Group >
-                        <Radio fw={600} value="Предоставить/изменить доступ" label="Предоставить/изменить доступ"/>
-                        <Radio fw={600} value="Закрыть доступ" label="Закрыть доступ"/>
+                <Radio.Group 
+                value={reqType}
+                onChange={handleReqTypeChange}
+                withAsterisk >
+                    <Group>
+                        <Radio fw={200}
+                        label="Предоставить/изменить доступ"
+                        value="Предоставить/изменить доступ" 
+                        /> 
+
+                        <Radio fw={200}
+                        label="Закрыть доступ"
+                        value="Закрыть доступ"
+                        />
                     </Group>
                 </Radio.Group>
             </Grid2>
@@ -159,12 +216,12 @@ export const RequestCreateZNDDialog = (props: {
                     fullWidth={true}
                     onClick={CreateDialog}
                     >
-                    Выберите ИТ-сервис
+                    Выберите ИТ-сервис *
                     </Button>
                 </Grid2>
             </Grid2>
             
-            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="15px">
+            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="10px">
                 <Grid2 size={2}>
                     <Text fw={600}>Сервис/модуль</Text>
                 </Grid2>
@@ -184,7 +241,7 @@ export const RequestCreateZNDDialog = (props: {
                     </Input.Wrapper>
                 </Grid2>
             </Grid2>  
-            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="10px">
+            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left">
                 <Grid2 size={2}>
                     <Text fw={600}>Услуга</Text>
                 </Grid2>
@@ -205,9 +262,9 @@ export const RequestCreateZNDDialog = (props: {
                 </Grid2>
             </Grid2>
             
-            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="center" paddingBottom="10px">
+            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="center">
                 <Grid2 size={6}>
-                    <Input.Wrapper label="Кому доступ" withAsterisk size='md'>
+                    <Input.Wrapper label="Кому доступ *" size='md'>
                         <Select
                             data={employeeOptions}
                             maxDropdownHeight={200}
@@ -230,7 +287,7 @@ export const RequestCreateZNDDialog = (props: {
                 </Grid2>    
             </Grid2>
 
-            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="10px">
+            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left">
                 <Grid2 size={6}>
                     <Input.Wrapper label="Должность" size='md'>
                         <Input 
@@ -250,7 +307,7 @@ export const RequestCreateZNDDialog = (props: {
                 </Grid2>    
             </Grid2>
 
-            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="15px">
+            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="10px">
                 <Grid2 size={6}>
                     <Input.Wrapper label="Подразделение" size='md'>
                         <Input 
@@ -270,7 +327,7 @@ export const RequestCreateZNDDialog = (props: {
                 </Grid2>    
             </Grid2>
             
-            <Grid2 container spacing={3} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="15px">
+            <Grid2 container spacing={3} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="10px">
                 <Grid2 size={5} >
                     <Checkbox
                     fw={600}
@@ -308,21 +365,31 @@ export const RequestCreateZNDDialog = (props: {
                 </Grid2>
             </Grid2>
             
-            <Grid2 container spacing={3} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="15px">
+            <Grid2 container spacing={3} direction={'row'} alignItems="center" justifyContent="left" paddingBottom="10px">
                 <Grid2 size={2}>
-                    <Text fw={600}>Уровень доступа:</Text>
+                    <Text fw={600}>Уровень доступа *:</Text>
                 </Grid2>
-                <Radio.Group withAsterisk >
+                <Radio.Group 
+                value={accessType}
+                onChange={handleAccessTypeChange}
+                withAsterisk >
                     <Group >
-                        <Radio fw={600} value="Запись" label="Запись"/>
-                        <Radio fw={600} value="Чтение" label="Чтение"/>
+                        <Radio fw={200} 
+                        label="Запись"
+                        value="Запись"
+                        />
+
+                        <Radio fw={200} 
+                        label="Чтение"
+                        value="Чтение"
+                        />
                     </Group>
                 </Radio.Group>
             </Grid2>                    
 
-            <Grid2 container spacing={2} direction="row" alignItems="stretch" justifyContent="left" paddingBottom="15px">
+            <Grid2 container spacing={2} direction="row" alignItems="stretch" justifyContent="left" paddingBottom="5px">
                 <Grid2 size={12}>
-                    <Text fw={600} mb="xs">Укажите необходимые роли</Text>
+                    <Text fw={600} mb="xs">Укажите необходимые роли *</Text>
                     <MantineReactTable table={table} />
                 </Grid2>
             </Grid2>                   
@@ -338,13 +405,14 @@ export const RequestCreateZNDDialog = (props: {
                 />
             </Input.Wrapper>
 
-            <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" paddingTop="15px">
+            <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" paddingTop="10px">
                     <Grid2 size={3} >
                         <Button
                         variant="contained"
                         color="primary"
                         size={'small'}
                         fullWidth={true}
+                        disabled={!isFormValid}
                         >
                         Сохранить
                         </Button>

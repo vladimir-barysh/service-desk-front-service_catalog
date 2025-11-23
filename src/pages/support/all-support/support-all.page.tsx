@@ -245,7 +245,7 @@ export function SupportAllPage() {
 
   const onRequestTypeSelect = (selected: any) => {
     setRequestType(selected);
-    if (selected === "Заявка на обслуживание") {
+    if (selected === "Заявка на обслуживание" || selected === "Инцидент") {
       createZNODialog();
     }
     else if (selected === "Заявка на доступ") {
@@ -359,7 +359,7 @@ export function SupportAllPage() {
       fontSize: '11px',
     },
 
-    mantineTableContainerProps: { sx: { maxHeight: 800 } },
+    mantineTableContainerProps: { sx: { minHeight: 150,maxHeight: 800 } },
 
     mantineTableHeadCellProps: {
       style: {

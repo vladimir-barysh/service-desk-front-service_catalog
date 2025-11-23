@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -46,10 +46,18 @@ export const RequestCreateZNODialog = (props: {
 }) => {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [chosen, setChosen] = React.useState<ItSystem | null>(null);
+    
+    const [problemDescription, setProblemDescription] = useState('');
+    const [expectedResult, setExpectedResult] = useState('');
+    const [comment, setComment] = useState('');
 
-    const handleClose = () => {
-        props.onClose();
-    };
+    const isFormValid = useMemo(() => {
+        return (
+            chosen !== null && 
+            problemDescription.trim() !== '' && 
+            expectedResult.trim() !== ''
+        );
+    }, [chosen, problemDescription, expectedResult]);
 
     function CreateDialog() {
         setIsCreateDialogOpen(true);
@@ -57,6 +65,36 @@ export const RequestCreateZNODialog = (props: {
     const onCreateDialogClose = () => {
         setIsCreateDialogOpen(false);
     }
+
+    const handleClose = () => {
+        setChosen(null);
+        setProblemDescription('');
+        setExpectedResult('');
+        setComment('');
+        setFiles([]);
+        props.onClose();
+    };
+
+    const handleSave = () => {
+        if (!isFormValid) {
+            alert('Пожалуйста, заполните все обязательные поля');
+            return;
+        }
+
+        const formData = {
+            service: chosen,
+            problemDescription,
+            expectedResult,
+            comment,
+            files
+        };
+
+        console.log('Данные для сохранения:', formData);
+        
+        handleClose();
+    };
+
+    
 
     const [files, setFiles] = useState<File[]>([]);
 
@@ -66,7 +104,6 @@ export const RequestCreateZNODialog = (props: {
         const newFiles = Array.from(selectedFiles);
         setFiles(prev => [...prev, ...newFiles]);
         }
-        // Сбрасываем значение input чтобы можно было выбрать те же файлы снова
         event.target.value = '';
     };
 
@@ -97,12 +134,14 @@ export const RequestCreateZNODialog = (props: {
       fullWidth={true}
       maxWidth="md"
     >
-        <DialogTitle>Создание заявки на обслуживание</DialogTitle>
-
         <DialogContent sx={{minHeight: '70vh', minWidth: '75vh', padding:"20x"}}>
-            <DialogContentText>
-            </DialogContentText>
-            <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" paddingBottom="15px">
+            <Box fontSize='25px' fontWeight='700' marginBottom='10px'>
+                            Регистрация ЗНО
+                        </Box>
+                        <Box fontSize='15px' fontWeight='500' marginBottom='10px' sx={{color: 'error.main'}}>
+                            Пункты с * обязательны к заполнению
+                        </Box>
+            <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" paddingTop='5px'>
                 <Grid2 size={3}>
                     <Button
                     variant="contained"
@@ -111,27 +150,11 @@ export const RequestCreateZNODialog = (props: {
                     fullWidth={true}
                     onClick={CreateDialog}
                     >
-                    Выберите ИТ-сервис
+                    Выберите ИТ-сервис *
                     </Button>
                 </Grid2>
             </Grid2>
-            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left">
-                <Grid2 size={2}>
-                    <Text fw={600}>Желаемый срок</Text>
-                </Grid2>
-                <Grid2 size={3}>
-                    <DateTimePicker
-                    placeholder="ДД.MM.ГГ ЧЧ:ММ"
-                    valueFormat="DD.MM.YYYY HH:mm"
-                    withSeconds={false} 
-                    onPointerEnterCapture={undefined} 
-                    onPointerLeaveCapture={undefined}
-                    clearable
-                    variant='filled'
-                    locale='ru'  
-                    />
-                </Grid2>
-            </Grid2>
+            
             <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingTop="15px">
                 <Grid2 size={2}>
                     <Text fw={600}>Сервис/модуль</Text>
@@ -152,7 +175,7 @@ export const RequestCreateZNODialog = (props: {
                     </Input.Wrapper>
                 </Grid2>
             </Grid2>  
-            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingTop="15px" paddingBottom="10px">
+            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingTop="15px" >
                 <Grid2 size={2}>
                     <Text fw={600}>Услуга</Text>
                 </Grid2>
@@ -172,25 +195,43 @@ export const RequestCreateZNODialog = (props: {
                     </Input.Wrapper>
                 </Grid2>
             </Grid2>
+
+            <Grid2 container spacing={2} direction={'row'} alignItems="center" justifyContent="left" paddingTop="15px" paddingBottom="10px">
+                <Grid2 size={2}>
+                    <Text fw={600}>Желаемый срок</Text>
+                </Grid2>
+                <Grid2 size={3}>
+                    <DateTimePicker
+                    placeholder="ДД.MM.ГГ ЧЧ:ММ"
+                    valueFormat="DD.MM.YYYY HH:mm"
+                    withSeconds={false} 
+                    onPointerEnterCapture={undefined} 
+                    onPointerLeaveCapture={undefined}
+                    clearable
+                    variant='filled'
+                    locale='ru'  
+                    />
+                </Grid2>
+            </Grid2>
             
-            <Input.Wrapper label="Подробное описание проблемы" size='md'>
+            <Input.Wrapper label="Подробное описание проблемы *" size='md'>
                 <Textarea
                 variant="filled"
                 autosize
                 minRows={4}
                 maxRows={4}
-                // value={value} 
-                // onChange={(e) => setValue(e.currentTarget.value)}
+                value={problemDescription} 
+                onChange={(e) => setProblemDescription(e.currentTarget.value)}
                 />
             </Input.Wrapper>
-            <Input.Wrapper label="Ожидаемый результат" size='md'>
+            <Input.Wrapper label="Ожидаемый результат *" size='md'>
                 <Textarea
                 variant="filled"
                 autosize
                 minRows={2}
                 maxRows={2}
-                // value={value} 
-                // onChange={(e) => setValue(e.currentTarget.value)}
+                value={expectedResult} 
+                onChange={(e) => setExpectedResult(e.currentTarget.value)}
                 />
             </Input.Wrapper>
             <Input.Wrapper label="Комментарий" size='md'>
@@ -199,8 +240,8 @@ export const RequestCreateZNODialog = (props: {
                 autosize
                 minRows={2}
                 maxRows={2}
-                // value={value} 
-                // onChange={(e) => setValue(e.currentTarget.value)}
+                value={comment} 
+                onChange={(e) => setComment(e.currentTarget.value)}
                 />
             </Input.Wrapper>
             <Grid2 container spacing={3} direction={'row'} paddingTop="15px" alignItems="left" justifyContent="left" >
@@ -252,35 +293,32 @@ export const RequestCreateZNODialog = (props: {
                         </Box>
                     </FileListContainer>
                 </Grid2>
-
             </Grid2>
-            <Box>
-                <Box position="absolute" bottom="20px" width="stretch">
-                    <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left">
-                        <Grid2 size={3} >
-                            <Button
-                            variant="contained"
-                            color="primary"
-                            size={'small'}
-                            fullWidth={true}
-                            >
-                            Сохранить
-                            </Button>
-                        </Grid2>
-                        <Grid2 size={3}>
-                            <Button
-                            variant="contained"
-                            color="inherit"
-                            size={'small'}
-                            fullWidth={true}
-                            onClick={handleClose}
-                            >
-                            Отмена
-                            </Button>
-                        </Grid2>
-                    </Grid2>
-                </Box>
-            </Box>
+            <Grid2 container spacing={3} direction={'row'} paddingTop="15px" alignItems="left" justifyContent="left">
+                <Grid2 size={3} >
+                    <Button
+                    variant="contained"
+                    color="primary"
+                    size={'small'}
+                    fullWidth={true}
+                    disabled={!isFormValid}
+                    >
+                    Сохранить
+                    </Button>
+                </Grid2>
+                <Grid2 size={3}>
+                    <Button
+                    variant="contained"
+                    color="inherit"
+                    size={'small'}
+                    fullWidth={true}
+                    onClick={handleClose}
+                    >
+                    Отмена
+                    </Button>
+                </Grid2>
+            </Grid2>
+            
         </DialogContent>
     </Dialog>
     
