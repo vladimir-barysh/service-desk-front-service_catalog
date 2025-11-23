@@ -4,11 +4,11 @@ import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable, 
 import { useSearchParams } from 'react-router-dom';
 import { data, type Request } from './makeData';
 import React, { useEffect, useState, useCallback } from 'react';
-import { createTheme, Grid2 } from '@mui/material';
+import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
-import { Center, Checkbox } from '@mantine/core';
+import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { SupportGeneralDialog } from '../../../components';
 import SplitButton from '../../../components/split-button/split-button.component';
@@ -16,6 +16,7 @@ import { RequestCreateDialog } from '../../../components';
 import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
 import { url } from 'inspector';
+
 
 export function SupportAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
@@ -244,7 +245,7 @@ export function SupportAllPage() {
 
   const onRequestTypeSelect = (selected: any) => {
     setRequestType(selected);
-    if (selected === "Заявка на обслуживание") {
+    if (selected === "Заявка на обслуживание" || selected === "Инцидент") {
       createZNODialog();
     }
     else if (selected === "Заявка на доступ") {
@@ -358,7 +359,7 @@ export function SupportAllPage() {
       fontSize: '11px',
     },
 
-    mantineTableContainerProps: { sx: { maxHeight: 800 } },
+    mantineTableContainerProps: { sx: { minHeight: 150,maxHeight: 800 } },
 
     mantineTableHeadCellProps: {
       style: {
@@ -487,13 +488,15 @@ export function SupportAllPage() {
             </Button>
           </Grid2>
           <Grid2 size="auto" alignContent="center">
-            <Checkbox
-              disabled={urlStatus==="Новая" ? true : false}
-              checked={hideClosed}
-              onChange={(event) => setHideClosed(event.currentTarget.checked)}
-              label="Скрыть закрытые заявки"
-              size="md"
-            />
+            <MantineProvider theme={{cursorType: 'pointer'}}>
+              <Checkbox
+                disabled={urlStatus==="Новая" ? true : false}
+                checked={hideClosed}
+                onChange={(event) => setHideClosed(event.currentTarget.checked)}
+                label="Скрыть закрытые заявки"
+                size="md"
+              />
+            </MantineProvider>
           </Grid2>
         </Grid2>
       </Box>
