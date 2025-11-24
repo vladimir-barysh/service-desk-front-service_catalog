@@ -10,7 +10,7 @@ import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog, RequestCreateDialog, ControlDialog, PostponeDialog} from '../../../components';
+import { SupportGeneralDialog, RequestCreateDialog, ControlDialog, PostponeDialog, RejectDialog} from '../../../components';
 import SplitButton from '../../../components/split-button/split-button.component';
 import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
@@ -406,6 +406,22 @@ export function SupportAllPage() {
     }
   };
 
+  // Обработчик нажатия кнопки На контроль
+  const handleControlClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length > 0) {
+      openDialog('control', selectedRows[0].original);
+    }
+  };
+
+  // Обработчик нажатия кнопки Отклонить заявку
+  const handleRejectClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length > 0) {
+      openDialog('reject', selectedRows[0].original);
+    }
+  };
+
   // Обработчик подтверждения откладывания
   const handlePostponeConfirm = (comment: string) => {
     const request = dialogs.postpone.request;
@@ -419,14 +435,6 @@ export function SupportAllPage() {
       // Реальная реализация
       //
       closeDialog('postpone');
-    }
-  };
-
-  // Обработчик нажатия кнопки На контроль
-  const handleControlClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length > 0) {
-      openDialog('control', selectedRows[0].original);
     }
   };
 
@@ -446,10 +454,31 @@ export function SupportAllPage() {
       closeDialog('control');
     }
   };
+
+  // Обработчик подтверждения отклонения
+  const handleRejectConfirm = (reason: string) => {
+    const request = dialogs.reject.request;
+    if (request) {
+      console.log('Отклоняем заявку:', {
+        request: request.requestNumber,
+        newStatus: 'Отклонена',
+        reason: reason
+      });
+      //
+      // Реальная реализация
+      //
+      closeDialog('reject');
+    }
+  };
   
   return (
     <div>
       <Box height={50}>
+        <SupportGeneralDialog
+          isOpen={isDialogOpen}
+          request={selectedRequest}
+          onClose={handleDialogClose}
+        />
         <RequestCreateDialog
           isOpen={isCreateDialogOpen}
           requestName={requestType.toString()}
@@ -476,6 +505,13 @@ export function SupportAllPage() {
           onClose={() => closeDialog('control')}
           onConfirm={handleControlConfirm}
           request={dialogs.control.request}
+        />
+        {/* Диалог нотклонить заявку */}
+        <RejectDialog
+          open={dialogs.reject.open}
+          onClose={() => closeDialog('reject')}
+          onConfirm={handleRejectConfirm}
+          request={dialogs.reject.request}
         />
         <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
@@ -505,6 +541,7 @@ export function SupportAllPage() {
               startIcon={<Clear />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleRejectClick}
             >
               Отклонить заявку
             </Button>
@@ -578,11 +615,6 @@ export function SupportAllPage() {
         </Grid2>
         <MantineReactTable key={tableKey} table={table} />
       </Box>
-      <SupportGeneralDialog
-        isOpen={isDialogOpen}
-        request={selectedRequest}
-        onClose={handleDialogClose}
-      />
     </div>
   );
 }
