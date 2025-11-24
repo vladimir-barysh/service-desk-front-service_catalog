@@ -67,7 +67,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
+
         const newFileData = {
           fileName: file.name,
           dateOfCreation: new Date().toISOString(),
@@ -120,7 +120,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
       accessorKey: 'dateOfCreation', header: 'Дата создания', size: 100,minSize: 20, maxSize: 100,
       Cell: ({ row }) => (
           <Text> 
-          {row.original.dateOfCreation}
+          {formatDateTime(row.original.dateOfCreation)}
           </Text>
       ),
     },
@@ -163,6 +163,31 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const formatDateTime = (dateTimeString: string | undefined): string => {
+    if (!dateTimeString){
+      return 'Ничего нет';
+    }
+
+    if (dateTimeString.match(/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/)) {
+      return dateTimeString;
+    }
+    
+    // Если это ISO строка (с Z), парсим как UTC и преобразуем в локальное время
+    const date = new Date(dateTimeString);
+    
+    if (isNaN(date.getTime())) {
+      return 'Неверная дата';
+    }
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+  };
+
   const handleRowDoubleClick = (row: MRT_Row<fileDataClass>) => {
     // Открыть файл при двойном клике по строке
   };
@@ -199,7 +224,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
     },
     mantineTableContainerProps: {
       style: {
-      maxHeight: 450,
+      maxHeight: 400,
       overflowY: 'auto',
       },
     },
@@ -230,7 +255,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
   return (
     <div>
       <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left" paddingTop="15px">
-        <Grid2 size={2}>
+        <Grid2 size='auto'>
           <Button
             component="label"
             role={undefined}
@@ -238,6 +263,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
             tabIndex={-1}
             startIcon={<CloudUploadIcon />}
             disabled={request?.status === 'Закрыта'}
+            sx={{ whiteSpace: 'nowrap' }}
           >
             Добавить файлы
             <VisuallyHiddenInput

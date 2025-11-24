@@ -54,7 +54,7 @@ export let uploadedFiles: fileDataClass[] = [
   {
     'id': 1,
     'fileName': '1.pdf',
-    'dateOfCreation': '21.10.2025',
+    'dateOfCreation': '2.19.2025',
     'author': 'Иванов И.И.',
     'idRequest':'000011',
     'fileSize': 1024 * 1024,
