@@ -1,6 +1,6 @@
 import React from 'react';
-import { useState } from 'react';
-import { Button, Grid2, styled } from '@mui/material';
+import { useState, useMemo, useEffect } from 'react';
+import { Button, Grid2, styled, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { Text } from '@mantine/core';
 import { Delete } from '@mui/icons-material';
@@ -10,8 +10,15 @@ import {
 } from 'mantine-react-table';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 
-import { fileDataClass, files } from './makeData';
+import { fileDataClass, 
+  uploadedFiles, 
+  addFileToMakeData, 
+  getFilesByRequestId, 
+  deleteFileFromMakeData,
+  getAllFiles 
+} from './makeData';
 import { Request } from '../../../pages/support/all-support/makeData';
+import { upload } from '@testing-library/user-event/dist/upload';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -30,8 +37,72 @@ interface SupportGeneralFirstTabProps {
 }
 
 export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
+  
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [loadedFiles, setLoadedFiles] = useState<fileDataClass[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
+  useEffect(() => {
+    if (request?.requestNumber) {
+      const requestFiles = uploadedFiles.filter(
+        file => file.idRequest === request.requestNumber);
+      setLoadedFiles(requestFiles);
+    }
+    else {
+      setLoadedFiles([]);
+    }
+  }, [request?.requestNumber]);
+
+  const filesForThisRequest = useMemo(() => {
+    return uploadedFiles.filter(
+      file => file.idRequest === request?.requestNumber
+    );
+  }, [uploadedFiles, request?.requestNumber]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        const newFileData = {
+          fileName: file.name,
+          dateOfCreation: new Date().toISOString(),
+          author: 'Текущий пользователь',
+          idRequest: request?.requestNumber,
+          fileSize: file.size,
+          fileType: file.type
+        };
+
+        const savedFile = addFileToMakeData(newFileData);
+        setLoadedFiles(prev => [...prev, savedFile]);
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке файла:', error);
+    } finally {
+      setIsUploading(false);
+      // Очищаем input
+      event.target.value = '';
+    }
+  };
+
+  const handleDeleteFile = () => {
+    if (!selectedRowId) {
+    return;
+  }
+    const fileId = parseInt(selectedRowId);
+
+    const success = deleteFileFromMakeData(fileId);
+    
+    if (success) {
+      setLoadedFiles(prev => prev.filter(file => file.id !== fileId));
+      setSelectedRowId(null); 
+    }
+  };
+  
   const columns = React.useMemo<MRT_ColumnDef<fileDataClass>[]>(() => [
     {
       id: 'rowNumber',
@@ -68,9 +139,29 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
           {row.original.author}
           </Text>
       ), 
-    },], []);
+    },
+    {
+      accessorKey: 'fileSize',
+      header: 'Размер',
+      size: 100,
+      Cell: ({ cell }) => (
+        <Typography variant="body2">
+          {formatFileSize(cell.getValue() as number)}
+        </Typography>
+      ),
+    },
+  
+  ], []);
 
-  const data = React.useMemo(() => files, []);
+  const data = React.useMemo(() => uploadedFiles, []);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   const handleRowDoubleClick = (row: MRT_Row<fileDataClass>) => {
     // Открыть файл при двойном клике по строке
@@ -78,7 +169,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
 
   const table = useMantineReactTable<fileDataClass>({
     columns,
-    data,
+    data: loadedFiles,
     enableRowSelection: false,
     getRowId: (row) => String(row.id),
     localization: MRT_Localization_RU,
@@ -148,12 +239,12 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
             startIcon={<CloudUploadIcon />}
             disabled={request?.status === 'Закрыта'}
           >
-            Добавить файл
+            Добавить файлы
             <VisuallyHiddenInput
               type="file"
               onChange={
                 // Загрузить файл
-                (event) => console.log(event.target.files)
+                handleFileUpload
               }
               multiple
             />
@@ -168,9 +259,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
           tabIndex={-1}
           startIcon={<Delete />}
           disabled={request?.status === 'Закрыта' || !selectedRowId}
-          onClick={() => {
-            // Удалить выбранный файл
-          }}
+          onClick={handleDeleteFile}
           >
             Удалить файл
           </Button>
