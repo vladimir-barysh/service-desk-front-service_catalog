@@ -3,22 +3,18 @@ import { useMemo } from 'react';
 import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
 import { data, type Request } from './makeData';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState} from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog } from '../../../components';
+import { SupportGeneralDialog, RequestCreateDialog, ControlDialog, PostponeDialog} from '../../../components';
 import SplitButton from '../../../components/split-button/split-button.component';
-import { RequestCreateDialog } from '../../../components';
 import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
-import { url } from 'inspector';
 import { useDialogs } from '../../../components/support-hooks/use-dialog-state';
-import { PostponeDialog } from '../../../components/support-button-dialogs/postpone-create-dialog/postpone-create-dialog';
-
 
 export function SupportAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
@@ -402,7 +398,7 @@ export function SupportAllPage() {
   // Хук для управления диалогами
   const { dialogs, openDialog, closeDialog } = useDialogs();
 
-  // Обработчик открытия диалога откладывания
+  // Обработчик нажатия кнопки Отложить заявку
   const handlePostponeClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length > 0) {
@@ -423,6 +419,31 @@ export function SupportAllPage() {
       // Реальная реализация
       //
       closeDialog('postpone');
+    }
+  };
+
+  // Обработчик нажатия кнопки На контроль
+  const handleControlClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length > 0) {
+      openDialog('control', selectedRows[0].original);
+    }
+  };
+
+   // Обработчик подтверждения постановки на контроль
+  const handleControlConfirm = (equipment: string, returnDate: Date | null) => {
+    const request = dialogs.control.request;
+    if (request && returnDate) {
+      console.log('Ставим на контроль:', {
+        request: request.requestNumber,
+        newStatus: 'На контроле',
+        equipment: equipment,
+        returnDate: returnDate.toISOString()
+      });
+      //
+      // Реальная реализация
+      //
+      closeDialog('control');
     }
   };
   
@@ -448,6 +469,13 @@ export function SupportAllPage() {
           onClose={() => closeDialog('postpone')}
           onConfirm={handlePostponeConfirm}
           request={dialogs.postpone.request}
+        />
+        {/* Диалог на контроль */}
+        <ControlDialog
+          open={dialogs.control.open}
+          onClose={() => closeDialog('control')}
+          onConfirm={handleControlConfirm}
+          request={dialogs.control.request}
         />
         <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
@@ -510,6 +538,7 @@ export function SupportAllPage() {
               color="inherit"
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleControlClick}
             >
               На контроль
             </Button>
