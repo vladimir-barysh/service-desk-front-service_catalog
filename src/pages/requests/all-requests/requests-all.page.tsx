@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { data, type Request } from './makeData';
+import { data, type Request } from '../../support/all-support/makeData';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
+import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { SupportGeneralDialog } from '../../../components';
 import SplitButton from '../../../components/split-button/split-button.component';
@@ -20,76 +21,139 @@ export function RequestsAllPage() {
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [hideClosed, setHideClosed] = useState(true);
+  const currInitiator = "Христорождественская В.А.";
+
+  const filteredData = useMemo(() => {
+      let result = data;
+      //Высвечиваем только данные, настоящего пользователя
+      result = result.filter(item => item.initiator === currInitiator);
+      
+      if (hideClosed) {
+        result = result.filter(item => item.status !== 'Закрыта');
+      }
+      
+      return result;
+    }, [hideClosed]);
+
+  useEffect(() => {
+    setHideClosed(true);
+  }, [location.pathname, location.search]);
+
   const columns = useMemo<MRT_ColumnDef<Request>[]>(
-    () => [
-      {
-        header: '№ заявки',
-        accessorKey: 'requestNumber',
-        maxSize: 110,
-      },
-      {
-        header: 'Дата регистрации',
-        accessorKey: 'dateRegistration',
-        type: 'string',
-        minSize: 170,
-      },
-      {
-        header: 'Желаемый срок',
-        accessorKey: 'dateDesired',
-        type: 'string',
-        width: 170,
-      },
-      {
-        header: 'Дата решения заявки',
-        accessorKey: 'dateSolution',
-        type: 'string',
-        width: 170,
-      },
-      {
-        header: 'Статус',
-        accessorKey: 'status',
-        type: 'string',
-        width: 200,
-      },
-      {
-        header: 'Заголовок',
-        accessorKey: 'header',
-        type: 'string',
-        width: 150,
-      },
-      {
-        header: 'Тип запроса',
-        accessorKey: 'requestType',
-        type: 'string',
-        width: 160,
-      },
-      {
-        header: 'Инициатор',
-        accessorKey: 'initiator',
-        type: 'string',
-        width: 150,
-      },
-      {
-        header: 'Пользователь',
-        accessorKey: 'user',
-        type: 'string',
-        width: 150,
-      },
-      {
-        header: 'IT-сервис (модуль)',
-        accessorKey: 'itModule',
-        type: 'string',
-        width: 150,
-      },
-      {
-        header: 'Услуга',
-        accessorKey: 'service',
-        type: 'string',
-        width: 150,
-      },
-    ],
-    [],
-  );
+      () => [
+        {
+          header: '№ заявки',
+          accessorKey: 'requestNumber',
+          maxSize: 90,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по №',
+          },
+          enableResizing: false,
+        },
+        {
+          header: 'Дата регистрации',
+          accessorKey: 'dateRegistration',
+          type: 'string',
+          maxSize: 175,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по дате регистрации',
+          },
+        },
+        {
+          header: 'Желаемый срок',
+          accessorKey: 'dateDesired',
+          type: 'string',
+          maxSize: 165,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по желаемому сроку',
+          },
+        },
+        {
+          header: 'Дата решения заявки',
+          accessorKey: 'dateSolution',
+          type: 'string',
+          maxSize: 160,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по дате решения',
+          },
+        },
+        {
+          header: 'Статус',
+          accessorKey: 'status',
+          type: 'string',
+          maxSize: 150,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по статусу',
+          },
+        },
+        {
+          header: 'Заголовок',
+          accessorKey: 'header',
+          type: 'string',
+          maxSize: 130,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по заголовку',
+          },
+        },
+        {
+          header: 'Тип запроса',
+          accessorKey: 'requestType',
+          type: 'string',
+          maxSize: 100,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по запросу',
+          },
+        },
+        {
+          header: 'Инициатор',
+          accessorKey: 'initiator',
+          type: 'string',
+          maxSize: 150,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по инициатору',
+          },
+        },
+        {
+          header: 'Пользователь',
+          accessorKey: 'user',
+          type: 'string',
+          maxSize: 150,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по пользователю',
+          },
+        },
+        {
+          header: 'IT-сервис (модуль)',
+          accessorKey: 'itModule',
+          type: 'string',
+          maxSize: 150,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по IT-сервису',
+          },
+        },
+        {
+          header: 'Услуга',
+          accessorKey: 'service',
+          type: 'string',
+          maxSize: 130,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по услуге',
+          },
+        },
+      ],
+      [],
+    );
 
   // Цвет заливки строки
   const colorRow = (row: MRT_Row<Request>) => {
@@ -211,7 +275,7 @@ export function RequestsAllPage() {
   // Создание таблицы
   const table = useMantineReactTable({
     columns: columns,
-    data: data,
+    data: filteredData,
     enableExpanding: false,
     enableTopToolbar:false,
     enableRowSelection:true,
@@ -219,17 +283,37 @@ export function RequestsAllPage() {
     enableMultiRowSelection:false,
     enableSelectAll:false,
     enableHiding:false,
-    enableColumnResizing:true,
+    enableColumnResizing:false,
+    layoutMode:'grid',
+    columnResizeMode:'onChange',
     filterFromLeafRows:true,
     enableColumnActions:false,
     localization:MRT_Localization_RU,
     initialState:{
-      density: 'md',
+      density: 'xs',
       pagination: { pageIndex: 0, pageSize: 100 },
       columnVisibility: {'mrt-row-select': false},
       showColumnFilters:true,
     },
+
+    mantineTableProps: {
+      fontSize: '11px',
+    },
+
     mantineTableContainerProps: { sx: { minHeight: 150, maxHeight: 800 } },
+
+    mantineTableHeadCellProps: {
+      style: {
+        fontSize: '13px',
+        fontWeight: 600,
+        padding: '10px 4px',
+      },
+    },
+
+    mantineFilterTextInputProps: {
+      size: 'xs',
+    },
+
     mantineTableBodyCellProps:({row}) => ({
       onClick: row.getToggleSelectedHandler(),
       sx: {
@@ -314,6 +398,16 @@ export function RequestsAllPage() {
             >
               Возобновить заявку
             </Button>
+          </Grid2>
+          <Grid2 size="auto" alignContent="center">
+            <MantineProvider theme={{cursorType: 'pointer'}}>
+              <Checkbox
+                checked={hideClosed}
+                onChange={(event) => setHideClosed(event.currentTarget.checked)}
+                label="Скрыть закрытые заявки"
+                size="md"
+              />
+            </MantineProvider>
           </Grid2>
         </Grid2>
 

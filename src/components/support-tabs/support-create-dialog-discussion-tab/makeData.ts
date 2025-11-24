@@ -1,8 +1,9 @@
 export type Message = {
   id: string;
   author: string;
-  createdAt: string; // ISO
+  createdAt: string;
   text: string;
+  
 };
 
 export const seed: Message[] = [
