@@ -6,7 +6,7 @@ import {
   Tab,
 } from '@mui/material';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { AttachFileOutlined, MessageOutlined } from '@mui/icons-material'
+import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined} from '@mui/icons-material'
 import { Request } from '../../pages/support/all-support/makeData';
 import { fileDataClass, uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData'; 
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
@@ -95,9 +95,9 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
                 <TabList onChange={handleChange} centered>
                 <Tab label="Общие сведения" value="1"/>
                 <Tab label="Файлы" icon={hasFiles? <AttachFileOutlined/> : undefined} iconPosition='end' value="2"/>
-                <Tab label="Согласование" value="3"/>
-                <Tab label="Задачи" value="4"/>
-                <Tab label="Обсуждение" icon={hasMessages? <MessageOutlined/> : undefined} iconPosition='end' value="5"/>
+                <Tab label="Согласование" icon={<PriorityHighOutlined/>} iconPosition='end' value="3"/>
+                <Tab label="Задачи" icon={<LanOutlined/>} iconPosition='end' value="4"/>
+                <Tab label="Обсуждение" icon={hasMessages? <PeopleAltOutlined/> : undefined} iconPosition='end' value="5"/>
                 <Tab label="История" value="6"/>
                 </TabList>
                 <TabPanel value="1" sx={{ padding: "0px" }}>
