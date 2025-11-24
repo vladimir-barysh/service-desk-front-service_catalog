@@ -54,7 +54,6 @@ export function SupportAllPage() {
     else {
       clearAllFilters();
     }
-    // Фильтр по чекбоксу "Скрыть закрытые"
     if (hideClosed) {
       result = result.filter(item => item.status !== 'Закрыта');
     }
@@ -267,8 +266,6 @@ export function SupportAllPage() {
     setIsCreateDialogZNDOpen(false);
   }
 
-  
-
   // Парсер даты
   function parseDate(dateString: string): Date | null {
     const parts = dateString.split('.');
@@ -340,7 +337,7 @@ export function SupportAllPage() {
     enableMultiRowSelection:false,
     enableSelectAll:false,
     enableHiding:false,
-    enableColumnResizing:true,
+    enableColumnResizing:false,
     layoutMode:'grid',
     columnResizeMode:'onChange',
     filterFromLeafRows:true,
@@ -352,6 +349,7 @@ export function SupportAllPage() {
       columnVisibility: {'mrt-row-select': false},
       showColumnFilters:true,
     },
+
     state: {columnFilters},
     onColumnFiltersChange: handleFiltersChange,
 
