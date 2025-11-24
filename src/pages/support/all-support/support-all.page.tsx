@@ -16,6 +16,8 @@ import { RequestCreateDialog } from '../../../components';
 import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
 import { url } from 'inspector';
+import { useDialogs } from '../../../components/support-hooks/use-dialog-state';
+import { PostponeDialog } from '../../../components/support-button-dialogs/postpone-create-dialog/postpone-create-dialog';
 
 
 export function SupportAllPage() {
@@ -254,12 +256,15 @@ export function SupportAllPage() {
       setIsCreateDialogOpen(true);
     }
   }
+
   function createZNDDialog() {
     setIsCreateDialogZNDOpen(true);
   }
+
   function createZNODialog() {
     setIsCreateDialogZNOOpen(true);
   }
+
   const onCreateDialogClose = () => {
     setIsCreateDialogOpen(false);
     setIsCreateDialogZNOOpen(false);
@@ -389,6 +394,37 @@ export function SupportAllPage() {
       },
     }),
   });
+
+  // Доступность кнопок по нажатию на строку таблицы
+  const selectedRowsCount = table.getSelectedRowModel().rows.length;
+  const hasSelectedRows = !(selectedRowsCount > 0);
+
+  // Хук для управления диалогами
+  const { dialogs, openDialog, closeDialog } = useDialogs();
+
+  // Обработчик открытия диалога откладывания
+  const handlePostponeClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length > 0) {
+      openDialog('postpone', selectedRows[0].original);
+    }
+  };
+
+  // Обработчик подтверждения откладывания
+  const handlePostponeConfirm = (comment: string) => {
+    const request = dialogs.postpone.request;
+    if (request) {
+      console.log('Откладываем заявку:', {
+        request: request.requestNumber,
+        newStatus: 'В ожидании',
+        comment: comment
+      });
+      //
+      // Реальная реализация
+      //
+      closeDialog('postpone');
+    }
+  };
   
   return (
     <div>
@@ -406,6 +442,13 @@ export function SupportAllPage() {
           isOpen={isCreateDialogZNDOpen}
           onClose={onCreateDialogClose}
         />
+        {/* Диалог откладывания */}
+        <PostponeDialog
+          open={dialogs.postpone.open}
+          onClose={() => closeDialog('postpone')}
+          onConfirm={handlePostponeConfirm}
+          request={dialogs.postpone.request}
+        />
         <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
@@ -422,6 +465,7 @@ export function SupportAllPage() {
               color="inherit"
               startIcon={<Build />}
               size={'small'}
+              disabled={hasSelectedRows}
             >
               Принять в работу
             </Button>
@@ -432,6 +476,7 @@ export function SupportAllPage() {
               color="error"
               startIcon={<Clear />}
               size={'small'}
+              disabled={hasSelectedRows}
             >
               Отклонить заявку
             </Button>
@@ -442,6 +487,8 @@ export function SupportAllPage() {
               color="warning"
               startIcon={<Note />}
               size={'small'}
+              disabled={hasSelectedRows}
+              onClick={handlePostponeClick}
             >
               Отложить заявку
             </Button>
@@ -452,6 +499,7 @@ export function SupportAllPage() {
               color="success"
               startIcon={<Check />}
               size={'small'}
+              disabled={hasSelectedRows}
             >
               Закрыть заявку
             </Button>
@@ -461,6 +509,7 @@ export function SupportAllPage() {
               variant="contained"
               color="inherit"
               size={'small'}
+              disabled={hasSelectedRows}
             >
               На контроль
             </Button>
@@ -470,6 +519,7 @@ export function SupportAllPage() {
               variant="contained"
               color="inherit"
               size={'small'}
+              disabled={hasSelectedRows}
             >
               Подтвердить заявку
             </Button>
@@ -497,12 +547,8 @@ export function SupportAllPage() {
             </MantineProvider>
           </Grid2>
         </Grid2>
-
         <MantineReactTable key={tableKey} table={table} />
-
       </Box>
-
-      
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         request={selectedRequest}
