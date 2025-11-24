@@ -1,1 +1,1 @@
-export * from './my-all-tasks';
+export * from './all-tasks';

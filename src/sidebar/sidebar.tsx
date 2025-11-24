@@ -19,17 +19,20 @@ const color = '#909fbbff';
 
 function useRequestCounts() {
   return useMemo(() => {
+    const currUser = 'Христорождественская В.А.';
     const newCount = data.filter(item => item.status === 'Новая').length;
     const allCount = data.filter(item => item.status !== 'Закрыта').length;
     const nAgreedCount = data.filter(item => item.status === 'Не согласовано').length;
     const nConfirmedCount = data.filter(item => item.status === 'Возобновлена').length;
     const onControlCount = data.filter(item => item.status === 'На контроле').length;
+    const exeCount = data.filter(item => item.user === currUser && item.status !== 'Закрыта').length;
     return {
       newCount,
       allCount,
       nAgreedCount,
       nConfirmedCount,
-      onControlCount
+      onControlCount,
+      exeCount
     };
   }, [data]);
 }
@@ -40,13 +43,18 @@ export function LeftSidebar() {
   const status = params.get('status');
 
   const isSupportAll = location.pathname === '/support/all';
+  const isTasksAll = location.pathname === '/tasks/my-all-tasks'
   const isNewActive  = isSupportAll && status === 'Новая';
   const isAllActive  = isSupportAll && !status;
   const isNAgreedActive = isSupportAll && status === 'nAgreed';
   const isNConfirmedActive = isSupportAll && status === 'nConfirmed';
   const isOnControlActive = isSupportAll && status === 'onControl';
+  const isOnExecution = isTasksAll && status === 'onExecution';
+  const isOnAgree = isTasksAll && status === 'onAgree';
 
-  const { newCount, allCount, nAgreedCount, nConfirmedCount, onControlCount } = useRequestCounts();
+  const { newCount, allCount, nAgreedCount, nConfirmedCount, onControlCount,
+    exeCount
+   } = useRequestCounts();
 
   return (
     <Box className={'box'}>
@@ -98,8 +106,8 @@ export function LeftSidebar() {
           }}
           icon = {<SupportAgentOutlined/>}>
             <MenuItem
-              component={<Link to={'/support/all?status=Новая'} />} // Поменять
-              active={isNewActive}  // Поменять
+              component={<Link to={'/support/all?status=Новая'} />}
+              active={isNewActive}
               suffix={<Badge badgeContent={newCount} color="primary"></Badge>}
             >Новые заявки</MenuItem>
             <MenuItem
@@ -135,14 +143,15 @@ export function LeftSidebar() {
             width: '330px'
           }}
           icon = {<ViewListOutlined/>}>
+            <MenuItem>Групповые (не принятые)</MenuItem>
             <MenuItem
-            suffix={<Badge badgeContent={999} color="warning"></Badge>}
-            >Групповые (не принятые)</MenuItem>
-            <MenuItem
-            suffix={<Badge badgeContent={999} color="warning"></Badge>}
+            component={<Link to={'/tasks/all?status=onExecution'} />}
+            active={isOnExecution}
+            suffix={<Badge badgeContent={exeCount} color="warning"></Badge>}
             >Задачи на исполнение</MenuItem>
             <MenuItem
-            suffix={<Badge badgeContent={999} color="warning"></Badge>}
+            component={<Link to={'/tasks/all?status=onAgree'} />}
+            active={isOnAgree}
             >Задачи на согласование</MenuItem>
           </SubMenu>
 
