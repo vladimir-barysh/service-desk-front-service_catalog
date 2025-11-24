@@ -18,7 +18,6 @@ import { fileDataClass,
   getAllFiles 
 } from './makeData';
 import { Request } from '../../../pages/support/all-support/makeData';
-import { upload } from '@testing-library/user-event/dist/upload';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -40,7 +39,6 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
   
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [loadedFiles, setLoadedFiles] = useState<fileDataClass[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (request?.requestNumber) {
@@ -53,17 +51,10 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
     }
   }, [request?.requestNumber]);
 
-  const filesForThisRequest = useMemo(() => {
-    return uploadedFiles.filter(
-      file => file.idRequest === request?.requestNumber
-    );
-  }, [uploadedFiles, request?.requestNumber]);
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    setIsUploading(true);
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -83,8 +74,6 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
     } catch (error) {
       console.error('Ошибка при загрузке файла:', error);
     } finally {
-      setIsUploading(false);
-      // Очищаем input
       event.target.value = '';
     }
   };
@@ -171,8 +160,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
     if (dateTimeString.match(/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/)) {
       return dateTimeString;
     }
-    
-    // Если это ISO строка (с Z), парсим как UTC и преобразуем в локальное время
+  
     const date = new Date(dateTimeString);
     
     if (isNaN(date.getTime())) {

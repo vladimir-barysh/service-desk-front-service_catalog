@@ -2,15 +2,9 @@ import * as React from "react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Box, Button as MUIButton, Grid2 } from "@mui/material";
 import { Card, Group, Text, Textarea, ScrollArea, Divider, Anchor, Badge } from "@mantine/core";
-import { IconEdit, IconPlus, IconCheck, IconX } from "@tabler/icons-react";
+import { IconEdit, IconCheck, IconX } from "@tabler/icons-react";
 import { Request, data } from '../../../pages/support/all-support/makeData';
 import { Message, seed } from './makeData';
-
-type DiscussionProps = {
-  requestNumber: string;                 // номер текущей заявки
-  authorField?: "user" | "initiator";    // из какого поля брать ФИО (по умолчанию user)
-};
-
 
 function formatDT(iso: string) {
   const d = new Date(iso);
@@ -19,7 +13,11 @@ function formatDT(iso: string) {
   return `${dd}  ${tt}`;
 }
 
-export function SupportDiscussionTab() {
+interface SupportGeneralFirstTabProps {
+  request: Request | null;
+}
+
+export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
   // список сообщений
   const [items, setItems] = useState<Message[]>(seed);
   // draft нового сообщения
@@ -34,20 +32,31 @@ export function SupportDiscussionTab() {
 
   const selected = useMemo(() => items.find(m => m.id === selectedId) || null, [items, selectedId]);
 
+  useEffect(() => {
+    if(request?.requestNumber) {
+      const requestMsgs = seed.filter(
+        msg => msg.idRequest === request.requestNumber);
+      setItems(requestMsgs);
+    }
+    else{
+      setItems([]);
+    }
+  }, [request?.requestNumber]);
+
   // Добавить сообщение
   const addMessage = () => {
     const text = draft.trim();
     if (!text) return;
-    const id = `m_${Date.now()}`;
+    const id = `${Date.now()}`;
     const next: Message = {
       id,
-      author: "Иванов Иван Иванович", // подставь текущего пользователя
+      author: "Христорождественская В.А.", // текущий пользователь
       createdAt: new Date().toISOString(),
       text,
+      idRequest: request?.requestNumber,
     };
     setItems(prev => [...prev, next]);
     setDraft("");
-    // проскроллить к низу
     setTimeout(() => listRef.current?.scrollTo({ top: 1e9, behavior: "smooth" }), 0);
   };
 
@@ -88,7 +97,9 @@ export function SupportDiscussionTab() {
     if (selectedId && editingId && selectedId !== editingId) {
       cancelEdit();
     }
+
   }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   return (
     <Box>
