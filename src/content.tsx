@@ -30,7 +30,7 @@ export const Content = () => {
                 <Route path="/requests/success" element={<RequestsSuccessPage />} />
                 <Route path="/requests/all" element={<RequestsAllPage />} />
                 <Route path="/support/all" element={<SupportAllPage />} />
-                <Route path="/tasks/my-all" element={<TasksMyAllPage />} />
+                <Route path="/tasks/all" element={<TasksMyAllPage />} />
                 <Route path="/services_catalog/tree" element={<ServicesCatalogTreePage />} />
                 <Route path="/services_catalog/itcatalog" element={<ServicesCatalogItCatalogPage />} />
                 <Route path="/services_catalog/itservices" element={<ServicesCatalogItServicesPage />} />

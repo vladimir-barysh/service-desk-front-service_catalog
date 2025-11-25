@@ -35,40 +35,27 @@ export function TasksMyAllPage() {
     setColumnFilters([]);
   };
 
-   // Функция для получения данных с учетом всех фильтров
   const filteredData = useMemo(() => {
     let result = data;
     
-    console.log('URL Status:', urlStatus); // для отладки
-    console.log('Initial data length:', result.length); // для отладки
-    
     // Фильтр по статусу из URL
     if (urlStatus === 'onAgree') {
-      result = result.filter(item => item.status === 'На согласовании' || item.status === 'Закрыта');
-      console.log('After onAgree filter:', result.length); // для отладки
+      result = result.filter(item => (item.status === 'На согласовании' || item.status === 'Закрыта') && item.user === currUser);
     }
     else if (urlStatus === 'onExecution') {
       result = result.filter(item => item.user === currUser);
-      console.log('After onExecution filter:', result.length); // для отладки
     }
     else if (urlStatus) {
-      // Для других статусов из URL применяем обычный фильтр
       result = result.filter(item => item.status === urlStatus);
-      console.log('After URL status filter:', result.length); // для отладки
     }
     
-    // Фильтр скрытия закрытых заявок
     if (hideClosed) {
       result = result.filter(item => item.status !== 'Закрыта');
-      console.log('After hideClosed filter:', result.length); // для отладки
     }
-    
-    console.log('Final result:', result); // для отладки
     return result;
   }, [urlStatus, hideClosed, currUser]);
 
   const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
-    // Разрешаем изменение фильтров всегда
     const next = typeof updater === 'function' ? updater(columnFilters) : updater;
     setColumnFilters(next);
   };
@@ -76,13 +63,10 @@ export function TasksMyAllPage() {
   // Эффект для синхронизации URL параметров с состоянием фильтров
   useEffect(() => {
     if (urlStatus === 'onAgree' || urlStatus === 'onExecution') {
-      // Для специальных статусов очищаем фильтры, т.к. фильтрация делается в filteredData
       setColumnFilters([]);
     } else if (urlStatus) {
-      // Для обычных статусов устанавливаем фильтр
       setColumnFilters([{ id: 'status', value: urlStatus }]);
     } else {
-      // Если нет URL параметра, очищаем фильтры
       setColumnFilters([]);
     }
   }, [urlStatus]);
