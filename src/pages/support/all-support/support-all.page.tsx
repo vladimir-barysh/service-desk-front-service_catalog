@@ -489,7 +489,7 @@ export function SupportAllPage() {
           <Grid2 size="auto">
             <SplitButton
               buttonText={'Создать заявку'}
-              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение', 'Инцидент']}
+              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение']}
               startIcon={<Add />}
               size={'small'}
               onSelect={onRequestTypeSelect}
