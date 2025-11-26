@@ -1,7 +1,12 @@
 import { Box, createTheme, ThemeProvider } from '@mui/material';
 import React from "react";
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { HomePage, LoginPage, RequestsAllPage, RequestsInWorkPage, RequestsOnConfirmPage, RequestsSuccessPage, ServicesCatalogTreePage, ServicesCatalogItCatalogPage, ServicesCatalogItServicesPage, ServicesCatalogHistoryPage, DirectoryGroupsPage, DirectoryWorktypesPage, SupportAllPage, TasksMyAllPage } from './pages';
+import { HomePage, LoginPage, RequestsAllPage, 
+  RequestsInWorkPage, RequestsOnConfirmPage, RequestsSuccessPage, 
+  ServicesCatalogTreePage, ServicesCatalogItCatalogPage, ServicesCatalogItServicesPage, 
+  ServicesCatalogHistoryPage, DirectoryGroupsPage, DirectoryWorktypesPage,
+   SupportAllPage,  } from './pages';
+import { TasksMyAllPage } from './pages/tasks/all-tasks/tasks-my-all.page';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { LeftSidebar } from './sidebar/sidebar';
 import { ruRU } from '@mui/material/locale';
