@@ -89,6 +89,7 @@ export function SupportAllPage() {
 
   useEffect(() => {
     setHideClosed(true);
+    table.setRowSelection({});
   }, [location.pathname, location.search]); // Сбрасываем при изменении пути или параметров
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
@@ -312,6 +313,11 @@ export function SupportAllPage() {
     return desiredDate < today;
   };
 
+  // Обработчик выбора строки
+  const handleRowClick = (row: MRT_Row<Request>) => {
+    row.getToggleSelectedHandler();
+  };
+
   // Обработчик двойного клика
   const handleRowDoubleClick = (row: MRT_Row<Request>) => {
     setSelectedRequest(row.original);
@@ -374,6 +380,7 @@ export function SupportAllPage() {
     },
 
     mantineTableBodyCellProps:({row}) => ({
+      //onClick: () => handleRowClick(row),
       onClick: row.getToggleSelectedHandler(),
       sx: {
         backgroundColor: colorRow(row),

@@ -73,7 +73,8 @@ export function TasksMyAllPage() {
 
   useEffect(() => {
     setHideClosed(true);
-  }, [location.pathname, location.search]);
+    table.setRowSelection({});
+  }, [location.pathname, location.search]); // Сбрасываем при изменении пути или параметров
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
