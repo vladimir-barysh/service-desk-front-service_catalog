@@ -415,28 +415,28 @@ export const RequestCreateZNDDialog = (props: {
             </Input.Wrapper>
 
             <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" paddingTop="10px">
-                    <Grid2 size={3} >
-                        <Button
-                        variant="contained"
-                        color="success"
-                        size={'small'}
-                        fullWidth={true}
-                        disabled={!isFormValid}
-                        >
-                        Сохранить
-                        </Button>
-                    </Grid2>
-                    <Grid2 size={3}>
-                        <Button
-                        variant="contained"
-                        color="inherit"
-                        size={'small'}
-                        fullWidth={true}
-                        onClick={handleClose}
-                        >
-                        Отмена
-                        </Button>
-                    </Grid2>
+                <Grid2 size={3} >
+                    <Button
+                    variant="contained"
+                    color="success"
+                    size={'small'}
+                    fullWidth={true}
+                    disabled={!isFormValid}
+                    >
+                    Сохранить
+                    </Button>
+                </Grid2>
+                <Grid2 size={3}>
+                    <Button
+                    variant="contained"
+                    color="inherit"
+                    size={'small'}
+                    fullWidth={true}
+                    onClick={handleClose}
+                    >
+                    Отмена
+                    </Button>
+                </Grid2>
             </Grid2>
         </DialogContent>
     </Dialog>

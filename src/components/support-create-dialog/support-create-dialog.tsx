@@ -4,7 +4,16 @@ import {
   DialogContent,
   DialogTitle,
   Tab,
+  Box,
+  Button,
+  Grid2,
+  Chip,
+  Paper,
+  IconButton
 } from '@mui/material';
+
+import { Close } from '@mui/icons-material';
+
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined} from '@mui/icons-material'
 import { Request } from '../../pages/support/all-support/makeData';
@@ -16,6 +25,7 @@ import { SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab,
 interface SupportGeneralDialogProps {
   isOpen: boolean;
   request: Request | null;
+  
   onClose: () => void;
 }
 
@@ -23,6 +33,22 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   const [value, setValue] = useState('1');
   const [hasFiles, setHasFiles] = useState(false);
   const [hasMessages, setHasMessages] = useState(false);
+
+  // Состояния для каждого таба
+  const [generalData, setGeneralData] = useState(request);
+  const [filesData, setFilesData] = useState<any[]>([]);
+  const [discussionData, setDiscussionData] = useState<any[]>([]);
+  
+  // Флаги изменений для каждого таба
+  const [generalChanged, setGeneralChanged] = useState(false);
+  const [filesChanged, setFilesChanged] = useState(false);
+  const [discussionChanged, setDiscussionChanged] = useState(false);
+
+  // Общий флаг изменений
+  const hasChanges = generalChanged || filesChanged || discussionChanged;
+
+  const [editableRequest, setEditableRequest] = useState<Request | null>(request);
+  const isEditing = !editableRequest?.status?.includes('Закрыта');              // флаг режима редактирования
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -79,18 +105,61 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
     checkMessages();
   }, [request]);
 
+  const handleSave = () => {
+    // Здесь будет логика сохранения изменений
+    console.log('Сохранение данных:', editableRequest);
+    //setHasChanges(false);
+  };
+
+  const handleCancel = () => {
+    setEditableRequest(request); // Возвращаем оригинальные данные
+    setGeneralData(request);
+    setFilesData([]);
+    setDiscussionData([]);
+    setGeneralChanged(false);
+    setFilesChanged(false);
+    setDiscussionChanged(false);
+    handleClose();
+  };
+
   return (
     <div>
       <Dialog
         open={isOpen}
         onClose={handleClose}
         fullWidth={true}
-        maxWidth="lg"
+        maxWidth='xl'
       >
-        <DialogTitle sx={{ paddingBottom: "0px" }}>
-          Информация по заявке {request?.requestNumber || ''}
-        </DialogTitle>
         <DialogContent sx={{ minHeight: '60vh', minWidth: '75vh' }}>
+          <Grid2 container spacing={0} direction={'row'} alignItems="left" justifyContent="space-between">
+                <Grid2 size='auto'>
+                    <Box fontSize='20px' fontWeight='700'>
+                        Заявка №{request?.requestNumber || ''}
+                    </Box>
+                </Grid2>
+                {/* Кнопки */}
+                <Grid2 size='auto' sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="small"
+                    disabled={!hasChanges}
+                    onClick={handleSave}
+                    sx={{ minWidth: '100px' }}
+                  >
+                    Сохранить
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="inherit"
+                    size="small"
+                    onClick={handleCancel}
+                    sx={{ minWidth: '100px' }}
+                  >
+                    Отмена
+                  </Button>
+                </Grid2>
+            </Grid2>
           <TabContext value={value}>
                 <TabList onChange={handleChange} centered>
                 <Tab label="Общие сведения" value="1"/>
@@ -101,7 +170,14 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
                 <Tab label="История" value="6"/>
                 </TabList>
                 <TabPanel value="1" sx={{ padding: "0px" }}>
-                <SupportGeneralTab isOpen={true} request={request}/>
+                <SupportGeneralTab 
+                  isOpen={true} 
+                  request={request}
+                  onUpdate={(data, hasChanges) => {
+                    setGeneralData(data);
+                    setGeneralChanged(hasChanges);
+                  }}
+                />
                 </TabPanel>
                 <TabPanel value="2" sx={{ padding: "0px" }}>
                 <SupportFilesTab request={request}/>

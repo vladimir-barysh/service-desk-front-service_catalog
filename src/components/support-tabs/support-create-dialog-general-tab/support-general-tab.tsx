@@ -1,110 +1,154 @@
-import React, { useState} from 'react';
-import { Grid2, TextField, Box, Typography, Button} from '@mui/material';
+import React, { useState, useEffect, useRef} from 'react';
+import { Grid2, TextField, 
+  Box, Typography, 
+  Button, InputLabel,
+  MenuItem, FormControl,
+  Select, InputAdornment
+} from '@mui/material';
 import { DateTimePicker } from '@mantine/dates';
 import { Request } from '../../../pages/support/all-support/makeData';
+import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
 
-interface SupportGeneralFirstTabProps {
+interface SupportGeneralTabProps {
   isOpen: boolean;
   request: Request | null;
+  onUpdate?: (data: any, hasChanges: boolean) => void;
 }
 
-export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
-  const [editableRequest, setEditableRequest] = useState<Request | null>(request);
-  const isEditing = !editableRequest?.status?.includes('Закрыта');              // флаг режима редактирования
-  const [hasChanges, setHasChanges] = useState(false);                          // флаг наличия изменений
+export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps) {
+  const [editedRequest, setEditableRequest] = useState<Request | null>(request);
+  const isEditing = !editedRequest?.status?.includes('Закрыта');              // флаг режима редактирования
+  const hasChanges = JSON.stringify(editedRequest) !== JSON.stringify(request);                      // флаг наличия изменений
 
-  if (!editableRequest) {
+  const isInitialMount = useRef(true);
+
+  if (!editedRequest) {
     return <Typography>Заявка не выбрана</Typography>;
   }
 
   const handleSave = () => {
     // Здесь будет логика сохранения изменений
-    console.log('Сохранение данных:', editableRequest);
-    setHasChanges(false);
+    //console.log('Сохранение данных:', editableRequest);
+    //setHasChanges(false);
   };
 
   const handleCancel = () => {
     setEditableRequest(request); // Возвращаем оригинальные данные
-    setHasChanges(false);
+    //setHasChanges(false);
   };
 
   const handleFieldChange = (field: string, value: string) => {
     setEditableRequest(prev => prev ? { ...prev, [field]: value } : null);
-    setHasChanges(true);
+    //setHasChanges(true);
   };
 
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (onUpdate){
+      onUpdate(editedRequest, hasChanges);
+    }
+    
+  }, [editedRequest, hasChanges, onUpdate]);
+
+  const handleChange = (field: string) => (event: any) => {
+    const value = event.target.value;
+    setEditableRequest(prev => prev ? { ...prev, [field]: value } : null);
+  };
+  
   return (
     <Box sx={{ mt: 2, position: 'relative', minHeight: '500px' }}>
       {/* Первая строка - заголовки таблицы */}
-      <Grid2 container spacing={0} sx={{ mb: 1 }}>
-        <Grid2 size={1} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
-          <Typography variant="subtitle2">№ заявки</Typography>
-        </Grid2>
-        <Grid2 size={1}>
-          <TextField
-            value={editableRequest.requestNumber || ''}
-            fullWidth
-            size="small"
-            variant="outlined"
-            InputProps={{ readOnly: !isEditing }}
-            onChange={(e) => handleFieldChange('requestNumber', e.target.value)}
-          />
-        </Grid2>
-        <Grid2 size={1} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
-          <Typography variant="subtitle2">Статус</Typography>
-        </Grid2>
-        <Grid2 size={2}>
-          <TextField
-            value={editableRequest.status || ''}
-            fullWidth
-            size="small"
-            variant="outlined"
-            InputProps={{ readOnly: !isEditing }}
-            onChange={(e) => handleFieldChange('status', e.target.value)}
-          />
-        </Grid2>
-        <Grid2 size={2} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
-          <Typography variant="subtitle2">Дата регистрации</Typography>
-        </Grid2>
-        <Grid2 size={2}>
-          <DateTimePicker
-            placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
-            valueFormat="DD.MM.YYYY HH:mm"
-            withSeconds={false} 
-            onPointerEnterCapture={undefined} 
-            onPointerLeaveCapture={undefined}
-            clearable
-            locale='ru'
-            size="md"
-            styles={{ input: {minHeight: '40px'}}}
-            readOnly={!isEditing}
-          />
+      <Grid2 container spacing={0} paddingBottom="5px" justifyContent="center">
+
+        <Grid2 container spacing={0} size={3}>
+          <Grid2 size="auto" sx={{ border: '1px solid #e0e0e0', p:1, backgroundColor: '#f5f5f5' }}>
+            <Typography variant="subtitle2">Статус</Typography>
+          </Grid2>
+          <Grid2 size="auto">
+            <FormControl sx={{ minWidth: 240 }} size="small">
+                <Select
+                  value={editedRequest.status || ''}
+                  onChange={handleChange('status')}
+                >
+                  {/*Добавить недостающие статусы*/}
+                  <MenuItem value={"Новая"}>Новая</MenuItem>
+                  <MenuItem value={"Закрытая"}>Закрытая</MenuItem>
+                  <MenuItem value={"В работе"}>В работе</MenuItem>
+                  <MenuItem value={"Согласование отколнено"}>Согласование отколнено</MenuItem>
+                </Select>
+              </FormControl>
+          </Grid2>
         </Grid2>
 
-        {/* Кнопки */}
-        <Grid2 size={3} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            disabled={!hasChanges}
-            onClick={handleSave}
-            sx={{ minWidth: '100px' }}
-          >
-            Сохранить
-          </Button>
-          <Button
-            variant="contained"
-            color="inherit"
-            size="small"
-            disabled={!hasChanges}
-            onClick={handleCancel}
-            sx={{ minWidth: '100px' }}
-          >
-            Отмена
-          </Button>
+        <Grid2 container spacing={0} size={3}>
+          <Grid2 size="auto" sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Typography variant="subtitle2">Дата регистрации</Typography>
+          </Grid2>
+          <Grid2 size="auto">
+            <DateTimePicker
+              placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
+              valueFormat="DD.MM.YYYY HH:mm"
+              
+              withSeconds={false} 
+              onPointerEnterCapture={undefined} 
+              onPointerLeaveCapture={undefined}
+              clearable
+              locale='ru'
+              size="md"
+              styles={{ input: {minHeight: '40px'}}}
+              readOnly={!isEditing}
+              //В заявке даты - строка, тут - DateValue
+              //value={editedRequest.dateRegistration}
+              //onChange={handleChange('dateRegistration')}
+            />
+          </Grid2>
         </Grid2>
+        
+        <Grid2 container spacing={0} size={3}>
+            <Grid2 size="auto" sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+              <Typography variant="subtitle2">Желаемый срок</Typography>
+            </Grid2>
+            <Grid2 size="auto">
+              <DateTimePicker
+                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
+                valueFormat="DD.MM.YYYY HH:mm"
+                withSeconds={false} 
+                onPointerEnterCapture={undefined} 
+                onPointerLeaveCapture={undefined}
+                clearable
+                locale='ru'
+                size="md"
+                styles={{ input: {minHeight: '40px'}}}
+                readOnly={!isEditing}
+              />
+            </Grid2>
+          </Grid2>
+
+          <Grid2 container spacing={0} size={3}>
+            <Grid2 size="auto" sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+              <Typography variant="subtitle2">Дата решения</Typography>
+            </Grid2>
+            <Grid2 size="auto">
+              <DateTimePicker
+                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
+                valueFormat="DD.MM.YYYY HH:mm"
+                withSeconds={false} 
+                onPointerEnterCapture={undefined} 
+                onPointerLeaveCapture={undefined}
+                clearable
+                locale='ru'
+                size="md"
+                styles={{ input: {minHeight: '40px'}}}
+                readOnly={!isEditing}
+              />
+            </Grid2>
+          </Grid2>
       </Grid2>
+
 
       {/* Основная таблица */}
       <Grid2 container spacing={0}>
@@ -117,12 +161,12 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editableRequest.itModule || ''}
+                value={editedRequest.itModule || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('itModule', e.target.value)}
+                onChange={handleChange('itModule')}
               />
             </Grid2>
           </Grid2>
@@ -134,12 +178,12 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editableRequest.service || ''}
+                value={editedRequest.service || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('service', e.target.value)}
+                onChange={handleChange('service')}
               />
             </Grid2>
           </Grid2>
@@ -155,7 +199,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('accessTo', e.target.value)}
+                onChange={handleChange('accessTo')}
               />
             </Grid2>
           </Grid2>
@@ -167,12 +211,12 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editableRequest.header || ''}
+                value={editedRequest.header || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('header', e.target.value)}
+                onChange={handleChange('header')}
               />
             </Grid2>
           </Grid2>
@@ -190,7 +234,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 multiline
                 rows={3}
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('description', e.target.value)}
+                onChange={handleChange('description')}
               />
             </Grid2>
           </Grid2>
@@ -208,7 +252,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 multiline
                 rows={3}
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('solution', e.target.value)}
+                onChange={handleChange('solution')}
               />
             </Grid2>
           </Grid2>
@@ -226,7 +270,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 multiline
                 rows={3}
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('comment', e.target.value)}
+                onChange={handleChange('comment')}
               />
             </Grid2>
           </Grid2>
@@ -242,6 +286,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
+                onChange={handleChange('dispatcher')}
               />
             </Grid2>
           </Grid2>
@@ -250,46 +295,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
         {/* Правая колонка - заголовки и значения */}
         <Grid2 size={6}>
           {/* Строка 1 */}
-          <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
-              <Typography variant="subtitle2">Желаемый срок</Typography>
-            </Grid2>
-            <Grid2 size={9}>
-              <DateTimePicker
-                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
-                valueFormat="DD.MM.YYYY HH:mm"
-                withSeconds={false} 
-                onPointerEnterCapture={undefined} 
-                onPointerLeaveCapture={undefined}
-                clearable
-                locale='ru'
-                size="md"
-                styles={{ input: {minHeight: '40px'}}}
-                readOnly={!isEditing}
-              />
-            </Grid2>
-          </Grid2>
-
-          {/* Строка 2 */}
-          <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
-              <Typography variant="subtitle2">Дата решения</Typography>
-            </Grid2>
-            <Grid2 size={9}>
-              <DateTimePicker
-                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
-                valueFormat="DD.MM.YYYY HH:mm"
-                withSeconds={false} 
-                onPointerEnterCapture={undefined} 
-                onPointerLeaveCapture={undefined}
-                clearable
-                locale='ru'
-                size="md"
-                styles={{ input: {minHeight: '40px'}}}
-                readOnly={!isEditing}
-              />
-            </Grid2>
-          </Grid2>
+          
 
           {/* Строка 3 */}
           <Grid2 container spacing={0}>
@@ -325,7 +331,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 multiline
                 rows={3}
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('postponementReason', e.target.value)}
+                onChange={handleChange('postponeReason')}
               />
             </Grid2>
           </Grid2>
@@ -354,17 +360,19 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
           {/* Строка 6 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
-              <Typography variant="subtitle2">Тип запроса</Typography>
+              <Typography variant="subtitle2">Тип заявки</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <TextField
-                value={editableRequest.requestType || ''}
-                fullWidth
-                size="small"
-                variant="outlined"
-                InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('requestType', e.target.value)}
-              />
+              <FormControl fullWidth>
+                <Select
+                  value={editedRequest.requestType || ''}
+                  onChange={handleChange('requestType')}
+                >
+                  <MenuItem value={"ЗНО"}>ЗНО</MenuItem>
+                  <MenuItem value={"ЗНД"}>ЗНД</MenuItem>
+                  <MenuItem value={"ЗНИ"}>ЗНИ</MenuItem>
+                </Select>
+              </FormControl>
             </Grid2>
           </Grid2>
 
@@ -379,7 +387,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('priority', e.target.value)}
+                onChange={handleChange('priority')}
               />
             </Grid2>
           </Grid2>
@@ -397,7 +405,7 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 multiline
                 rows={2}
                 InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('contactMethod', e.target.value)}
+                onChange={handleChange('contactMethod')}
               />
             </Grid2>
           </Grid2>
@@ -438,12 +446,15 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editableRequest.initiator || ''}
+                value={editedRequest.initiator || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
-                InputProps={{ readOnly: !isEditing }}
-                onChange={(e) => handleFieldChange('initiator', e.target.value)}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  },
+                }}
               />
             </Grid2>
           </Grid2>
@@ -458,7 +469,11 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 fullWidth
                 size="small"
                 variant="outlined"
-                InputProps={{ readOnly: !isEditing }}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  },
+                }}
               />
             </Grid2>
           </Grid2>
@@ -472,7 +487,11 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 fullWidth
                 size="small"
                 variant="outlined"
-                InputProps={{ readOnly: !isEditing }}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  },
+                }}
               />
             </Grid2>
           </Grid2>
@@ -489,7 +508,16 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 fullWidth
                 size="small"
                 variant="outlined"
-                InputProps={{ readOnly: !isEditing }}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <PhoneOutlined />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
             </Grid2>
           </Grid2>
@@ -505,6 +533,16 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <PhoneOutlined />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
             </Grid2>
           </Grid2>
@@ -520,6 +558,16 @@ export function SupportGeneralTab({ request}: SupportGeneralFirstTabProps) {
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <AlternateEmail />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
             </Grid2>
           </Grid2>
