@@ -314,8 +314,17 @@ export function RequestsAllPage() {
       size: 'xs',
     },
 
-    mantineTableBodyCellProps:({row}) => ({
-      onClick: row.getToggleSelectedHandler(),
+    mantineTableBodyCellProps: ({ row, cell }) => ({
+      onClick: (event) => {
+        // Если это не ячейка "header", то выделяем строку
+        if (cell.column.id === 'requestNumber') {
+          event.stopPropagation();
+          handleRowDoubleClick(row);
+        }
+        else {
+          row.getToggleSelectedHandler()(event);
+        }
+      },
       sx: {
         backgroundColor: colorRow(row),
         cursor: 'pointer',
@@ -324,15 +333,12 @@ export function RequestsAllPage() {
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
       }
     }),
-    // Добавляем обработчик двойного клика на строку
-    mantineTableBodyRowProps: ({ row }) => ({
-      onDoubleClick: () => handleRowDoubleClick(row),
-      sx: {
-        cursor: 'pointer',
-      },
-    }),
   });
   
+  // Доступность кнопок по нажатию на строку таблицы
+  const selectedRowsCount = table.getSelectedRowModel().rows.length;
+  const hasSelectedRows = !(selectedRowsCount > 0);
+
   return (
     <div>
       <Box height={50}>
@@ -365,6 +371,7 @@ export function RequestsAllPage() {
               color="error"
               startIcon={<Clear />}
               size={'small'}
+              disabled={hasSelectedRows}
             >
               Отменить заявку
             </Button>
@@ -375,6 +382,7 @@ export function RequestsAllPage() {
               color="warning"
               startIcon={<IconPencil />}
               size={'small'}
+              disabled={hasSelectedRows}
             >
               Редактировать заявку
             </Button>
@@ -385,6 +393,7 @@ export function RequestsAllPage() {
               color="success"
               startIcon={<Check />}
               size={'small'}
+              disabled={hasSelectedRows}
             >
               Подтвердить заявку
             </Button>
@@ -395,6 +404,7 @@ export function RequestsAllPage() {
               color="inherit"
               startIcon={<ThreeSixty />}
               size={'small'}
+              disabled={hasSelectedRows}
             >
               Возобновить заявку
             </Button>

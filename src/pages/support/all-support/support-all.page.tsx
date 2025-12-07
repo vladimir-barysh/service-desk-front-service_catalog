@@ -379,9 +379,17 @@ export function SupportAllPage() {
       size: 'xs',
     },
 
-    mantineTableBodyCellProps:({row}) => ({
-      //onClick: () => handleRowClick(row),
-      onClick: row.getToggleSelectedHandler(),
+    mantineTableBodyCellProps: ({ row, cell }) => ({
+      onClick: (event) => {
+        // Если это не ячейка "header", то выделяем строку
+        if (cell.column.id === 'requestNumber') {
+          event.stopPropagation();
+          handleRowDoubleClick(row);
+        }
+        else {
+          row.getToggleSelectedHandler()(event);
+        }
+      },
       sx: {
         backgroundColor: colorRow(row),
         cursor: 'pointer',
@@ -389,13 +397,6 @@ export function SupportAllPage() {
         fontWeight: row.original.status === 'Новая' ? 'bold' : 'normal',
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
       }
-    }),
-    // Добавляем обработчик двойного клика на строку
-    mantineTableBodyRowProps: ({ row }) => ({
-      onDoubleClick: () => handleRowDoubleClick(row),
-      sx: {
-        cursor: 'pointer',
-      },
     }),
   });
 
