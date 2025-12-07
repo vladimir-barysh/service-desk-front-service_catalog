@@ -9,7 +9,8 @@ import {
   Button,
   Grid2,
   Chip,
-  Paper
+  Paper,
+  IconButton
 } from '@mui/material';
 import { Input, Textarea, Text, CloseButton } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
@@ -19,6 +20,7 @@ import { Close } from '@mui/icons-material';
 
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { ItSystem } from '../itservice-choose/makeData';
+import { Grid } from '@mui/joy';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -135,12 +137,21 @@ export const RequestCreateZNODialog = (props: {
       maxWidth="md"
     >
         <DialogContent sx={{minHeight: '70vh', minWidth: '75vh', padding:"20x"}}>
-            <Box fontSize='25px' fontWeight='700' marginBottom='10px'>
-                            Регистрация ЗНО
-                        </Box>
-                        <Box fontSize='15px' fontWeight='500' marginBottom='10px' sx={{color: 'error.main'}}>
-                            Пункты с * обязательны к заполнению
-                        </Box>
+            <Grid2 container spacing={0} direction={'row'} alignItems="left" justifyContent="space-between">
+                <Grid2 size='auto'>
+                    <Box fontSize='25px' fontWeight='700'>
+                        Регистрация ЗНО
+                    </Box>
+                </Grid2>
+                <Grid2 size='auto'>
+                    <IconButton onClick={handleClose}>
+                        <Close/>
+                    </IconButton>
+                </Grid2>
+            </Grid2>
+            <Box fontSize='15px' fontWeight='500' marginBottom='10px' sx={{color: 'error.main'}}>
+                Пункты с * обязательны к заполнению
+            </Box>
             <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" paddingTop='5px'>
                 <Grid2 size={3}>
                     <Button

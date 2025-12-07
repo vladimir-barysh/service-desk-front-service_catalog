@@ -1,13 +1,10 @@
 import React from 'react';
 import { useState, useMemo } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Box,
-  Button,
-  Grid2
+  Dialog, DialogContent,
+  DialogContentText, DialogTitle,
+  Box, Button,
+  Grid2, IconButton
 } from '@mui/material';
 import { 
     Input, 
@@ -19,6 +16,9 @@ import {
     Select, 
     Checkbox
 } from '@mantine/core';
+
+import { Close } from '@mui/icons-material';
+
 import { IconAt, IconPhone } from '@tabler/icons-react';
 import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
@@ -180,9 +180,18 @@ export const RequestCreateZNDDialog = (props: {
     >
         <DialogContent sx={{minHeight: '70vh', minWidth: '75vh', padding:"20x"}}>
             
-            <Box fontSize='25px' fontWeight='700' marginBottom='10px'>
-                Регистрация ЗНД
-            </Box>
+            <Grid2 container spacing={0} direction={'row'} alignItems="left" justifyContent="space-between">
+                <Grid2 size='auto'>
+                    <Box fontSize='25px' fontWeight='700'>
+                        Регистрация ЗНД
+                    </Box>
+                </Grid2>
+                <Grid2 size='auto'>
+                    <IconButton onClick={handleClose}>
+                        <Close/>
+                    </IconButton>
+                </Grid2>
+            </Grid2>
             <Box fontSize='15px' fontWeight='500' sx={{color: 'error.main'}}>
                 Пункты с * обязательны к заполнению
             </Box>
