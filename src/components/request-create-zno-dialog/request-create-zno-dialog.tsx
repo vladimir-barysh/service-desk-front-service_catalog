@@ -309,7 +309,7 @@ export const RequestCreateZNODialog = (props: {
                 <Grid2 size={3} >
                     <Button
                     variant="contained"
-                    color="primary"
+                    color="success"
                     size={'small'}
                     fullWidth={true}
                     disabled={!isFormValid}
