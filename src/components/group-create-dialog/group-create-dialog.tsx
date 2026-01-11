@@ -49,14 +49,10 @@ export const GroupCreateDialog = (props: {
   const [value, setValue] = React.useState('1');
   const [open, setOpen] = React.useState(false);
 
-  let TableServicesAll: tableClass;
-  TableServicesAll = new tableClass(servicesAll, getColumns("Выбрано"));
-  let TableServicesChoose: tableClass;
-  TableServicesChoose = new tableClass(servicesChoose, getColumns("Доступно"));
-  let TableHumansAll: tableClass;
-  TableHumansAll = new tableClass(humansAll, getColumns("Выбрано"));
-  let TableHumansChoose: tableClass;
-  TableHumansChoose = new tableClass(humansChoose, getColumns("Доступно"));
+  const TableServicesAll = new tableClass(servicesAll, getColumns("Выбрано"));
+  const TableServicesChoose = new tableClass(servicesChoose, getColumns("Доступно"));
+  const TableHumansAll = new tableClass(humansAll, getColumns("Выбрано"));
+  const TableHumansChoose = new tableClass(humansChoose, getColumns("Доступно"));
 
 
   const handleClick = () => {

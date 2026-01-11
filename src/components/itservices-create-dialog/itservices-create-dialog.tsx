@@ -194,16 +194,11 @@ export const ItservicesCreateDialog = (props: {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('1');
 
-  let TableRoles: tableClass;
-  TableRoles = new tableClass(roles, rolesColumns);
-  let TableWorkTypes: tableClass;
-  TableWorkTypes = new tableClass(worktypes, worktypesColumns);
-  let TableRights: tableClass;
-  TableRights = new tableClass(rights, rightsColumns);
-  let TableServicesAll: tableClass;
-  TableServicesAll = new tableClass(servicesAll, getColumns("Доступно"));
-  let TableServicesChoose: tableClass;
-  TableServicesChoose = new tableClass(servicesChoose, getColumns("Выбрано"));
+  const TableRoles = new tableClass(roles, rolesColumns);
+  const TableWorkTypes = new tableClass(worktypes, worktypesColumns);
+  const TableRights = new tableClass(rights, rightsColumns);
+  const TableServicesAll = new tableClass(servicesAll, getColumns("Доступно"));
+  const TableServicesChoose = new tableClass(servicesChoose, getColumns("Выбрано"));
 
 
   function createRole(mode: string, table: MRT_TableInstance<any>)

@@ -1,10 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { Grid2 } from '@mui/material';
-import { ArticleOutlined, DeleteOutlined} from '@mui/icons-material';
-import Button from '@mui/material/Button';
+import React from 'react';
+import { Grid2, Button, Typography, List, ListItem, ListItemText, CircularProgress, Alert } from '@mui/material';
+import { ArticleOutlined, DeleteOutlined } from '@mui/icons-material';
 import { IconPencil } from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
+import { getAuthorities } from '../../api/services/authorityService';
 
 export function HomePage() {
+
+  const {
+    data: authorities = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['authorities'],
+    queryFn: getAuthorities,
+  });
+
   return (
     <div>
       <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left">
@@ -41,7 +52,47 @@ export function HomePage() {
           </Button>
         </Grid2>
       </Grid2>
-      Главная страница
+      <Typography variant="h5" gutterBottom>
+        Главная страница
+      </Typography>
+
+      {/* Блок со списком полномочий */}
+      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+        Список полномочий (Authorities)
+      </Typography>
+
+      {isLoading && (
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <CircularProgress />
+        </div>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Не удалось загрузить список полномочий: {error instanceof Error ? error.message : 'Неизвестная ошибка'}
+        </Alert>
+      )}
+
+      {!isLoading && !error && (
+        <>
+          {authorities.length === 0 ? (
+            <Alert severity="info">
+              В справочнике пока нет полномочий
+            </Alert>
+          ) : (
+            <List>
+              {authorities.map((auth: any) => (
+                <ListItem key={auth.idAuthority} divider>
+                  <ListItemText
+                    primary={auth.authority}
+                    secondary={auth.description || 'Описание отсутствует'}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </>
+      )}
     </div>
   );
 }
