@@ -146,6 +146,7 @@ export function LeftSidebar() {
               background: submenuColor1,
               color: 'white',
               justifyContent: 'center',
+              padding: '20px 0px 20px 0px',
             }}
             rootStyles = {{
               color: 'sectionTitleColor',
