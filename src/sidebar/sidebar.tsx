@@ -22,6 +22,7 @@ import { alignProperty } from "@mui/material/styles/cssUtils";
 
 const activeColor = '#455980ff';
 const submenuColor = '#32415c';
+const submenuColor1 = '#2c3951';
 const backgroundColor = '#3b4c6c';
 const color = '#909fbbff';
 const sectionTitleColor = "#c0d0f0";
@@ -73,7 +74,10 @@ export function LeftSidebar() {
   
   const menuItemCommon = {
     style: { marginLeft: '-10px', width: '310px' },
-    rootStyles: { fontWeight: 400 }
+    rootStyles: { 
+      fontWeight: 400,
+      fontSize: '1.0rem',
+     }
   };
 
   const sectionHeader = {
@@ -84,8 +88,8 @@ export function LeftSidebar() {
       justifyContent: 'center',
     },
     rootStyles: {
-      color: sectionTitleColor,
       fontWeight: 600,
+      fontSize: '1.0rem',
       opacity: 1,
       cursor: "default",
       "&:hover": { background: "none" },
@@ -111,7 +115,7 @@ export function LeftSidebar() {
               height: '25px',
               minHeight: '25px',
               padding: '0 10px',
-              fontSize: '1.0rem',
+              
               gap: '0px',
               borderRadius: '5px',
               margin: '1px 6px',
@@ -135,6 +139,27 @@ export function LeftSidebar() {
             }
           }}
         >
+          <MenuItem
+            disabled
+            style = {{ marginLeft: '0px', 
+              width: '100%', 
+              background: submenuColor1,
+              color: 'white',
+              justifyContent: 'center',
+            }}
+            rootStyles = {{
+              color: 'sectionTitleColor',
+              fontWeight: 600,
+              fontSize: '1.3rem',
+              opacity: 1,
+              cursor: "default",
+              "&:hover": { background: "none" },
+              textAlign: 'center' as const,
+            }}
+          >
+            SERVICE-DESK
+          </MenuItem>
+
           <MenuItem
             {...menuItemCommon}
             component={<Link to={'/home/home.page'} />}

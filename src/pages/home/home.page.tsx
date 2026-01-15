@@ -196,7 +196,7 @@ export function HomePage() {
   });
 
   return (
-        <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div>
       <Grid2 container spacing={3}>
         {/* Левая панель - Категории и Избранное */}
         <Grid2 size={{ xs: 12, md: 3 }}>
@@ -222,7 +222,10 @@ export function HomePage() {
                     }
                   }}
                 >
-                  <ListItemText primary={category} />
+                  <ListItemText primary={category}
+                  primaryTypographyProps={{
+                    fontSize: '1.0rem',
+                  }} />
                 </ListItemButton>
               ))}
             </List>
@@ -242,8 +245,8 @@ export function HomePage() {
                   <ListItemText 
                     primary={article.title}
                     secondary={format(article.date, 'dd.MM.yyyy')}
-                    primaryTypographyProps={{ fontSize: '0.9rem' }}
-                    secondaryTypographyProps={{ fontSize: '0.8rem' }}
+                    primaryTypographyProps={{ fontSize: '1.0rem' }}
+                    secondaryTypographyProps={{ fontSize: '0.85rem' }}
                   />
                 </ListItemButton>
               ))}
@@ -254,13 +257,13 @@ export function HomePage() {
         {/* Центральная часть - Лента статей */}
         <Grid2 size={{ xs: 12, md: 6 }}>
           {/* Панель управления */}
-          <Grid2 container spacing={2} alignItems="center" justifyContent="left" sx={{ mb: 4 }}>
+          <Grid2 container spacing={2} alignItems="center" justifyContent="center" sx={{ mb: 4 }}>
             <Grid2 size="auto">
               <Button
                 variant="contained"
                 color="success"
                 startIcon={<ArticleOutlined />}
-                size={'small'}
+                size={'medium'}
                 onClick={() => setOpenDialog(true)}
               >
                 Создать статью
@@ -272,7 +275,7 @@ export function HomePage() {
                 variant="contained"
                 color="warning"
                 startIcon={<IconPencil />}
-                size={'small'}
+                size={'medium'}
               >
                 Редактировать статью
               </Button>
@@ -283,7 +286,7 @@ export function HomePage() {
                 variant="contained"
                 color="error"
                 startIcon={<DeleteOutlined />}
-                size={'small'}
+                size={'medium'}
               >
                 Удалить статью
               </Button>
