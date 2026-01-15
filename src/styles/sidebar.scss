@@ -1,10 +1,25 @@
 $darkColor: #32415c;
 
-.box {
+/*.box {
     height: 100%;
     position: fixed;
     z-index: 1;
     overflow-x: hidden;
     background-color: $darkColor;
     
+}*/
+
+.box {
+    height: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    overflow-x: hidden;
+    background-color: $darkColor;
+    box-sizing: border-box;     // ← очень важно
+
+    & > * {
+        border-right: none !important;
+    }
 }
