@@ -10,7 +10,7 @@ import {
   Grid2,
   Chip,
   Paper,
-  IconButton
+  IconButton, Typography
 } from '@mui/material';
 import { Input, Textarea, Text, CloseButton } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
@@ -21,6 +21,8 @@ import { Close } from '@mui/icons-material';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { ItSystem } from '../itservice-choose/makeData';
 import { Grid } from '@mui/joy';
+
+import { TextInputField } from '../text-input-field';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -225,36 +227,41 @@ export const RequestCreateZNODialog = (props: {
                 </Grid2>
             </Grid2>
             
-            <Input.Wrapper label="Подробное описание проблемы *" size='md'>
-                <Textarea
-                variant="filled"
-                autosize
-                minRows={4}
-                maxRows={4}
-                value={problemDescription} 
-                onChange={(e) => setProblemDescription(e.currentTarget.value)}
-                />
-            </Input.Wrapper>
-            <Input.Wrapper label="Ожидаемый результат *" size='md'>
-                <Textarea
-                variant="filled"
-                autosize
-                minRows={2}
-                maxRows={2}
-                value={expectedResult} 
-                onChange={(e) => setExpectedResult(e.currentTarget.value)}
-                />
-            </Input.Wrapper>
-            <Input.Wrapper label="Комментарий" size='md'>
-                <Textarea
-                variant="filled"
-                autosize
-                minRows={2}
-                maxRows={2}
-                value={comment} 
-                onChange={(e) => setComment(e.currentTarget.value)}
-                />
-            </Input.Wrapper>
+            <Grid2 container spacing={1} direction='column' margin='0px 0px 10px 0px'>
+                <Grid2 size='auto' >
+                    <Text fw={600}>Подробное описание проблемы *</Text>
+                </Grid2>
+                <Grid2 size='auto'>
+                    <TextInputField
+                        value={problemDescription}
+                        onChange={(e) => setProblemDescription(e.target.value)}
+                    />
+                </Grid2>
+            </Grid2>
+            
+            <Grid2 container spacing={1} direction='column' margin='0px 0px 10px 0px'>
+                <Grid2 size='auto' >
+                    <Text fw={600}>Ожидаемый результат *</Text>
+                </Grid2>
+                <Grid2 size='auto'>
+                    <TextInputField
+                        value={expectedResult}
+                        onChange={(e) => setProblemDescription(e.target.value)}
+                    />
+                </Grid2>
+            </Grid2>
+            <Grid2 container spacing={1} direction='column' margin='0px 0px 10px 0px'>
+                <Grid2 size='auto' >
+                    <Text fw={600}>Комментарий</Text>
+                </Grid2>
+                <Grid2 size='auto'>
+                    <TextInputField
+                        value={comment}
+                        onChange={(e) => setProblemDescription(e.target.value)}
+                    />
+                </Grid2>
+            </Grid2>
+            
             <Grid2 container spacing={3} direction={'row'} paddingTop="15px" alignItems="left" justifyContent="left" >
                 <Grid2 size={3} paddingTop="15px">
                     <Button

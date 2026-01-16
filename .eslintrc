@@ -3,6 +3,7 @@
   "plugins": ["@typescript-eslint", "react", "react-hooks"],
   "extends": [
     "eslint:recommended",
+    "plugin:react/jsx-runtime",
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended"
   ],
@@ -12,7 +13,8 @@
       "rules": {
         "no-undef": "off",
         "react/prop-types": "off",
-        "@typescript-eslint/ban-ts-comment": "warn"
+        "@typescript-eslint/ban-ts-comment": "warn",
+        "react/react-in-jsx-scope": "off"
       }
     }
   ],

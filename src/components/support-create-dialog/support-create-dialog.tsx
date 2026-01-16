@@ -9,7 +9,7 @@ import {
   Grid2,
   Chip,
   Paper,
-  IconButton
+  IconButton, DialogActions, DialogContentText
 } from '@mui/material';
 
 import { Close } from '@mui/icons-material';
@@ -50,13 +50,44 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   const [editableRequest, setEditableRequest] = useState<Request | null>(request);
   const isEditing = !editableRequest?.status?.includes('Закрыта');              // флаг режима редактирования
 
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
   };
 
   const handleClose = () => {
+    if (hasChanges) {
+     /* const confirmed = window.confirm("У вас есть несохраненные изменения, хотите сохранить их перед закрытием?");
+      if (confirmed) {
+        // Сохраняем изменения
+        handleSave(); // ваша функция сохранения
+      }
+      // Если пользователь нажал "Отмена" - не закрываем диалог
+      if (!confirmed) return;*/
+      setOpenConfirmDialog(true);
+      return; // Не закрываем основной диалог
+    }
     setValue("1");
     onClose();
+  };
+
+  const handleConfirmClose = (shouldSave: boolean) => {
+    setOpenConfirmDialog(false);
+    
+    if (shouldSave) {
+      // Сохраняем изменения
+      handleSave();
+    }
+    
+    // В любом случае закрываем основной диалог
+    setValue("1");
+    onClose();
+  };
+
+  const handleCancelClose = () => {
+    setOpenConfirmDialog(false);
+    // Оставляем основной диалог открытым
   };
 
   // Функция для проверки файлов по ID заявки
@@ -132,34 +163,18 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
       >
         <DialogContent sx={{ minHeight: '60vh', minWidth: '75vh' }}>
           <Grid2 container spacing={0} direction={'row'} alignItems="left" justifyContent="space-between">
-                <Grid2 size='auto'>
-                    <Box fontSize='20px' fontWeight='700'>
-                        Заявка №{request?.requestNumber || ''}
-                    </Box>
-                </Grid2>
-                {/* Кнопки */}
-                <Grid2 size='auto' sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    size="small"
-                    disabled={!hasChanges}
-                    onClick={handleSave}
-                    sx={{ minWidth: '100px' }}
-                  >
-                    Сохранить
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="inherit"
-                    size="small"
-                    onClick={handleCancel}
-                    sx={{ minWidth: '100px' }}
-                  >
-                    Отмена
-                  </Button>
-                </Grid2>
+            <Grid2 size='auto'>
+                <Box fontSize='20px' fontWeight='700'>
+                    Заявка №{request?.requestNumber || ''}
+                </Box>
             </Grid2>
+            {/* Крестик */}
+            <Grid2 size='auto'>
+              <IconButton onClick={handleClose}>
+                  <Close/>
+              </IconButton>
+            </Grid2>
+          </Grid2>
           <TabContext value={value}>
                 <TabList onChange={handleChange} centered>
                 <Tab label="Общие сведения" value="1"/>
@@ -195,9 +210,71 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
                 <SupportHistoryTab/>
                 </TabPanel>
           </TabContext>
-          
+
+          {/* Кнопки */}
+          <Grid2 size='auto' sx={{ margin: '20px 0px 0px 0px', display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="success"
+              size="small"
+              disabled={!hasChanges}
+              onClick={handleSave}
+              sx={{ minWidth: '100px' }}
+            >
+              Сохранить
+            </Button>
+            <Button
+              variant="contained"
+              color="inherit"
+              size="small"
+              onClick={handleCancel}
+              sx={{ minWidth: '100px' }}
+            >
+              Отмена
+            </Button>
+          </Grid2>
+
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={openConfirmDialog}
+        onClose={handleCancelClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title" color='red' alignContent='center'>
+          Внимание!
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description" color='black'>
+            У вас есть несохраненные изменения, хотите сохранить их перед закрытием?
+          </DialogContentText>
+        </DialogContent>
+          <Grid2 size='auto' sx={{ margin: '0px 0px 20px 0px', display: 'flex', gap: 1, justifyContent: 'center' }}>
+            <Button
+                variant="contained"
+                color="success"
+                size="small"
+                onClick={() => handleConfirmClose(true)}
+                sx={{ minWidth: '100px' }}
+                autoFocus
+              >
+                Да
+              </Button>
+            <Button
+              variant="contained"
+              color="inherit"
+              size="small"
+              onClick={() => handleConfirmClose(false)}
+              sx={{ minWidth: '100px' }}
+            >
+              Нет
+            </Button>
+          </Grid2>
+      </Dialog>
     </div>
+
+    
   );
 }

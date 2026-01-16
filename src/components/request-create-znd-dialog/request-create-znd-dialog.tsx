@@ -4,7 +4,7 @@ import {
   Dialog, DialogContent,
   DialogContentText, DialogTitle,
   Box, Button,
-  Grid2, IconButton
+  Grid2, IconButton, Typography
 } from '@mui/material';
 import { 
     Input, 
@@ -32,10 +32,13 @@ import {
 } from 'mantine-react-table';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 
+import { TextInputField } from '../text-input-field';
+
 export const RequestCreateZNDDialog = (props: {
     isOpen: boolean;
     onClose: any;
 }) => {
+    const [value, setValue] = useState('');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [chosen, setChosen] = React.useState<ItSystem | null>(null);
     const [selected, setSelected] = useState<tableDataClass | null>(null);
@@ -402,16 +405,17 @@ export const RequestCreateZNDDialog = (props: {
                 </Grid2>
             </Grid2>                   
             
-            <Input.Wrapper label="Комментарий" size='md' >
-                <Textarea
-                variant="filled"
-                autosize
-                minRows={2}
-                maxRows={2}
-                // value={value} 
-                // onChange={(e) => setValue(e.currentTarget.value)}
-                />
-            </Input.Wrapper>
+            <Grid2 container spacing={1} direction='column' margin='0px 0px 10px 0px'>
+                <Grid2 size='auto' >
+                    <Text fw={600}>Комментарий</Text>
+                </Grid2>
+                <Grid2 size='auto'>
+                    <TextInputField
+                        value={''}
+                        onChange={(e) => setValue(e.currentTarget.value)}
+                    />
+                </Grid2>
+            </Grid2>
 
             <Grid2 container spacing={3} direction={'row'} alignItems="left" justifyContent="left" paddingTop="10px">
                 <Grid2 size={3} >

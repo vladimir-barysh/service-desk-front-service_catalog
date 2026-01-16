@@ -10,6 +10,7 @@ export class Request {
   user: string | undefined;
   itModule: string | undefined;
   service: string | undefined;
+  description: string | undefined;
 }
 
 // Данные для примера
@@ -26,6 +27,7 @@ export const data: Request[] = [
         user: 'Христорождественская В.А.',
         itModule: '1C:Автотранспорт',
         service: 'Предоставить доступ на очень длинное название услуги',
+        description: 'Длинное описание Длинное описание Длинное описание Длинное описание'
     },
         {
         requestNumber: '000004',
@@ -39,6 +41,7 @@ export const data: Request[] = [
         user: 'Христорождественская В.А.',
         itModule: undefined,
         service: undefined,
+        description: ''
     },
         {
         requestNumber: '000009',
@@ -52,6 +55,7 @@ export const data: Request[] = [
         user: 'Христорождественская В.А.',
         itModule: undefined,
         service: undefined,
+        description: ''
     },
         {
         requestNumber: '000001',
@@ -65,6 +69,7 @@ export const data: Request[] = [
         user: 'Христорождественская В.А.',
         itModule: undefined,
         service: undefined,
+        description: ''
     },
         {
         requestNumber: '000003',
@@ -78,6 +83,7 @@ export const data: Request[] = [
         user: 'Христорождественская В.А.',
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000005',
@@ -91,6 +97,7 @@ export const data: Request[] = [
         user: 'Христорождественская В.А.',
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000006',
@@ -104,6 +111,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000007',
@@ -117,6 +125,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000008',
@@ -130,6 +139,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000010',
@@ -143,6 +153,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000012',
@@ -156,6 +167,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000013',
@@ -169,6 +181,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000014',
@@ -182,6 +195,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000015',
@@ -195,6 +209,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000016',
@@ -208,6 +223,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000017',
@@ -221,6 +237,7 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
     {
         requestNumber: '000018',
@@ -234,5 +251,6 @@ export const data: Request[] = [
         user: undefined,
         itModule: undefined,
         service: undefined,
+        description: ''
     },
 ]

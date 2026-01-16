@@ -8,6 +8,7 @@ import { Grid2, TextField,
 import { DateTimePicker } from '@mantine/dates';
 import { Request } from '../../../pages/support/all-support/makeData';
 import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
+import { TextInputField } from '../../text-input-field';
 
 interface SupportGeneralTabProps {
   isOpen: boolean;
@@ -21,6 +22,13 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   const hasChanges = JSON.stringify(editedRequest) !== JSON.stringify(request);                      // флаг наличия изменений
 
   const isInitialMount = useRef(true);
+
+  const labelStyle = {
+    border: '1px solid #e0e0e0', 
+    borderRadius: '5px',
+    p: 1, 
+    backgroundColor: '#f5f5f5'
+  };
 
   if (!editedRequest) {
     return <Typography>Заявка не выбрана</Typography>;
@@ -65,7 +73,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       <Grid2 container spacing={0} paddingBottom="5px" justifyContent="center">
 
         <Grid2 container spacing={0} size={3}>
-          <Grid2 size="auto" sx={{ border: '1px solid #e0e0e0', p:1, backgroundColor: '#f5f5f5' }}>
+          <Grid2 size="auto" sx={labelStyle}>
             <Typography variant="subtitle2">Статус</Typography>
           </Grid2>
           <Grid2 size="auto">
@@ -85,7 +93,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         </Grid2>
 
         <Grid2 container spacing={0} size={3}>
-          <Grid2 size="auto" sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+          <Grid2 size="auto" sx={labelStyle}>
             <Typography variant="subtitle2">Дата регистрации</Typography>
           </Grid2>
           <Grid2 size="auto">
@@ -109,7 +117,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         </Grid2>
         
         <Grid2 container spacing={0} size={3}>
-            <Grid2 size="auto" sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size="auto" sx={labelStyle}>
               <Typography variant="subtitle2">Желаемый срок</Typography>
             </Grid2>
             <Grid2 size="auto">
@@ -129,7 +137,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
           </Grid2>
 
           <Grid2 container spacing={0} size={3}>
-            <Grid2 size="auto" sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size="auto" sx={labelStyle}>
               <Typography variant="subtitle2">Дата решения</Typography>
             </Grid2>
             <Grid2 size="auto">
@@ -156,7 +164,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         <Grid2 size={6}>
           {/* Строка 1 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Сервис / Модуль</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -173,7 +181,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 2 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Услуга</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -190,7 +198,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 3 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Кому доступ</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -206,7 +214,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 4 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Заголовок</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -223,61 +231,49 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 5 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Описание</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                multiline
-                rows={3}
-                InputProps={{ readOnly: !isEditing }}
+              <TextInputField
+                value={editedRequest.description || ''}
                 onChange={handleChange('description')}
+                readonly={!isEditing}
               />
             </Grid2>
           </Grid2>
 
           {/* Строка 6 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Решение</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                multiline
-                rows={3}
-                InputProps={{ readOnly: !isEditing }}
+              <TextInputField
+                value={''}
                 onChange={handleChange('solution')}
+                readonly={!isEditing}
               />
             </Grid2>
           </Grid2>
 
           {/* Строка 7 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Комментарий</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                multiline
-                rows={3}
-                InputProps={{ readOnly: !isEditing }}
+              <TextInputField
+                value={''}
                 onChange={handleChange('comment')}
+                readonly={!isEditing}
               />
             </Grid2>
           </Grid2>
 
           {/* Строка 8 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Диспетчер</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -299,7 +295,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 3 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Отложено до</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -319,26 +315,11 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
           </Grid2>
 
           {/* Строка 4 */}
-          <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
-              <Typography variant="subtitle2">Описание причины отложения</Typography>
-            </Grid2>
-            <Grid2 size={9}>
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                multiline
-                rows={3}
-                InputProps={{ readOnly: !isEditing }}
-                onChange={handleChange('postponeReason')}
-              />
-            </Grid2>
-          </Grid2>
+          
 
           {/* Строка 5 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Контрольная дата возврата техники</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -359,7 +340,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 6 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Тип заявки</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -378,7 +359,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 7 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Приоритет</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -394,7 +375,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 8 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Способ обращения</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -412,7 +393,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 9 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">База знаний по системе</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -441,7 +422,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         <Grid2 size={6}>
           {/* Строка 1 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Инициатор</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -461,7 +442,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
           
           {/* Строка 2 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Должность</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -479,7 +460,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
           </Grid2>
           {/* Строка 3 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Подразделение</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -500,7 +481,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         <Grid2 size={6}>
           {/* Строка 1 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Вн. номер</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -524,7 +505,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 2 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Сот. номер</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -549,7 +530,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 3 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={{ border: '1px solid #e0e0e0', p: 1, backgroundColor: '#f5f5f5' }}>
+            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Почта</Typography>
             </Grid2>
             <Grid2 size={9}>
