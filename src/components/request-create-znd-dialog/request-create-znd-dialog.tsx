@@ -398,7 +398,6 @@ export const RequestCreateZNDDialog = (props: {
 
             <Grid2 container spacing={2} direction="row" alignItems="stretch" justifyContent="left" paddingBottom="5px">
                 <Grid2 size={12}>
-                    <Text fw={600} mb="xs">Укажите необходимые роли *</Text>
                     <MantineReactTable table={table} />
                 </Grid2>
             </Grid2>                   

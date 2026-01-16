@@ -355,6 +355,13 @@ export function LeftSidebar() {
           >
             Информация
           </MenuItem>
+          
+          <MenuItem
+            {...menuItemCommon}
+            icon = {<PersonOutlined/>}
+          >
+            Мой профиль
+          </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
@@ -398,52 +405,6 @@ export function LeftSidebar() {
           ></MenuItem>
         </Menu>
       </Sidebar>
-
-      {/*МБ потом убрать*/}
-      <Box
-        sx={{
-          mt: "auto",
-          paddingBottom: '20px',
-          borderTop: "1px solid #1e2a44",
-          bgcolor: "rgba(0,0,0,0.15)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          gap: 1.5,
-          flexShrink: 0,
-          flexWrap: "nowrap",
-          minHeight: "64px",
-        }}
-      >
-        <Box sx={{ minWidth: 0 }}>
-            <Typography
-              variant="subtitle2"
-              sx={{
-                color: "#e0e7ff",
-                fontWeight: 500,
-                lineHeight: 1.2,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {currentUser.name}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "#a0b0d0",
-                display: "block",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {currentUser.role}
-            </Typography>
-          </Box>
-      </Box>
-        
     </Box>
 );
 

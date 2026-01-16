@@ -14,12 +14,14 @@ import SplitButton from '../../../components/split-button/split-button.component
 import { RequestCreateDialog } from '../../../components';
 import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
+import { RequestCreateZNIDialog } from '../../../components/request-create-zni-dialog/request-create-zni-dialog';
 import { IconPencil } from '@tabler/icons-react';
 
 export function RequestsAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
+  const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const currInitiator = "Христорождественская В.А.";
@@ -182,11 +184,14 @@ export function RequestsAllPage() {
 
   const onRequestTypeSelect = (selected: any) => {
     setRequestType(selected);
-    if (selected === "Заявка на обслуживание" || selected === "Инцидент") {
+    if (selected === "Заявка на обслуживание") {
       createZNODialog();
     }
     else if (selected === "Заявка на доступ") {
       createZNDDialog();
+    }
+    else if (selected === "Заявка на изменение") {
+      createZNIDialog();
     }
     else {
       setIsCreateDialogOpen(true);
@@ -198,10 +203,14 @@ export function RequestsAllPage() {
   function createZNODialog() {
     setIsCreateDialogZNOOpen(true);
   }
+  function createZNIDialog() {
+    setIsCreateDialogZNIOpen(true);
+  }
   const onCreateDialogClose = () => {
     setIsCreateDialogOpen(false);
     setIsCreateDialogZNOOpen(false);
     setIsCreateDialogZNDOpen(false);
+    setIsCreateDialogZNIOpen(false);
   }
   useEffect(() => {
       console.debug('111' + requestTypeDialog);
@@ -353,6 +362,10 @@ export function RequestsAllPage() {
         />
         <RequestCreateZNDDialog
           isOpen={isCreateDialogZNDOpen}
+          onClose={onCreateDialogClose}
+        />
+        <RequestCreateZNIDialog
+          isOpen={isCreateDialogZNIOpen}
           onClose={onCreateDialogClose}
         />
         <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
