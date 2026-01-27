@@ -2,10 +2,10 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8081',
-  withCredentials: true, 
+  withCredentials: true,
 });
 
-// Опционально: интерсепторы для обработки ошибок
+//интерсепторы для обработки ошибок
 api.interceptors.response.use(
   response => response,
   error => {

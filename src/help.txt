@@ -1,0 +1,52 @@
+Виды запросов к БД
+
+useQuery. Получение данных один раз при загрузке + умное кэширование. работает так:
+
+При первом рендере компонента:
+→ вызывает yourApiMethod()
+→ делает HTTP-запрос к серверу
+
+Кладёт результат в глобальный кэш
+
+Все другие компоненты с таким же queryKey:
+→ получают данные из кэша, без запроса
+staleTime указывает, сколько времени данные в кеше будут оставаться "актуальными"
+
+Пример вызова в коде страницы: 
+const {
+    data: yourData = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['yourKey'],
+    queryFn: yourApiMethod,
+    staleTime: Infinity //данные всегда актуальны
+  });
+
+Загрузка данных при открытии страницы:
+useEffect(() => {
+    getOrderTypes()
+      .then(data => {
+        setOrderTypes(data);
+      })
+      .catch(err => {
+        setError(err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
+Загрузка данных каждые 10 сек:
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetch("/api/tickets")
+      .then(r => r.json())
+      .then(setTickets);
+  }, 10000); // каждые 10 секунд
+
+  return () => clearInterval(interval);
+}, []);
+
+
+Настроить WEBSOCKET для чата (и еще чего-нибудь!!!
