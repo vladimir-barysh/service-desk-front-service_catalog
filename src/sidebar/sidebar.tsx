@@ -1,19 +1,22 @@
-import React, {useMemo} from "react";
+import React, { useMemo } from "react";
 import { Menu, MenuItem, Sidebar, SubMenu } from 'react-pro-sidebar';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Badge, Box, Typography } from '@mui/material';
-import { ModeEdit, TaskAlt, ChecklistRtl, 
-  Reorder, Groups, Folder, 
-  LanOutlined, Storage, SettingsSuggest, 
-  HomeOutlined, InfoOutlined, PersonOutlined, 
-  ViewListOutlined, EngineeringOutlined, 
+import {
+  ModeEdit, TaskAlt, ChecklistRtl,
+  Reorder, Groups, Folder,
+  LanOutlined, Storage, SettingsSuggest,
+  HomeOutlined, InfoOutlined, PersonOutlined,
+  ViewListOutlined, EngineeringOutlined,
   SupportAgentOutlined
 } from '@mui/icons-material'
 import '../styles/sidebar.scss';
 import { data, type Request } from '../pages/support/all-support/makeData';
 import { stat } from "fs";
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, 
-         ListItemText, ListSubheader, Divider } from '@mui/material';
+import {
+  Drawer, List, ListItem, ListItemButton, ListItemIcon,
+  ListItemText, ListSubheader, Divider
+} from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -27,15 +30,15 @@ const backgroundColor = '#3b4c6c';
 const color = '#909fbbff';
 const sectionTitleColor = "#c0d0f0";
 const currentUser = {
-      name: "Христорождественская В.А.",
-      role: "Старший специалист",
-      avatarUrl: null, // или "https://..." если есть фото
-      initials: "ВА"   // или генерировать автоматически
-    };
+  name: "Христорождественская В.А.",
+  role: "Старший специалист",
+  avatarUrl: null, // или "https://..." если есть фото
+  initials: "ВА"   // или генерировать автоматически
+};
 
 function useRequestCounts() {
   return useMemo(() => {
-    
+
     const newCount = data.filter(item => item.status === 'Новая').length;
     const allCount = data.filter(item => item.status !== 'Закрыта').length;
     const nAgreedCount = data.filter(item => item.status === 'Не согласовано').length;
@@ -60,8 +63,8 @@ export function LeftSidebar() {
 
   const isSupportAll = location.pathname === '/support/all';
   const isTasksAll = location.pathname === '/tasks/my-all-tasks'
-  const isNewActive  = isSupportAll && status === 'Новая';
-  const isAllActive  = isSupportAll && !status;
+  const isNewActive = isSupportAll && status === 'Новая';
+  const isAllActive = isSupportAll && !status;
   const isNAgreedActive = isSupportAll && status === 'nAgreed';
   const isNConfirmedActive = isSupportAll && status === 'nConfirmed';
   const isOnControlActive = isSupportAll && status === 'onControl';
@@ -71,19 +74,20 @@ export function LeftSidebar() {
   const { newCount, allCount, nAgreedCount, nConfirmedCount, onControlCount,
     exeCount
   } = useRequestCounts();
-  
+
   const menuItemCommon = {
     style: { marginLeft: '-10px', width: '310px' },
-    rootStyles: { 
+    rootStyles: {
       fontWeight: 400,
       fontSize: '1.0rem',
-     }
+    }
   };
 
   const sectionHeader = {
     disabled: true,
-    style: { marginLeft: '0px', 
-      width: '100%', 
+    style: {
+      marginLeft: '0px',
+      width: '100%',
       background: submenuColor,
       justifyContent: 'center',
     },
@@ -96,15 +100,15 @@ export function LeftSidebar() {
       textAlign: 'center' as const,
     }
   };
-  
+
   return (
     <Box className={'box'}
-      sx = {{
+      sx={{
         display: "flex",
         flexDirection: "column"
       }}
     >
-      <Sidebar 
+      <Sidebar
         width='100%'
         backgroundColor='backgroundColor'
       >
@@ -112,23 +116,23 @@ export function LeftSidebar() {
           menuItemStyles={{
             button: ({ active }) => {
               return {
-              height: '25px',
-              minHeight: '25px',
-              padding: '0 10px',
-              
-              gap: '0px',
-              borderRadius: '5px',
-              margin: '1px 6px',
-              
-              backgroundColor: active ? activeColor : backgroundColor,
-              color: active ? 'white' : color,
-              '&:hover': {
-                backgroundColor: activeColor,
-                color: 'white',
-              },
+                height: '25px',
+                minHeight: '25px',
+                padding: '0 10px',
+
+                gap: '0px',
+                borderRadius: '5px',
+                margin: '1px 6px',
+
+                backgroundColor: active ? activeColor : backgroundColor,
+                color: active ? 'white' : color,
+                '&:hover': {
+                  backgroundColor: activeColor,
+                  color: 'white',
+                },
               }
             },
-            
+
             icon: {
               minWidth: '32px',
               fontSize: '1.1rem',
@@ -141,14 +145,15 @@ export function LeftSidebar() {
         >
           <MenuItem
             disabled
-            style = {{ marginLeft: '0px', 
-              width: '100%', 
+            style={{
+              marginLeft: '0px',
+              width: '100%',
               background: submenuColor1,
               color: 'white',
               justifyContent: 'center',
               padding: '20px 0px 20px 0px',
             }}
-            rootStyles = {{
+            rootStyles={{
               color: 'sectionTitleColor',
               fontWeight: 600,
               fontSize: '1.3rem',
@@ -166,7 +171,7 @@ export function LeftSidebar() {
             component={<Link to={'/home/home.page'} />}
             active={location.pathname.includes('/home/home.page')}
             icon={<HomeOutlined />}
-            >
+          >
             Главная страница
           </MenuItem>
 
@@ -185,7 +190,7 @@ export function LeftSidebar() {
           >
             Мои заявки
           </MenuItem>
-          
+
           <MenuItem
             {...sectionHeader}
             disabled
@@ -195,7 +200,7 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<SupportAgentOutlined/>}
+            icon={<SupportAgentOutlined />}
             component={<Link to={'/support/all?status=Новая'} />}
             active={isNewActive}
             suffix={<Badge badgeContent={newCount} color="primary"></Badge>}
@@ -205,8 +210,8 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<SupportAgentOutlined/>}
-            component={<Link to={'/support/all'}/>}
+            icon={<SupportAgentOutlined />}
+            component={<Link to={'/support/all'} />}
             active={isAllActive}
             suffix={<Badge badgeContent={allCount} color="warning"></Badge>}
           >
@@ -215,8 +220,8 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<SupportAgentOutlined/>}
-            component={<Link to={'/support/all?status=nAgreed'}/>}
+            icon={<SupportAgentOutlined />}
+            component={<Link to={'/support/all?status=nAgreed'} />}
             active={isNAgreedActive}
             suffix={<Badge badgeContent={nAgreedCount} color="primary"></Badge>}
           >
@@ -225,8 +230,8 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<SupportAgentOutlined/>}
-            component={<Link to={'/support/all?status=nConfirmed'}/>}
+            icon={<SupportAgentOutlined />}
+            component={<Link to={'/support/all?status=nConfirmed'} />}
             active={isNConfirmedActive}
             suffix={<Badge badgeContent={nConfirmedCount} color="warning"></Badge>}
           >
@@ -235,56 +240,56 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<SupportAgentOutlined/>}
-            component={<Link to={'/support/all?status=onControl'}/>}
+            icon={<SupportAgentOutlined />}
+            component={<Link to={'/support/all?status=onControl'} />}
             active={isOnControlActive}
             suffix={<Badge badgeContent={onControlCount} color="primary"></Badge>}
           >
             Заявки (на контроле)
           </MenuItem>
-          
+
           <MenuItem
             {...menuItemCommon}
-            icon = {<SupportAgentOutlined/>}
-            component={<Link to={'/support/all'}/>}
+            icon={<SupportAgentOutlined />}
+            component={<Link to={'/support/all'} />}
             active={isAllActive}
           >
             Мои заявки
           </MenuItem>
-        
+
           <MenuItem
             {...sectionHeader}
             disabled
           >
             Задачи
           </MenuItem>
-          
+
           <MenuItem
             {...menuItemCommon}
-            icon = {<ViewListOutlined/>}
-          > 
+            icon={<ViewListOutlined />}
+          >
             Групповые (не принятые)
           </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<ViewListOutlined/>}
+            icon={<ViewListOutlined />}
             component={<Link to={'/tasks/all?status=onExecution'} />}
             active={isOnExecution}
-            suffix={<Badge badgeContent={exeCount} color="warning"></Badge>}  
+            suffix={<Badge badgeContent={exeCount} color="warning"></Badge>}
           >
             Задачи на исполнение
           </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<ViewListOutlined/>}
+            icon={<ViewListOutlined />}
             component={<Link to={'/tasks/all?status=onAgree'} />}
             active={isOnAgree}
           >
             Задачи на согласование
           </MenuItem>
-      
+
           <MenuItem
             {...sectionHeader}
             disabled
@@ -294,7 +299,7 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<LanOutlined/>}
+            icon={<LanOutlined />}
             component={<Link to={'/services_catalog/tree'} />}
             active={location.pathname.includes('/services_catalog/tree')}
           >
@@ -303,7 +308,7 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<LanOutlined/>}
+            icon={<LanOutlined />}
             component={<Link to={'/services_catalog/itcatalog'} />}
             active={location.pathname.includes('/services_catalog/itcatalog')}
           >
@@ -312,22 +317,22 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<LanOutlined/>}
+            icon={<LanOutlined />}
             component={<Link to={'/services_catalog/itservices'} />}
             active={location.pathname.includes('/services_catalog/itservices')}
           >
             ИТ-сервисы
           </MenuItem>
-          
+
           <MenuItem
             {...menuItemCommon}
-            icon = {<LanOutlined/>}
+            icon={<LanOutlined />}
             component={<Link to={'/services_catalog/history'} />}
             active={location.pathname.includes('/services_catalog/history')}
           >
             История каталога
           </MenuItem>
-        
+
           <MenuItem
             {...sectionHeader}
             disabled
@@ -337,64 +342,80 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<EngineeringOutlined/>}
+            icon={<EngineeringOutlined />}
+            component={<Link to={'/admin/manual'}/>}
+            active={location.pathname.includes('/admin/manual')}
           >
             Справочники
           </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<EngineeringOutlined/>}
+            icon={<EngineeringOutlined />}
+            component={<Link to={'/admin/schedule'}/>}
+            active={location.pathname.includes('/admin/schedule')}
           >
             График работы УИТ
           </MenuItem>
-      
+
           <MenuItem
             {...sectionHeader}
             disabled
           >
             Информация
           </MenuItem>
-          
+
           <MenuItem
             {...menuItemCommon}
-            icon = {<PersonOutlined/>}
+            icon={<PersonOutlined />}
+            component={<Link to={'/info/profile'}/>}
+            active={location.pathname.includes('/info/profile')}
           >
             Мой профиль
           </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<InfoOutlined/>}
+            icon={<InfoOutlined />}
+            component={<Link to={'/info/webservices'}/>}
+            active={location.pathname.includes('/info/webservices')}
           >
             Веб-сервисы
           </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<InfoOutlined/>}
+            icon={<InfoOutlined />}
+            component={<Link to={'/info/itcatalog'}/>}
+            active={location.pathname.includes('/info/itcatalog')}
           >
             Каталог ИТ-услуг
           </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<InfoOutlined/>}
+            icon={<InfoOutlined />}
+            component={<Link to={'/info/knowbase'}/>}
+            active={location.pathname.includes('/info/knowbase')}
           >
             База знаний
           </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<InfoOutlined/>}
+            icon={<InfoOutlined />}
             suffix={<Badge badgeContent={999} color="warning"></Badge>}
+            component={<Link to={'/info/notifications'}/>}
+            active={location.pathname.includes('/info/notifications')}
           >
             Уведомления
           </MenuItem>
 
           <MenuItem
             {...menuItemCommon}
-            icon = {<InfoOutlined/>}
+            icon={<InfoOutlined />}
+            component={<Link to={'/info/reference'}/>}
+            active={location.pathname.includes('/info/reference')}
           >
             Справка о системе
           </MenuItem>
@@ -406,6 +427,6 @@ export function LeftSidebar() {
         </Menu>
       </Sidebar>
     </Box>
-);
+  );
 
 }
