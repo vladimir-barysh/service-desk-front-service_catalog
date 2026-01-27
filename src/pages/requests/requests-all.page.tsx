@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable } from 'mantine-react-table';
+import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable } from 'mantine-react-table';
 import { data, type Request } from '../../support/all-support/makeData';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
@@ -9,12 +9,12 @@ import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog } from '../../../components';
-import SplitButton from '../../../components/split-button/split-button.component';
-import { RequestCreateDialog } from '../../../components';
-import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
-import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
-import { RequestCreateZNIDialog } from '../../../components/request-create-zni-dialog/request-create-zni-dialog';
+import { SupportGeneralDialog } from '../../components';
+import SplitButton from '../../components/split-button/split-button.component';
+import { RequestCreateDialog } from '../../components';
+import { RequestCreateZNODialog } from '../../components/request-create-zno-dialog/request-create-zno-dialog';
+import { RequestCreateZNDDialog } from '../../components/request-create-znd-dialog/request-create-znd-dialog';
+import { RequestCreateZNIDialog } from '../../components/request-create-zni-dialog/request-create-zni-dialog';
 import { IconPencil } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 
