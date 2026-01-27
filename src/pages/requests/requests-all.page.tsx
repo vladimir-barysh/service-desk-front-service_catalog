@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { data, type Request } from '../support/all-support/makeData';
+import { data, type Request } from '../../support/all-support/makeData';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
@@ -16,6 +16,9 @@ import { RequestCreateZNODialog } from '../../components/request-create-zno-dial
 import { RequestCreateZNDDialog } from '../../components/request-create-znd-dialog/request-create-znd-dialog';
 import { RequestCreateZNIDialog } from '../../components/request-create-zni-dialog/request-create-zni-dialog';
 import { IconPencil } from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
+
+import { getOrderTypes } from '../../../api/services/orderTypeService';
 
 export function RequestsAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
@@ -27,154 +30,153 @@ export function RequestsAllPage() {
   const currInitiator = "Христорождественская В.А.";
 
   const filteredData = useMemo(() => {
-      let result = data;
-      //Высвечиваем только данные, настоящего пользователя
-      result = result.filter(item => item.initiator === currInitiator);
-      
-      if (hideClosed) {
-        result = result.filter(item => item.status !== 'Закрыта');
-      }
-      
-      return result;
-    }, [hideClosed]);
+    let result = data;
+    //Высвечиваем только данные, настоящего пользователя
+    result = result.filter(item => item.initiator === currInitiator);
+
+    if (hideClosed) {
+      result = result.filter(item => item.status !== 'Закрыта');
+    }
+
+    return result;
+  }, [hideClosed]);
 
   useEffect(() => {
     setHideClosed(true);
   }, [location.pathname, location.search]);
 
   const columns = useMemo<MRT_ColumnDef<Request>[]>(
-      () => [
-        {
-          header: '№ заявки',
-          accessorKey: 'requestNumber',
-          maxSize: 90,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по №',
-          },
-          enableResizing: false,
+    () => [
+      {
+        header: '№ заявки',
+        accessorKey: 'requestNumber',
+        maxSize: 90,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по №',
         },
-        {
-          header: 'Дата регистрации',
-          accessorKey: 'dateRegistration',
-          type: 'string',
-          maxSize: 175,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по дате регистрации',
-          },
+        enableResizing: false,
+      },
+      {
+        header: 'Дата регистрации',
+        accessorKey: 'dateRegistration',
+        type: 'string',
+        maxSize: 175,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по дате регистрации',
         },
-        {
-          header: 'Желаемый срок',
-          accessorKey: 'dateDesired',
-          type: 'string',
-          maxSize: 165,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по желаемому сроку',
-          },
+      },
+      {
+        header: 'Желаемый срок',
+        accessorKey: 'dateDesired',
+        type: 'string',
+        maxSize: 165,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по желаемому сроку',
         },
-        {
-          header: 'Дата решения заявки',
-          accessorKey: 'dateSolution',
-          type: 'string',
-          maxSize: 160,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по дате решения',
-          },
+      },
+      {
+        header: 'Дата решения заявки',
+        accessorKey: 'dateSolution',
+        type: 'string',
+        maxSize: 160,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по дате решения',
         },
-        {
-          header: 'Статус',
-          accessorKey: 'status',
-          type: 'string',
-          maxSize: 150,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по статусу',
-          },
+      },
+      {
+        header: 'Статус',
+        accessorKey: 'status',
+        type: 'string',
+        maxSize: 150,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по статусу',
         },
-        {
-          header: 'Заголовок',
-          accessorKey: 'header',
-          type: 'string',
-          maxSize: 130,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по заголовку',
-          },
+      },
+      {
+        header: 'Заголовок',
+        accessorKey: 'header',
+        type: 'string',
+        maxSize: 130,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по заголовку',
         },
-        {
-          header: 'Тип запроса',
-          accessorKey: 'requestType',
-          type: 'string',
-          maxSize: 100,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по запросу',
-          },
+      },
+      {
+        header: 'Тип запроса',
+        accessorKey: 'requestType',
+        type: 'string',
+        maxSize: 100,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по запросу',
         },
-        {
-          header: 'Инициатор',
-          accessorKey: 'initiator',
-          type: 'string',
-          maxSize: 150,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по инициатору',
-          },
+      },
+      {
+        header: 'Инициатор',
+        accessorKey: 'initiator',
+        type: 'string',
+        maxSize: 150,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по инициатору',
         },
-        {
-          header: 'Пользователь',
-          accessorKey: 'user',
-          type: 'string',
-          maxSize: 150,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по пользователю',
-          },
+      },
+      {
+        header: 'Пользователь',
+        accessorKey: 'user',
+        type: 'string',
+        maxSize: 150,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по пользователю',
         },
-        {
-          header: 'IT-сервис (модуль)',
-          accessorKey: 'itModule',
-          type: 'string',
-          maxSize: 150,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по IT-сервису',
-          },
+      },
+      {
+        header: 'IT-сервис (модуль)',
+        accessorKey: 'itModule',
+        type: 'string',
+        maxSize: 150,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по IT-сервису',
         },
-        {
-          header: 'Услуга',
-          accessorKey: 'service',
-          type: 'string',
-          maxSize: 130,
-          enableResizing: false,
-          mantineFilterTextInputProps: {
-            placeholder: 'Фильтр по услуге',
-          },
+      },
+      {
+        header: 'Услуга',
+        accessorKey: 'service',
+        type: 'string',
+        maxSize: 130,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр по услуге',
         },
-      ],
-      [],
-    );
+      },
+    ],
+    [],
+  );
 
   // Цвет заливки строки
   const colorRow = (row: MRT_Row<Request>) => {
-    if (row.getIsSelected())
-    {
+    if (row.getIsSelected()) {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
     // Получаем тип заявки из данных строки
     const requestType = row.original.requestType;
-  
+
     // Цвета для разных типов заявок
     switch (requestType) {
       case 'ЗНО':
-        return 'rgba(76, 175, 80, 0.1)'; 
+        return 'rgba(76, 175, 80, 0.1)';
       case 'ЗНД':
-        return 'rgba(255, 152, 0, 0.1)'; 
+        return 'rgba(255, 152, 0, 0.1)';
       case 'ЗНИ':
-        return 'rgba(244, 67, 54, 0.1)'; 
+        return 'rgba(244, 67, 54, 0.1)';
       case 'инцидент':
         return 'rgba(33, 150, 243, 0.1)';
       default:
@@ -213,8 +215,8 @@ export function RequestsAllPage() {
     setIsCreateDialogZNIOpen(false);
   }
   useEffect(() => {
-      console.debug('111' + requestTypeDialog);
-    }, [requestTypeDialog]
+    console.debug('111' + requestTypeDialog);
+  }, [requestTypeDialog]
   );
 
   // Парсер даты
@@ -238,26 +240,26 @@ export function RequestsAllPage() {
 
     return new Date(year, month, day);
   }
-  
+
   // Функция для проверки просрочки заявки
   const isRequestOverdue = (request: Request): boolean => {
     if (!request.dateDesired) return false;
-    
+
     // Если заявка уже завершена не считаем просроченной
     const completedStatuses = ['Закрыта', 'Отклонена'];
     if (request.status && completedStatuses.includes(request.status)) {
       return false;
     }
-    
+
     const desiredDate = parseDate(request.dateDesired.split(' ')[0]);
-    
+
     // Если дата не распарсилась не считаем просроченной
     if (!desiredDate) return false;
-    
+
     // Сравниваем с текущей датой (без времени)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     return desiredDate < today;
   };
 
@@ -273,6 +275,17 @@ export function RequestsAllPage() {
     setSelectedRequest(null);
   };
 
+
+  const {
+    data: orderTypes = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['ordertypes'],
+    queryFn: getOrderTypes,
+    staleTime: Infinity
+  });
+
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType] = useState(0);
@@ -286,23 +299,23 @@ export function RequestsAllPage() {
     columns: columns,
     data: filteredData,
     enableExpanding: false,
-    enableTopToolbar:false,
-    enableRowSelection:true,
-    enableRowNumbers:false,
-    enableMultiRowSelection:false,
-    enableSelectAll:false,
-    enableHiding:false,
-    enableColumnResizing:false,
-    layoutMode:'grid',
-    columnResizeMode:'onChange',
-    filterFromLeafRows:true,
-    enableColumnActions:false,
-    localization:MRT_Localization_RU,
-    initialState:{
+    enableTopToolbar: false,
+    enableRowSelection: true,
+    enableRowNumbers: false,
+    enableMultiRowSelection: false,
+    enableSelectAll: false,
+    enableHiding: false,
+    enableColumnResizing: false,
+    layoutMode: 'grid',
+    columnResizeMode: 'onChange',
+    filterFromLeafRows: true,
+    enableColumnActions: false,
+    localization: MRT_Localization_RU,
+    initialState: {
       density: 'xs',
       pagination: { pageIndex: 0, pageSize: 100 },
-      columnVisibility: {'mrt-row-select': false},
-      showColumnFilters:true,
+      columnVisibility: { 'mrt-row-select': false },
+      showColumnFilters: true,
     },
 
     mantineTableProps: {
@@ -343,7 +356,7 @@ export function RequestsAllPage() {
       }
     }),
   });
-  
+
   // Доступность кнопок по нажатию на строку таблицы
   const selectedRowsCount = table.getSelectedRowModel().rows.length;
   const hasSelectedRows = !(selectedRowsCount > 0);
@@ -389,7 +402,7 @@ export function RequestsAllPage() {
               Отменить заявку
             </Button>
           </Grid2>
-            <Grid2 size="auto">
+          <Grid2 size="auto">
             <Button
               variant="contained"
               color="warning"
@@ -400,7 +413,7 @@ export function RequestsAllPage() {
               Редактировать заявку
             </Button>
           </Grid2>
-            <Grid2 size="auto">
+          <Grid2 size="auto">
             <Button
               variant="contained"
               color="success"
@@ -423,7 +436,7 @@ export function RequestsAllPage() {
             </Button>
           </Grid2>
           <Grid2 size="auto" alignContent="center">
-            <MantineProvider theme={{cursorType: 'pointer'}}>
+            <MantineProvider theme={{ cursorType: 'pointer' }}>
               <Checkbox
                 checked={hideClosed}
                 onChange={(event) => setHideClosed(event.currentTarget.checked)}
@@ -434,10 +447,10 @@ export function RequestsAllPage() {
           </Grid2>
         </Grid2>
 
-        <MantineReactTable table={table}/>
+        <MantineReactTable table={table} />
 
       </Box>
-      
+
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         request={selectedRequest}
