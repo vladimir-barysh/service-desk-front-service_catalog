@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { data, type Request } from '../../support/all-support/makeData';
+import { data, type Request } from '../support/all-support/makeData';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
@@ -17,8 +17,7 @@ import { RequestCreateZNDDialog } from '../../components/request-create-znd-dial
 import { RequestCreateZNIDialog } from '../../components/request-create-zni-dialog/request-create-zni-dialog';
 import { IconPencil } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-
-import { getOrderTypes } from '../../../api/services/orderTypeService';
+import { getOrderTypes } from '../../api/services/orderTypeService';
 
 export function RequestsAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);

@@ -21,6 +21,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { DataGrid, GridColDef, GridRowModel, GridRowModes, GridRowModesModel } from '@mui/x-data-grid';
 import { useQuery } from '@tanstack/react-query';
 import { getAuthorities } from '../../api/services/authorityService';
+import { getOrderTypes } from '../../api/services/orderTypeService';
+import { getOrderStates } from '../../api/services/orderStateService';
 
 // Типы
 interface DictionaryMeta {
@@ -42,13 +44,13 @@ const DICTIONARIES: DictionaryMeta[] = [
         apiEndpoint: '/api/ordertype',
         columns: [
             { field: 'name', headerName: 'Название', width: 220, editable: true },
-            { field: 'isActive', headerName: 'Активна', width: 110, type: 'boolean', editable: true },
+            { field: 'available', headerName: 'Активна', width: 110, type: 'boolean', editable: true },
         ],
     },
     {
         key: 'orderstate',
         title: 'Статус заявки',
-        apiEndpoint: '/api/orderstatus',
+        apiEndpoint: '/api/orderstate',
         columns: [
             { field: 'name', headerName: 'Название', width: 220, editable: true },
         ],
@@ -289,14 +291,48 @@ export function ManualPage() {
         queryFn: getAuthorities,
     });
 
+    const {
+        data: orderTypes = [],
+        isLoading: isLoadingOrderTypes,
+        isError: isErrorOrderTypes,
+        error: orderTypesError,
+    } = useQuery({
+        queryKey: ['ordertypes'],
+        queryFn: getOrderTypes,
+    });
+
+    const {
+        data: orderStates = [],
+        isLoading: isLoadingOrderStates,
+        isError: isErrorOrderStates,
+        error: orderStatesError,
+    } = useQuery({
+        queryKey: ['orderstate'],
+        queryFn: getOrderStates,
+    });
+
     const loadDictionary = async (dict: DictionaryMeta) => {
         setLoading(true);
         setError(null);
 
         try {
-            if (dict.key === 'authority') {
+            if (dict.key === 'ordertype') {
+                const formatted = orderTypes.map((item: any) => ({
+                    id: item.idOrderType,
+                    name: item.name,
+                    available: item.available,
+                }));
+
+                setDictData(prev => ({ ...prev, [dict.key]: formatted }));
+            } else if (dict.key === 'orderstate') {
+                const formatted = orderStates.map((item: any) => ({
+                    id: item.idOrderState,
+                    name: item.name
+                }));
+
+                setDictData(prev => ({ ...prev, [dict.key]: formatted }));
+            } else if (dict.key === 'authority') {
                 // ← вот здесь используем данные из useQuery
-                const authorities = await getAuthorities();           // или берём из кэша
                 const formatted = authorities.map((item: any) => ({
                     id: item.id || item.authorityId || item.code,       // подставь реальное поле
                     name: item.name || item.title || item.authority,    // название должности
@@ -335,7 +371,7 @@ export function ManualPage() {
             <Grid container component={Paper} sx={{ flex: 1, overflow: 'hidden' }}>
                 {/* Список справочников */}
                 <Grid item xs={12} md={3} sx={{ borderRight: '1px solid #e0e0e0', overflowY: 'auto' }}>
-                    <Typography variant="h6" align='center' padding='8px 0px 8px 0px'  sx={{ borderBottom: '1px solid #e0e0e0'}}>
+                    <Typography variant="h6" align='center' padding='8px 0px 8px 0px' sx={{ borderBottom: '1px solid #e0e0e0' }}>
                         Список справочников
                     </Typography>
                     <List disablePadding>
@@ -361,7 +397,7 @@ export function ManualPage() {
                         <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Typography color="text.secondary">Выберите справочник</Typography>
                         </Box>
-                    ) : loading ? (
+                    ) : isLoading ? (
                         <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <CircularProgress />
                         </Box>
