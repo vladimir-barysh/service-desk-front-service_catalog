@@ -1,6 +1,6 @@
 // components/postpone-dialog/postpone-dialog.tsx
 import React, { useState } from 'react';
-import { Request } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/all-support/makeData';
 import {
   Dialog,
   DialogTitle,
@@ -14,7 +14,7 @@ interface PostponeDialogProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (comment: string) => void;
-  request?: Request | null;
+  request?: Order | null;
 }
 
 export function PostponeDialog({ open, onClose, onConfirm, request }: PostponeDialogProps) {
@@ -34,7 +34,7 @@ export function PostponeDialog({ open, onClose, onConfirm, request }: PostponeDi
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Отложить заявку {request?.requestNumber} </DialogTitle>
+      <DialogTitle>Отложить заявку {request?.nomer} </DialogTitle>
       <DialogContent>
         <TextField
             label="Причина откладывания"

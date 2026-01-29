@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Request } from '../../pages/support/all-support/makeData';
+import { Order } from '../../pages/support/all-support/makeData';
 
 type DialogState = {
-  postpone: { open: boolean; request: Request | null };
-  accept: { open: boolean; request: Request | null };
-  reject: { open: boolean; request: Request | null };
-  close: { open: boolean; request: Request | null };
-  control: { open: boolean; request: Request | null };
-  confirm: { open: boolean; request: Request | null };
+  postpone: { open: boolean; request: Order | null };
+  accept: { open: boolean; request: Order | null };
+  reject: { open: boolean; request: Order | null };
+  close: { open: boolean; request: Order | null };
+  control: { open: boolean; request: Order | null };
+  confirm: { open: boolean; request: Order | null };
 };
 
 export function useDialogs() {
@@ -20,7 +20,7 @@ export function useDialogs() {
     confirm: { open: false, request: null },
   });
 
-  const openDialog = (dialogName: keyof DialogState, request: Request) => {
+  const openDialog = (dialogName: keyof DialogState, request: Order) => {
     setDialogs(prev => ({
       ...prev,
       [dialogName]: { open: true, request }

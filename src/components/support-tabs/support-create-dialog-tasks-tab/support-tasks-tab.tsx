@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
 import { SchemaNode, schemaData } from './makeData';
 import { RedirectTaskDialog, RedirectData, PostponeTaskDialog, PostponeData } from '../../../components';
-import { Request } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/all-support/makeData';
 
 // Пропсы для компонентов
 interface BlockSchemaProps {
@@ -12,7 +12,7 @@ interface BlockSchemaProps {
 }
 
 interface SupportTasksTabProps {
-  request: Request | null;
+  request: Order | null;
 }
 
 // Функция для блок схемы
@@ -168,7 +168,7 @@ export function SupportTasksTab({ request }: SupportTasksTabProps) {
         open={postponeDialogOpen}
         onClose={handlePostponeClose}
         onSave={handlePostponeSave}
-        currentDate={request?.dateDesired} // Передаем текущую дату из request
+        currentDate={request?.dateFinishPlan} // Передаем текущую дату из request
       />
 
       {/* Вывод выбранного блока */}

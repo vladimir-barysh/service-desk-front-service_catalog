@@ -479,7 +479,7 @@ export function TasksMyAllPage() {
 
       <SupportGeneralDialog
         isOpen={isDialogOpen}
-        request={selectedRequest}
+        request={null}
         onClose={handleDialogClose}
       />
     </div>

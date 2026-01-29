@@ -6,19 +6,19 @@ import { Grid2, TextField,
   Select, InputAdornment
 } from '@mui/material';
 import { DateTimePicker } from '@mantine/dates';
-import { Request } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/all-support/makeData';
 import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
 import { TextInputField } from '../../text-input-field';
 
 interface SupportGeneralTabProps {
   isOpen: boolean;
-  request: Request | null;
+  request: Order | null;
   onUpdate?: (data: any, hasChanges: boolean) => void;
 }
 
 export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps) {
-  const [editedRequest, setEditableRequest] = useState<Request | null>(request);
-  const isEditing = !editedRequest?.status?.includes('Закрыта');              // флаг режима редактирования
+  const [editedRequest, setEditableRequest] = useState<Order | null>(request);
+  const isEditing = !editedRequest?.orderState?.name?.includes('Закрыта');              // флаг режима редактирования
   const hasChanges = JSON.stringify(editedRequest) !== JSON.stringify(request);                      // флаг наличия изменений
 
   const isInitialMount = useRef(true);
@@ -79,7 +79,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
           <Grid2 size="auto">
             <FormControl sx={{ minWidth: 240 }} size="small">
                 <Select
-                  value={editedRequest.status || ''}
+                  value={editedRequest.orderState?.name || ''}
                   onChange={handleChange('status')}
                 >
                   {/*Добавить недостающие статусы*/}
@@ -110,7 +110,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               styles={{ input: {minHeight: '40px'}}}
               readOnly={!isEditing}
               //В заявке даты - строка, тут - DateValue
-              //value={editedRequest.dateRegistration}
+              //value={editedRequest.dateCreated}
               //onChange={handleChange('dateRegistration')}
             />
           </Grid2>
@@ -169,7 +169,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.itModule || ''}
+                value={editedRequest.service?.fullname || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -186,7 +186,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.service || ''}
+                value={editedRequest.catalogItem?.name || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -208,6 +208,8 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('accessTo')}
+                disabled={editedRequest.orderType?.name === 'ЗНД' ? false : true}
+                value={editedRequest.orderType?.name === 'ЗНД' ? editedRequest.initiator?.fio1c : 'Не тот тип заявки'}
               />
             </Grid2>
           </Grid2>
@@ -219,7 +221,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.header || ''}
+                value={editedRequest.name || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -250,7 +252,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextInputField
-                value={''}
+                value={editedRequest.resultText || ''}
                 onChange={handleChange('solution')}
                 readonly={!isEditing}
               />
@@ -283,6 +285,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('dispatcher')}
+                value={editedRequest.dispatcher?.fio1c || ''}
               />
             </Grid2>
           </Grid2>
@@ -346,7 +349,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Grid2 size={9}>
               <FormControl fullWidth>
                 <Select
-                  value={editedRequest.requestType || ''}
+                  value={editedRequest.orderType?.name || ''}
                   onChange={handleChange('requestType')}
                 >
                   <MenuItem value={"ЗНО"}>ЗНО</MenuItem>
@@ -369,6 +372,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('priority')}
+                value={editedRequest.orderPriority?.name || ''}
               />
             </Grid2>
           </Grid2>
@@ -427,7 +431,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.initiator || ''}
+                value={editedRequest.initiator?.fio1c || ''}
                 fullWidth
                 size="small"
                 variant="outlined"

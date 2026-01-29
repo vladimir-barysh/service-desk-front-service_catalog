@@ -10,13 +10,13 @@ import {
   Box
 } from '@mui/material';
 import { DateTimePicker } from '@mantine/dates';
-import { Request } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/all-support/makeData';
 
 interface ControlDialogProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (equipment: string, returnDate: Date | null) => void;
-  request?: Request | null;
+  request?: Order | null;
 }
 
 export function ControlDialog({ open, onClose, onConfirm, request }: ControlDialogProps) {
@@ -38,7 +38,7 @@ export function ControlDialog({ open, onClose, onConfirm, request }: ControlDial
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{style: { minHeight: '500px'}}}>
-      <DialogTitle>Поставить заявку <strong>{request?.requestNumber}</strong> на контроль</DialogTitle>
+      <DialogTitle>Поставить заявку <strong>{request?.nomer}</strong> на контроль</DialogTitle>
       
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>          

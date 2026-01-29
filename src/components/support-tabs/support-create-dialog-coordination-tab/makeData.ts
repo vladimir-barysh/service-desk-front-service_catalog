@@ -1,4 +1,4 @@
-import { Request } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/all-support/makeData';
 
 export interface Coordination {
   id: number;
@@ -12,7 +12,7 @@ export interface Coordination {
 }
 
 // Функция для генерации данных согласования по типу заявки
-export const generateCoordinationData = (request: Request | null): Coordination[] => {
+export const generateCoordinationData = (request: Order | null): Coordination[] => {
   if (!request) return [];
 
   const baseData: Coordination = {
@@ -26,7 +26,7 @@ export const generateCoordinationData = (request: Request | null): Coordination[
     status: 'Согласовано'
   };
 
-  switch (request.requestType) {
+  switch (request.orderType?.name) {
     case 'ЗНД':
       return [{
         ...baseData,

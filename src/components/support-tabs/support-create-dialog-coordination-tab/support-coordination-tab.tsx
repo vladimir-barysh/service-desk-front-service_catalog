@@ -11,11 +11,11 @@ import {
   Paper,
   Typography
 } from '@mui/material';
-import { Request } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/all-support/makeData';
 import { generateCoordinationData} from './makeData';
 
 interface SupportCoordinationTabProps {
-  request: Request | null;
+  request: Order | null;
 }
 
 export function SupportCoordinationTab({ request }: SupportCoordinationTabProps) {
@@ -58,7 +58,7 @@ export function SupportCoordinationTab({ request }: SupportCoordinationTabProps)
       {/* Информация о типе заявки */}
       <Box>
         <Typography variant="subtitle2" color="text.secondary">
-          Тип заявки: <strong>{request?.requestType || 'не определен'}</strong>
+          Тип заявки: <strong>{request?.orderType?.name || 'не определен'}</strong>
         </Typography>
       </Box>
 

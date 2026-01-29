@@ -17,7 +17,7 @@ import { fileDataClass,
   deleteFileFromMakeData,
   getAllFiles 
 } from './makeData';
-import { Request } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/all-support/makeData';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -32,7 +32,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 interface SupportGeneralFirstTabProps {
-  request: Request | null;
+  request: Order | null;
 }
 
 export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
@@ -41,15 +41,15 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
   const [loadedFiles, setLoadedFiles] = useState<fileDataClass[]>([]);
 
   useEffect(() => {
-    if (request?.requestNumber) {
+    if (request?.nomer) {
       const requestFiles = uploadedFiles.filter(
-        file => file.idRequest === request.requestNumber);
+        file => file.idRequest === request.nomer);
       setLoadedFiles(requestFiles);
     }
     else {
       setLoadedFiles([]);
     }
-  }, [request?.requestNumber]);
+  }, [request?.nomer]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -63,7 +63,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
           fileName: file.name,
           dateOfCreation: new Date().toISOString(),
           author: 'Текущий пользователь',
-          idRequest: request?.requestNumber,
+          idRequest: request?.nomer,
           fileSize: file.size,
           fileType: file.type
         };
@@ -250,7 +250,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
             variant="contained"
             tabIndex={-1}
             startIcon={<CloudUploadIcon />}
-            disabled={request?.status === 'Закрыта'}
+            disabled={request?.orderState?.name === 'Закрыта'}
             sx={{ whiteSpace: 'nowrap' }}
           >
             Добавить файлы
@@ -272,7 +272,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
           color="error"
           tabIndex={-1}
           startIcon={<Delete />}
-          disabled={request?.status === 'Закрыта' || !selectedRowId}
+          disabled={request?.orderState?.name === 'Закрыта' || !selectedRowId}
           onClick={handleDeleteFile}
           >
             Удалить файл

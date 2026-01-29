@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { Box, Button as MUIButton, Grid2 } from "@mui/material";
 import { Card, Group, Text, Textarea, ScrollArea, Divider, Anchor, Badge } from "@mantine/core";
 import { IconEdit, IconCheck, IconX } from "@tabler/icons-react";
-import { Request, data } from '../../../pages/support/all-support/makeData';
+import { Order, data } from '../../../pages/support/all-support/makeData';
 import { Message, seed } from './makeData';
 
 function formatDT(iso: string) {
@@ -14,7 +14,7 @@ function formatDT(iso: string) {
 }
 
 interface SupportGeneralFirstTabProps {
-  request: Request | null;
+  request: Order | null;
 }
 
 export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
@@ -33,15 +33,15 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
   const selected = useMemo(() => items.find(m => m.id === selectedId) || null, [items, selectedId]);
 
   useEffect(() => {
-    if(request?.requestNumber) {
+    if(request?.nomer) {
       const requestMsgs = seed.filter(
-        msg => msg.idRequest === request.requestNumber);
+        msg => msg.idRequest === request.nomer);
       setItems(requestMsgs);
     }
     else{
       setItems([]);
     }
-  }, [request?.requestNumber]);
+  }, [request?.nomer]);
 
   // Добавить сообщение
   const addMessage = () => {
@@ -53,7 +53,7 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
       author: "Христорождественская В.А.", // текущий пользователь
       createdAt: new Date().toISOString(),
       text,
-      idRequest: request?.requestNumber,
+      idRequest: request?.nomer,
     };
     setItems(prev => [...prev, next]);
     setDraft("");

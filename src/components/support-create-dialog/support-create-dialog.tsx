@@ -16,7 +16,7 @@ import { Close } from '@mui/icons-material';
 
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined} from '@mui/icons-material'
-import { Request } from '../../pages/support/all-support/makeData';
+import { Order } from '../../pages/support/all-support/makeData';
 import { fileDataClass, uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData'; 
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
 import { SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab, 
@@ -24,7 +24,7 @@ import { SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab,
 
 interface SupportGeneralDialogProps {
   isOpen: boolean;
-  request: Request | null;
+  request: Order | null;
   
   onClose: () => void;
 }
@@ -47,8 +47,8 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   // Общий флаг изменений
   const hasChanges = generalChanged || filesChanged || discussionChanged;
 
-  const [editableRequest, setEditableRequest] = useState<Request | null>(request);
-  const isEditing = !editableRequest?.status?.includes('Закрыта');              // флаг режима редактирования
+  const [editableRequest, setEditableRequest] = useState<Order | null>(request);
+  const isEditing = !editableRequest?.orderState?.name?.includes('Закрыта');              // флаг режима редактирования
 
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
@@ -92,14 +92,14 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
 
   // Функция для проверки файлов по ID заявки
   const checkFiles = () => {
-    if (!request?.requestNumber) {
+    if (!request?.nomer) {
       setHasFiles(false);
       return;
     }
 
     // Ищем файлы, у которых idRequest совпадает с id заявки
     const filesForThisRequest = uploadedFiles.filter(
-      file => file.idRequest === request.requestNumber
+      file => file.idRequest === request.nomer
     );
     
     if (filesForThisRequest.length > 0) {
@@ -112,14 +112,14 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   };
 
   const checkMessages = () => {
-    if (!request?.requestNumber) {
+    if (!request?.nomer) {
       setHasMessages(false);
       return;
     }
 
     // Ищем файлы, у которых idRequest совпадает с id заявки
     const messagesForThisRequest = seed.filter(
-      message => message.idRequest === request.requestNumber
+      message => message.idRequest === request.nomer
     );
     
     if (messagesForThisRequest.length > 0) {
@@ -165,7 +165,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
           <Grid2 container spacing={0} direction={'row'} alignItems="left" justifyContent="space-between">
             <Grid2 size='auto'>
                 <Box fontSize='20px' fontWeight='700'>
-                    Заявка №{request?.requestNumber || ''}
+                    Заявка №{request?.nomer || ''}
                 </Box>
             </Grid2>
             {/* Крестик */}
@@ -197,7 +197,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
                 <TabPanel value="2" sx={{ padding: "0px" }}>
                 <SupportFilesTab request={request}/>
                 </TabPanel>
-                <TabPanel value="3" sx={{ padding: "0px" }}>
+                <TabPanel value="3" sx={{ padding: "0px" }}>                
                 <SupportCoordinationTab request={request}/>
                 </TabPanel>
                 <TabPanel value="4" sx={{ padding: "0px" }}>

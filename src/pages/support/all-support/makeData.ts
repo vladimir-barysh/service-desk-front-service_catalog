@@ -1,3 +1,46 @@
+export class Order {
+  nomer: string | undefined;
+  name: string | undefined;
+  description: string | undefined;
+  dateCreated: string | undefined;
+  dateFinishPlan: string | undefined;
+  dateFinishFact: string | undefined;
+  orderParent: Order | undefined;
+  orderType: OrderType | undefined;
+  catalogItem: CatItem | undefined;
+  service: Service | undefined;
+  orderState: OrderState | undefined;
+  orderPriority: OrderPriority | undefined;
+  creator: User | undefined;
+  initiator: User | undefined;
+  dispatcher: User | undefined;
+  executor: User | undefined;
+  orderSource: OrderSource | undefined;
+  resultText: string | undefined;
+}
+
+export class OrderType{
+    name: string | undefined;
+}
+
+export class CatItem{
+    name: string | undefined;
+}
+export class Service{
+    fullname: string | undefined;
+}
+export class OrderState{
+    name: string | undefined;
+}
+export class OrderPriority{
+    name: string | undefined;
+}
+export class User{
+    fio1c: string | undefined;
+}
+export class OrderSource{
+    name: string | undefined;
+}
 export class Request {
   requestNumber: string | undefined;
   dateRegistration: string | undefined;

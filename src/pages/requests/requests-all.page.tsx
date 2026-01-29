@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { data, type Request } from '../support/all-support/makeData';
+import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable } from 'mantine-react-table';
+import { type Request } from './makeData';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
@@ -19,6 +19,8 @@ import { IconPencil } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { getOrderTypes } from '../../api/services/orderTypeService';
 
+import { getOrders } from '../../api/services/orderService';
+
 export function RequestsAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
@@ -26,15 +28,34 @@ export function RequestsAllPage() {
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
-  const currInitiator = "Христорождественская В.А.";
+  const currInitiator = "Борисов Борис Борисович";
+
+  const {
+    data: orders = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['orders'],
+    queryFn: getOrders,
+  });
+
+  const {
+    data: orderTypes = [],
+    isLoading: orderLoad,
+    error: orderError,
+  } = useQuery({
+    queryKey: ['ordertypes'],
+    queryFn: getOrderTypes,
+    staleTime: Infinity
+  });
 
   const filteredData = useMemo(() => {
-    let result = data;
+    let result = orders;
     //Высвечиваем только данные, настоящего пользователя
-    result = result.filter(item => item.initiator === currInitiator);
+    result = result.filter((item: any) => item.initiator === currInitiator);
 
     if (hideClosed) {
-      result = result.filter(item => item.status !== 'Закрыта');
+      result = result.filter((item: any) => item.orderState !== 4);
     }
 
     return result;
@@ -48,7 +69,7 @@ export function RequestsAllPage() {
     () => [
       {
         header: '№ заявки',
-        accessorKey: 'requestNumber',
+        accessorKey: 'nomer',
         maxSize: 90,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по №',
@@ -57,7 +78,7 @@ export function RequestsAllPage() {
       },
       {
         header: 'Дата регистрации',
-        accessorKey: 'dateRegistration',
+        accessorKey: 'dateCreated',
         type: 'string',
         maxSize: 175,
         enableResizing: false,
@@ -67,7 +88,7 @@ export function RequestsAllPage() {
       },
       {
         header: 'Желаемый срок',
-        accessorKey: 'dateDesired',
+        accessorKey: 'dateFinishPlan',
         type: 'string',
         maxSize: 165,
         enableResizing: false,
@@ -77,7 +98,7 @@ export function RequestsAllPage() {
       },
       {
         header: 'Дата решения заявки',
-        accessorKey: 'dateSolution',
+        accessorKey: 'dateFinishFact',
         type: 'string',
         maxSize: 160,
         enableResizing: false,
@@ -87,17 +108,18 @@ export function RequestsAllPage() {
       },
       {
         header: 'Статус',
-        accessorKey: 'status',
+        accessorKey: 'orderState',
         type: 'string',
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по статусу',
         },
+        Cell: ({ row }) => row.original.orderState?.name || 'Статуса нет'
       },
       {
         header: 'Заголовок',
-        accessorKey: 'header',
+        accessorKey: 'name',
         type: 'string',
         maxSize: 130,
         enableResizing: false,
@@ -107,13 +129,14 @@ export function RequestsAllPage() {
       },
       {
         header: 'Тип запроса',
-        accessorKey: 'requestType',
+        accessorKey: 'orderType',
         type: 'string',
         maxSize: 100,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по запросу',
         },
+        Cell: ({ row }) => row.original.orderType?.name || ''
       },
       {
         header: 'Инициатор',
@@ -124,36 +147,40 @@ export function RequestsAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по инициатору',
         },
+        Cell: ({ row }) => row.original.initiator?.fio1c || ''
       },
       {
         header: 'Пользователь',
-        accessorKey: 'user',
+        accessorKey: 'dispatcher',
         type: 'string',
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по пользователю',
         },
+        Cell: ({ row }) => row.original.dispatcher?.fio1c || ''
       },
       {
         header: 'IT-сервис (модуль)',
-        accessorKey: 'itModule',
+        accessorKey: 'service',
         type: 'string',
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по IT-сервису',
         },
+        Cell: ({ row }) => row.original.service?.fullname || ''
       },
       {
         header: 'Услуга',
-        accessorKey: 'service',
+        accessorKey: 'catalogItem',
         type: 'string',
         maxSize: 130,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по услуге',
         },
+        Cell: ({ row }) => row.original.catalogItem?.name || ''
       },
     ],
     [],
@@ -166,7 +193,8 @@ export function RequestsAllPage() {
     }
 
     // Получаем тип заявки из данных строки
-    const requestType = row.original.requestType;
+    const requestType = row.original.orderType?.name;
+
 
     // Цвета для разных типов заявок
     switch (requestType) {
@@ -176,8 +204,6 @@ export function RequestsAllPage() {
         return 'rgba(255, 152, 0, 0.1)';
       case 'ЗНИ':
         return 'rgba(244, 67, 54, 0.1)';
-      case 'инцидент':
-        return 'rgba(33, 150, 243, 0.1)';
       default:
         return 'hsla(0, 88%, 72%, 1.00)';
     }
@@ -242,15 +268,15 @@ export function RequestsAllPage() {
 
   // Функция для проверки просрочки заявки
   const isRequestOverdue = (request: Request): boolean => {
-    if (!request.dateDesired) return false;
+    if (!request.dateFinishPlan) return false;
 
     // Если заявка уже завершена не считаем просроченной
     const completedStatuses = ['Закрыта', 'Отклонена'];
-    if (request.status && completedStatuses.includes(request.status)) {
+    if (request.orderState) {
       return false;
     }
 
-    const desiredDate = parseDate(request.dateDesired.split(' ')[0]);
+    const desiredDate = parseDate(request.dateFinishPlan.split(' ')[0]);
 
     // Если дата не распарсилась не считаем просроченной
     if (!desiredDate) return false;
@@ -275,15 +301,7 @@ export function RequestsAllPage() {
   };
 
 
-  const {
-    data: orderTypes = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['ordertypes'],
-    queryFn: getOrderTypes,
-    staleTime: Infinity
-  });
+
 
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -296,7 +314,7 @@ export function RequestsAllPage() {
   // Создание таблицы
   const table = useMantineReactTable({
     columns: columns,
-    data: filteredData,
+    data: orders,
     enableExpanding: false,
     enableTopToolbar: false,
     enableRowSelection: true,
@@ -350,7 +368,7 @@ export function RequestsAllPage() {
         backgroundColor: colorRow(row),
         cursor: 'pointer',
         border: '1px solid #dde7ee',
-        fontWeight: row.original.status === 'Новая' ? 'bold' : 'normal',
+        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
       }
     }),

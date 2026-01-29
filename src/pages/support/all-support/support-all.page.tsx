@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
-import { data, type Request } from './makeData';
+import { type Order } from './makeData';
 import React, { useEffect, useState} from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
@@ -17,6 +17,10 @@ import { RequestCreateZNODialog } from '../../../components/request-create-zno-d
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
 import { RequestCreateZNIDialog } from '../../../components/request-create-zni-dialog/request-create-zni-dialog';
 import { useDialogs } from '../../../components/support-hooks/use-dialog-state';
+
+
+import { useQuery } from '@tanstack/react-query';
+import { getOrders } from '../../../api/services/orderService';
 
 export function SupportAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
@@ -35,28 +39,37 @@ export function SupportAllPage() {
     setColumnFilters([]);
   };
 
+  const {
+      data: orders = [],
+      isLoading,
+      error,
+  } = useQuery({
+      queryKey: ['orders'],
+      queryFn: getOrders,
+  });
+
   // Функция для получения данных с учетом всех фильтров
   const filteredData = useMemo(() => {
-    let result = data;
+    let result = orders;
     
     // Фильтр по статусу из URL
     if (urlStatus === 'Новая') { 
-      result = result.filter(item => item.status === urlStatus);
+      result = result.filter((item: any) => item.orderState?.name === urlStatus);
     }
     else if (urlStatus === 'nAgreed') {
-      result = result.filter(item => item.status === 'Не согласовано' || item.status === 'Закрыта');
+      result = result.filter((item: any)  => item.orderState?.name === 'Не согласовано' || item.orderState?.name === 'Закрыта');
     }
     else if (urlStatus === 'nConfirmed') {
-      result = result.filter(item => item.status === 'Возобновлена' || item.status === 'Закрыта');
+      result = result.filter((item: any)  => item.orderState?.name === 'Возобновлена' || item.orderState?.name === 'Закрыта');
     }
     else if (urlStatus === 'onControl') {
-      result = result.filter(item => item.status === 'На контроле' || item.status === 'Закрыта');
+      result = result.filter((item: any)  => item.orderState?.name === 'На контроле' || item.orderState?.name === 'Закрыта');
     }
     else {
       clearAllFilters();
     }
     if (hideClosed) {
-      result = result.filter(item => item.status !== 'Закрыта');
+      result = result.filter((item: any)  => item.orderState?.name !== 'Закрыта');
     }
     
     return result;
@@ -96,50 +109,50 @@ export function SupportAllPage() {
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
-  const columns = useMemo<MRT_ColumnDef<Request>[]>(
-    () => [
-      {
-        header: '№ заявки',
-        accessorKey: 'requestNumber',
-        maxSize: 90,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по №',
+  const columns = useMemo<MRT_ColumnDef<Order>[]>(
+      () => [
+        {
+          header: '№ заявки',
+          accessorKey: 'nomer',
+          maxSize: 90,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по №',
+          },
+          enableResizing: false,
         },
-        enableResizing: false,
-      },
-      {
-        header: 'Дата регистрации',
-        accessorKey: 'dateRegistration',
-        type: 'string',
-        maxSize: 175,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по дате регистрации',
+        {
+          header: 'Дата регистрации',
+          accessorKey: 'dateCreated',
+          type: 'string',
+          maxSize: 175,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по дате регистрации',
+          },
         },
-      },
-      {
-        header: 'Желаемый срок',
-        accessorKey: 'dateDesired',
-        type: 'string',
-        maxSize: 165,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по желаемому сроку',
+        {
+          header: 'Желаемый срок',
+          accessorKey: 'dateFinishPlan',
+          type: 'string',
+          maxSize: 165,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по желаемому сроку',
+          },
         },
-      },
-      {
-        header: 'Дата решения заявки',
-        accessorKey: 'dateSolution',
-        type: 'string',
-        maxSize: 160,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по дате решения',
+        {
+          header: 'Дата решения заявки',
+          accessorKey: 'dateFinishFact',
+          type: 'string',
+          maxSize: 160,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по дате решения',
+          },
         },
-      },
-      {
+        {
         header: 'Статус',
-        accessorKey: 'status',
+        accessorKey: 'orderState',
         type: 'string',
         maxSize: 150,
         enableResizing: false,
@@ -154,80 +167,86 @@ export function SupportAllPage() {
           disabled: !!urlStatus || hideClosed,
           readOnly: !!urlStatus || hideClosed,
         },
-      },
-      {
-        header: 'Заголовок',
-        accessorKey: 'header',
-        type: 'string',
-        maxSize: 130,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по заголовку',
+          Cell: ({ row }) => row.original.orderState?.name || 'Статуса нет'
         },
-      },
-      {
-        header: 'Тип запроса',
-        accessorKey: 'requestType',
-        type: 'string',
-        maxSize: 100,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по запросу',
+        {
+          header: 'Заголовок',
+          accessorKey: 'name',
+          type: 'string',
+          maxSize: 130,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по заголовку',
+          },
         },
-      },
-      {
-        header: 'Инициатор',
-        accessorKey: 'initiator',
-        type: 'string',
-        maxSize: 150,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по инициатору',
+        {
+          header: 'Тип запроса',
+          accessorKey: 'orderType',
+          type: 'string',
+          maxSize: 100,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по запросу',
+          },
+          Cell: ({ row }) => row.original.orderType?.name || ''
         },
-      },
-      {
-        header: 'Пользователь',
-        accessorKey: 'user',
-        type: 'string',
-        maxSize: 150,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по пользователю',
+        {
+          header: 'Инициатор',
+          accessorKey: 'initiator',
+          type: 'string',
+          maxSize: 150,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по инициатору',
+          },
+          Cell: ({ row }) => row.original.initiator?.fio1c || ''
         },
-      },
-      {
-        header: 'IT-сервис (модуль)',
-        accessorKey: 'itModule',
-        type: 'string',
-        maxSize: 150,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по IT-сервису',
+        {
+          header: 'Пользователь',
+          accessorKey: 'dispatcher',
+          type: 'string',
+          maxSize: 150,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по пользователю',
+          },
+          Cell: ({ row }) => row.original.dispatcher?.fio1c || ''
         },
-      },
-      {
-        header: 'Услуга',
-        accessorKey: 'service',
-        type: 'string',
-        maxSize: 130,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по услуге',
+        {
+          header: 'IT-сервис (модуль)',
+          accessorKey: 'service',
+          type: 'string',
+          maxSize: 150,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по IT-сервису',
+          },
+          Cell: ({ row }) => row.original.service?.fullname || ''
         },
-      },
-    ],
-    [urlStatus],
-  );
+        {
+          header: 'Услуга',
+          accessorKey: 'catalogItem',
+          type: 'string',
+          maxSize: 130,
+          enableResizing: false,
+          mantineFilterTextInputProps: {
+            placeholder: 'Фильтр по услуге',
+          },
+          Cell: ({ row }) => row.original.catalogItem?.name || ''
+        },
+      ],
+      [urlStatus],
+    );
 
   // Цвет заливки строки
-  const colorRow = (row: MRT_Row<Request>) => {
+  const colorRow = (row: MRT_Row<Order>) => {
     if (row.getIsSelected())
     {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
     // Получаем тип заявки из данных строки
-    const requestType = row.original.requestType;
+    const requestType = row.original.orderType?.name;
   
     // Цвета для разных типов заявок
     switch (requestType) {
@@ -237,8 +256,6 @@ export function SupportAllPage() {
         return 'rgba(255, 152, 0, 0.1)'; 
       case 'ЗНИ':
         return 'rgba(244, 67, 54, 0.1)'; 
-      case 'инцидент':
-        return 'rgba(33, 150, 243, 0.1)';
       default:
         return 'hsla(0, 88%, 72%, 1.00)';
     }
@@ -299,16 +316,16 @@ export function SupportAllPage() {
   }
   
   // Функция для проверки просрочки заявки
-  const isRequestOverdue = (request: Request): boolean => {
-    if (!request.dateDesired) return false;
+  const isRequestOverdue = (request: Order): boolean => {
+    if (!request.dateFinishPlan) return false;
     
     // Если заявка уже завершена не считаем просроченной
     const completedStatuses = ['Закрыта', 'Отклонена'];
-    if (request.status && completedStatuses.includes(request.status)) {
+    if (request.orderState) {
       return false;
     }
     
-    const desiredDate = parseDate(request.dateDesired.split(' ')[0]);
+    const desiredDate = parseDate(request.dateFinishPlan.split(' ')[0]);
     
     // Если дата не распарсилась не считаем просроченной
     if (!desiredDate) return false;
@@ -326,7 +343,7 @@ export function SupportAllPage() {
   };
 
   // Обработчик двойного клика
-  const handleRowDoubleClick = (row: MRT_Row<Request>) => {
+  const handleRowDoubleClick = (row: MRT_Row<Order>) => {
     setSelectedRequest(row.original);
     setIsDialogOpen(true);
   };
@@ -337,7 +354,7 @@ export function SupportAllPage() {
     setSelectedRequest(null);
   };
 
-  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<Order | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType] = useState(0);
 
@@ -389,7 +406,7 @@ export function SupportAllPage() {
     mantineTableBodyCellProps: ({ row, cell }) => ({
       onClick: (event) => {
         // Если это не ячейка "header", то выделяем строку
-        if (cell.column.id === 'requestNumber') {
+        if (cell.column.id === 'nomer') {
           event.stopPropagation();
           handleRowDoubleClick(row);
         }
@@ -401,7 +418,7 @@ export function SupportAllPage() {
         backgroundColor: colorRow(row),
         cursor: 'pointer',
         border: '1px solid #dde7ee',
-        fontWeight: row.original.status === 'Новая' ? 'bold' : 'normal',
+        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
       }
     }),
@@ -427,7 +444,7 @@ export function SupportAllPage() {
     const request = dialogs.postpone.request;
     if (request) {
       console.log('Откладываем заявку:', {
-        request: request.requestNumber,
+        request: request.nomer,
         newStatus: 'В ожидании',
         comment: comment
       });
@@ -451,7 +468,7 @@ export function SupportAllPage() {
     const request = dialogs.control.request;
     if (request && returnDate) {
       console.log('Ставим на контроль:', {
-        request: request.requestNumber,
+        request: request.nomer,
         newStatus: 'На контроле',
         equipment: equipment,
         returnDate: returnDate.toISOString()
