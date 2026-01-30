@@ -23,6 +23,9 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import { alignProperty } from "@mui/material/styles/cssUtils";
 
+import { useQuery } from '@tanstack/react-query';
+import { getOrders } from '../api/services/orderService';
+
 const activeColor = '#455980ff';
 const submenuColor = '#32415c';
 const submenuColor1 = '#2c3951';
@@ -30,21 +33,33 @@ const backgroundColor = '#3b4c6c';
 const color = '#909fbbff';
 const sectionTitleColor = "#c0d0f0";
 const currentUser = {
-  name: "Христорождественская В.А.",
+  name: "Борисов Борис Борисович",
   role: "Старший специалист",
   avatarUrl: null, // или "https://..." если есть фото
   initials: "ВА"   // или генерировать автоматически
 };
 
+
+
 function useRequestCounts() {
+
+  const {
+      data: orders = [],
+      isLoading,
+      error,
+  } = useQuery({
+      queryKey: ['orders'],
+      queryFn: getOrders,
+  });
+
   return useMemo(() => {
 
-    const newCount = data.filter(item => item.status === 'Новая').length;
-    const allCount = data.filter(item => item.status !== 'Закрыта').length;
-    const nAgreedCount = data.filter(item => item.status === 'Не согласовано').length;
-    const nConfirmedCount = data.filter(item => item.status === 'Возобновлена').length;
-    const onControlCount = data.filter(item => item.status === 'На контроле').length;
-    const exeCount = data.filter(item => item.user === currentUser.name && item.status !== 'Закрыта').length;
+    const newCount = orders.filter((item: any) => item.orderStatus?.name === 'Новая').length;
+    const allCount = orders.filter((item: any) => item.orderStatus?.name !== 'Закрыта').length;
+    const nAgreedCount = orders.filter((item: any) => item.orderStatus?.name === 'Не согласовано').length;
+    const nConfirmedCount = orders.filter((item: any) => item.orderStatus?.name === 'Возобновлена').length;
+    const onControlCount = orders.filter((item: any) => item.orderStatus?.name === 'На контроле').length;
+    const exeCount = orders.filter((item: any) => item.orderStatus?.name !== 'Закрыта' && item.dispatcher?.name === currentUser.name).length;
     return {
       newCount,
       allCount,
@@ -53,14 +68,14 @@ function useRequestCounts() {
       onControlCount,
       exeCount
     };
-  }, [data]);
+  }, [orders]);
 }
 
 export function LeftSidebar() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const status = params.get('status');
-
+  
   const isSupportAll = location.pathname === '/support/all';
   const isTasksAll = location.pathname === '/tasks/my-all-tasks'
   const isNewActive = isSupportAll && status === 'Новая';
@@ -70,6 +85,7 @@ export function LeftSidebar() {
   const isOnControlActive = isSupportAll && status === 'onControl';
   const isOnExecution = isTasksAll && status === 'onExecution';
   const isOnAgree = isTasksAll && status === 'onAgree';
+  const isMeActive = isTasksAll && status === 'mine';
 
   const { newCount, allCount, nAgreedCount, nConfirmedCount, onControlCount,
     exeCount
@@ -251,8 +267,8 @@ export function LeftSidebar() {
           <MenuItem
             {...menuItemCommon}
             icon={<SupportAgentOutlined />}
-            component={<Link to={'/support/all'} />}
-            active={isAllActive}
+            component={<Link to={'/support/all?status=mine'} />}
+            active={isMeActive}
           >
             Мои заявки
           </MenuItem>

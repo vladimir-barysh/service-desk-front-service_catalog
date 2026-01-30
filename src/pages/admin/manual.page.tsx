@@ -307,7 +307,7 @@ export function ManualPage() {
         isError: isErrorOrderStates,
         error: orderStatesError,
     } = useQuery({
-        queryKey: ['orderstate'],
+        queryKey: ['orderstates'],
         queryFn: getOrderStates,
     });
 

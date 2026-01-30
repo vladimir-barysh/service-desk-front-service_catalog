@@ -1,14 +1,24 @@
-import React, { useState, useEffect, useRef} from 'react';
-import { Grid2, TextField, 
-  Box, Typography, 
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import {
+  Grid2, TextField,
+  Box, Typography,
   Button, InputLabel,
   MenuItem, FormControl,
-  Select, InputAdornment
+  Select, InputAdornment, SelectChangeEvent
 } from '@mui/material';
-import { DateTimePicker } from '@mantine/dates';
-import { Order } from '../../../pages/support/all-support/makeData';
+import { DateTimePicker, DateValue } from '@mantine/dates';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { Order, OrderState } from '../../../pages/support/all-support/makeData';
 import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
 import { TextInputField } from '../../text-input-field';
+
+import { useQuery } from '@tanstack/react-query';
+import { getOrderTypes } from '../../../api/services/orderTypeService';
+import { getOrderStates } from '../../../api/services/orderStateService';
+import { getOrderPriorities } from '../../../api/services/orderPriorityService';
+import { getUsers } from '../../../api/services/userService';
 
 interface SupportGeneralTabProps {
   isOpen: boolean;
@@ -17,16 +27,37 @@ interface SupportGeneralTabProps {
 }
 
 export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps) {
-  const [editedRequest, setEditableRequest] = useState<Order | null>(request);
+  const [editedRequest, setEditedRequest] = useState<Order | null>(request);
+
   const isEditing = !editedRequest?.orderState?.name?.includes('Закрыта');              // флаг режима редактирования
-  const hasChanges = JSON.stringify(editedRequest) !== JSON.stringify(request);                      // флаг наличия изменений
+  //const hasChanges = JSON.stringify(editedRequest) !== JSON.stringify(request);                      // флаг наличия изменений
+  const hasChanges = useMemo(() => {
+    if (!editedRequest || !request) return false;
+
+    return (
+      editedRequest.name !== request.name ||
+      editedRequest.description !== request.description ||
+      editedRequest.dateCreated !== request.dateCreated ||
+      editedRequest.dateFinishPlan !== request.dateFinishPlan ||
+      editedRequest.dateFinishFact !== request.dateFinishFact ||
+      editedRequest.orderType?.idOrderType !== request.orderType?.idOrderType ||
+      editedRequest.catalogItem?.idCatitem !== request.catalogItem?.idCatitem ||
+      editedRequest.service?.idService !== request.service?.idService ||
+      editedRequest.orderState?.idOrderState !== request.orderState?.idOrderState ||
+      editedRequest.orderPriority?.idOrderPriority !== request.orderPriority?.idOrderPriority ||
+      editedRequest.creator?.idItUser !== request.creator?.idItUser ||
+      editedRequest.initiator?.idItUser !== request.initiator?.idItUser ||
+      editedRequest.dispatcher?.idItUser !== request.dispatcher?.idItUser ||
+      editedRequest.resultText !== request.resultText
+    );
+  }, [editedRequest, request]);
 
   const isInitialMount = useRef(true);
 
   const labelStyle = {
-    border: '1px solid #e0e0e0', 
+    border: '1px solid #e0e0e0',
     borderRadius: '5px',
-    p: 1, 
+    p: 1,
     backgroundColor: '#f5f5f5'
   };
 
@@ -41,12 +72,12 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   };
 
   const handleCancel = () => {
-    setEditableRequest(request); // Возвращаем оригинальные данные
+    setEditedRequest(request); // Возвращаем оригинальные данные
     //setHasChanges(false);
   };
 
   const handleFieldChange = (field: string, value: string) => {
-    setEditableRequest(prev => prev ? { ...prev, [field]: value } : null);
+    setEditedRequest(prev => prev ? { ...prev, [field]: value } : null);
     //setHasChanges(true);
   };
 
@@ -56,17 +87,105 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       return;
     }
 
-    if (onUpdate){
+    if (onUpdate) {
       onUpdate(editedRequest, hasChanges);
     }
-    
+
   }, [editedRequest, hasChanges, onUpdate]);
 
   const handleChange = (field: string) => (event: any) => {
     const value = event.target.value;
-    setEditableRequest(prev => prev ? { ...prev, [field]: value } : null);
+    setEditedRequest(prev => prev ? { ...prev, [field]: value } : null);
   };
-  
+
+  const handleDateChange = (field: string, newDate: DateValue) => {
+    const temp = dayjs(newDate);
+    setEditedRequest(prev => prev ? { ...prev, [field]: temp } : null);
+  };
+
+  const handleOrderStateChange = (event: SelectChangeEvent<string>) => {
+    const selectedName = event.target.value;
+
+    const selectedObject = orderStates.find(
+      (item: any) => item.name === selectedName
+    ) ?? null;
+
+    setEditedRequest(prev => prev ? { ...prev, orderState: selectedObject } : null);
+
+  };
+
+  const handleOrderTypeChange = (event: SelectChangeEvent<string>) => {
+    const selectedName = event.target.value;
+
+    const selectedObject = orderTypes.find(
+      (item: any) => item.name === selectedName
+    ) ?? null;
+
+    setEditedRequest(prev => prev ? { ...prev, orderType: selectedObject } : null);
+
+  };
+
+  const handleOrderPriorityChange = (event: SelectChangeEvent<number>) => {
+    const selectedId = Number(event.target.value);
+
+    const selectedObject = orderPriorities.find(
+      (item: any) => item.idOrderPriority === selectedId
+    ) ?? null;
+
+    setEditedRequest(prev =>
+      prev ? { ...prev, orderPriority: selectedObject } : null
+    );
+  };
+
+  const handleDispatcherChange = (event: SelectChangeEvent<string>) => {
+    const selectedName = event.target.value;
+
+    const selectedObject = users.find(
+      (item: any) => item.fio1c === selectedName
+    ) ?? null;
+
+    setEditedRequest(prev => prev ? { ...prev, dispatcher: selectedObject } : null);
+
+  };
+
+  const {
+    data: users = [],
+    isLoading: userLoad,
+    error: userError,
+  } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+    staleTime: Infinity
+  })
+
+  const {
+    data: orderTypes = [],
+    isLoading: orderLoad,
+    error: orderError,
+  } = useQuery({
+    queryKey: ['ordertypes'],
+    queryFn: getOrderTypes,
+    staleTime: Infinity
+  });
+
+  const {
+    data: orderStates = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['orderstates'],
+    queryFn: getOrderStates,
+  });
+
+  const {
+    data: orderPriorities = [],
+    isLoading: orderPriorityLoad,
+    error: orderPriorityError,
+  } = useQuery({
+    queryKey: ['orderpriorities'],
+    queryFn: getOrderPriorities,
+  });
+
   return (
     <Box sx={{ mt: 2, position: 'relative', minHeight: '500px' }}>
       {/* Первая строка - заголовки таблицы */}
@@ -78,17 +197,23 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
           </Grid2>
           <Grid2 size="auto">
             <FormControl sx={{ minWidth: 240 }} size="small">
-                <Select
-                  value={editedRequest.orderState?.name || ''}
-                  onChange={handleChange('status')}
-                >
-                  {/*Добавить недостающие статусы*/}
-                  <MenuItem value={"Новая"}>Новая</MenuItem>
-                  <MenuItem value={"Закрытая"}>Закрытая</MenuItem>
-                  <MenuItem value={"В работе"}>В работе</MenuItem>
-                  <MenuItem value={"Согласование отколнено"}>Согласование отколнено</MenuItem>
-                </Select>
-              </FormControl>
+              <Select
+                value={editedRequest.orderState?.name || ''}
+                onChange={handleOrderStateChange}
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return <em>Не выбрано</em>;
+                  }
+                  return selected;  // или найдите label по имени, если нужно
+                }}
+              >
+                {orderStates.map((item: any) => (
+                  <MenuItem key={item.name} value={item.name}>
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid2>
         </Grid2>
 
@@ -97,64 +222,70 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Typography variant="subtitle2">Дата регистрации</Typography>
           </Grid2>
           <Grid2 size="auto">
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
+                valueFormat="DD.MM.YYYY HH:mm"
+
+                withSeconds={false}
+                onPointerEnterCapture={undefined}
+                onPointerLeaveCapture={undefined}
+                clearable
+                locale='ru'
+                size="md"
+                styles={{ input: { minHeight: '40px' } }}
+                readOnly={!isEditing}
+                //В заявке даты - строка, тут - DateValue
+                value={editedRequest?.dateCreated ? dayjs(editedRequest?.dateCreated).toDate() : null}
+                onChange={(newDateCreated) => handleDateChange('dateCreated', newDateCreated)}
+              />
+            </LocalizationProvider>
+          </Grid2>
+        </Grid2>
+
+        <Grid2 container spacing={0} size={3}>
+          <Grid2 size="auto" sx={labelStyle}>
+            <Typography variant="subtitle2">Желаемый срок</Typography>
+          </Grid2>
+          <Grid2 size="auto">
             <DateTimePicker
               placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
               valueFormat="DD.MM.YYYY HH:mm"
-              
-              withSeconds={false} 
-              onPointerEnterCapture={undefined} 
+              withSeconds={false}
+              onPointerEnterCapture={undefined}
               onPointerLeaveCapture={undefined}
               clearable
               locale='ru'
               size="md"
-              styles={{ input: {minHeight: '40px'}}}
+              styles={{ input: { minHeight: '40px' } }}
               readOnly={!isEditing}
-              //В заявке даты - строка, тут - DateValue
-              //value={editedRequest.dateCreated}
-              //onChange={handleChange('dateRegistration')}
+              value={editedRequest?.dateFinishPlan ? dayjs(editedRequest?.dateFinishPlan).toDate() : null}
+              onChange={(newDateFinishPlan) => handleDateChange('dateFinishPlan', newDateFinishPlan)}
             />
           </Grid2>
         </Grid2>
-        
-        <Grid2 container spacing={0} size={3}>
-            <Grid2 size="auto" sx={labelStyle}>
-              <Typography variant="subtitle2">Желаемый срок</Typography>
-            </Grid2>
-            <Grid2 size="auto">
-              <DateTimePicker
-                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
-                valueFormat="DD.MM.YYYY HH:mm"
-                withSeconds={false} 
-                onPointerEnterCapture={undefined} 
-                onPointerLeaveCapture={undefined}
-                clearable
-                locale='ru'
-                size="md"
-                styles={{ input: {minHeight: '40px'}}}
-                readOnly={!isEditing}
-              />
-            </Grid2>
-          </Grid2>
 
-          <Grid2 container spacing={0} size={3}>
-            <Grid2 size="auto" sx={labelStyle}>
-              <Typography variant="subtitle2">Дата решения</Typography>
-            </Grid2>
-            <Grid2 size="auto">
-              <DateTimePicker
-                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
-                valueFormat="DD.MM.YYYY HH:mm"
-                withSeconds={false} 
-                onPointerEnterCapture={undefined} 
-                onPointerLeaveCapture={undefined}
-                clearable
-                locale='ru'
-                size="md"
-                styles={{ input: {minHeight: '40px'}}}
-                readOnly={!isEditing}
-              />
-            </Grid2>
+        <Grid2 container spacing={0} size={3}>
+          <Grid2 size="auto" sx={labelStyle}>
+            <Typography variant="subtitle2">Дата решения</Typography>
           </Grid2>
+          <Grid2 size="auto">
+            <DateTimePicker
+              placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
+              valueFormat="DD.MM.YYYY HH:mm"
+              withSeconds={false}
+              onPointerEnterCapture={undefined}
+              onPointerLeaveCapture={undefined}
+              clearable
+              locale='ru'
+              size="md"
+              styles={{ input: { minHeight: '40px' } }}
+              readOnly={!isEditing}
+              value={editedRequest?.dateFinishFact ? dayjs(editedRequest?.dateFinishFact).toDate() : null}
+              onChange={(newDateFinishFact) => handleDateChange('dateFinishFact', newDateFinishFact)}
+            />
+          </Grid2>
+        </Grid2>
       </Grid2>
 
 
@@ -226,7 +357,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 size="small"
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
-                onChange={handleChange('header')}
+                onChange={handleChange('name')}
               />
             </Grid2>
           </Grid2>
@@ -253,7 +384,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Grid2 size={9}>
               <TextInputField
                 value={editedRequest.resultText || ''}
-                onChange={handleChange('solution')}
+                onChange={handleChange('resultText')}
                 readonly={!isEditing}
               />
             </Grid2>
@@ -279,14 +410,25 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <Typography variant="subtitle2">Диспетчер</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                InputProps={{ readOnly: !isEditing }}
-                onChange={handleChange('dispatcher')}
-                value={editedRequest.dispatcher?.fio1c || ''}
-              />
+              <FormControl fullWidth size="small">
+                <Select
+                  value={editedRequest.dispatcher?.fio1c || ''}
+                  onChange={handleDispatcherChange}
+
+                  renderValue={(selected) => {
+                    if (!selected) {
+                      return <em>Не выбрано</em>;
+                    }
+                    return selected;  // или найдите label по имени, если нужно
+                  }}
+                >
+                  {users.map((item: any) => (
+                    <MenuItem key={item.fio1c} value={item.fio1c}>
+                      {item.fio1c}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid2>
           </Grid2>
         </Grid2>
@@ -294,7 +436,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         {/* Правая колонка - заголовки и значения */}
         <Grid2 size={6}>
           {/* Строка 1 */}
-          
+
 
           {/* Строка 3 */}
           <Grid2 container spacing={0}>
@@ -305,39 +447,43 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <DateTimePicker
                 placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
                 valueFormat="DD.MM.YYYY HH:mm"
-                withSeconds={false} 
-                onPointerEnterCapture={undefined} 
+                withSeconds={false}
+                onPointerEnterCapture={undefined}
                 onPointerLeaveCapture={undefined}
                 clearable
                 locale='ru'
                 size="md"
-                styles={{ input: {minHeight: '40px'}}}
+                styles={{ input: { minHeight: '40px' } }}
                 readOnly={!isEditing}
+              //value={editedRequest?.dateFinishFact ? dayjs(editedRequest?.dateFinishFact).toDate() : null}
+              //onChange={(newDateFinishFact) => handleDateChange('dateFinishFact', newDateFinishFact)}
               />
             </Grid2>
           </Grid2>
 
           {/* Строка 4 */}
-          
+
 
           {/* Строка 5 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
-              <Typography variant="subtitle2">Контрольная дата возврата техники</Typography>
+              <Typography variant="subtitle2">Дата возврата техники</Typography>
             </Grid2>
             <Grid2 size={9}>
               <DateTimePicker
-              placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
-              valueFormat="DD.MM.YYYY HH:mm"
-              withSeconds={false} 
-              onPointerEnterCapture={undefined} 
-              onPointerLeaveCapture={undefined}
-              clearable
-              locale='ru'
-              size="md"
-              styles={{ input: {minHeight: '40px'}}}
-              readOnly={!isEditing}
-            />
+                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
+                valueFormat="DD.MM.YYYY HH:mm"
+                withSeconds={false}
+                onPointerEnterCapture={undefined}
+                onPointerLeaveCapture={undefined}
+                clearable
+                locale='ru'
+                size="md"
+                styles={{ input: { minHeight: '40px' } }}
+                readOnly={!isEditing}
+                value={editedRequest?.dateFinishPlan ? dayjs(editedRequest?.dateFinishPlan).toDate() : null}
+                onChange={(newDateFinishPlan) => handleDateChange('dateFinishPlan', newDateFinishPlan)}
+              />
             </Grid2>
           </Grid2>
 
@@ -347,14 +493,23 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <Typography variant="subtitle2">Тип заявки</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <FormControl fullWidth>
+              <FormControl fullWidth size="small">
                 <Select
                   value={editedRequest.orderType?.name || ''}
-                  onChange={handleChange('requestType')}
+                  onChange={handleOrderTypeChange}
+
+                  renderValue={(selected) => {
+                    if (!selected) {
+                      return <em>Не выбрано</em>;
+                    }
+                    return selected;  // или найдите label по имени, если нужно
+                  }}
                 >
-                  <MenuItem value={"ЗНО"}>ЗНО</MenuItem>
-                  <MenuItem value={"ЗНД"}>ЗНД</MenuItem>
-                  <MenuItem value={"ЗНИ"}>ЗНИ</MenuItem>
+                  {orderTypes.map((item: any) => (
+                    <MenuItem key={item.name} value={item.name}>
+                      {item.name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid2>
@@ -366,14 +521,24 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <Typography variant="subtitle2">Приоритет</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                InputProps={{ readOnly: !isEditing }}
-                onChange={handleChange('priority')}
-                value={editedRequest.orderPriority?.name || ''}
-              />
+              <FormControl fullWidth size="small">
+                <Select
+                  value={editedRequest.orderPriority?.idOrderPriority || ''}
+                  onChange={handleOrderPriorityChange}
+
+                  renderValue={(selected) => {
+                    if (!selected) return <em>Не выбрано</em>;
+                    const p = orderPriorities.find((x: any) => x.idOrderPriority === selected);
+                    return p?.name;
+                  }}
+                >
+                  {orderPriorities.map((item: any) => (
+                    <MenuItem key={item.idOrderPriority} value={item.idOrderPriority}>
+                      {item.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid2>
           </Grid2>
 
@@ -388,7 +553,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 size="small"
                 variant="outlined"
                 multiline
-                rows={2}
+                rows={1}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('contactMethod')}
               />
@@ -406,7 +571,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 size="small"
                 variant="outlined"
                 multiline
-                rows={2}
+                rows={1}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={(e) => handleFieldChange('knowledgeBase', e.target.value)}
               />
@@ -416,7 +581,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       </Grid2>
 
       {/* Заголовок раздела */}
-      <Typography variant="subtitle1" sx={{ fontWeight: 'bold'}}>
+      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
         Информация о заявителе
       </Typography>
 
@@ -443,7 +608,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               />
             </Grid2>
           </Grid2>
-          
+
           {/* Строка 2 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>

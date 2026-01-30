@@ -168,7 +168,7 @@ export function SupportTasksTab({ request }: SupportTasksTabProps) {
         open={postponeDialogOpen}
         onClose={handlePostponeClose}
         onSave={handlePostponeSave}
-        currentDate={request?.dateFinishPlan} // Передаем текущую дату из request
+        //currentDate={request?.dateFinishPlan} // Передаем текущую дату из request
       />
 
       {/* Вывод выбранного блока */}

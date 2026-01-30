@@ -16,6 +16,7 @@ import { RequestCreateZNODialog } from '../../components/request-create-zno-dial
 import { RequestCreateZNDDialog } from '../../components/request-create-znd-dialog/request-create-znd-dialog';
 import { RequestCreateZNIDialog } from '../../components/request-create-zni-dialog/request-create-zni-dialog';
 import { IconPencil } from '@tabler/icons-react';
+import dayjs, { Dayjs } from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
 import { getOrderTypes } from '../../api/services/orderTypeService';
 
@@ -85,6 +86,19 @@ export function RequestsAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по дате регистрации',
         },
+        Cell: ({ cell }) => {
+          const value = cell.getValue<Dayjs | null | undefined | string>();
+
+          if (!value) return '—';
+
+          // если уже Dayjs — форматируем
+          if (dayjs.isDayjs(value)) {
+            return value.format('DD.MM.YYYY HH:mm');
+          }
+
+          // если вдруг пришла строка (на всякий случай)
+          return dayjs(value).format('DD.MM.YYYY HH:mm');
+        },
       },
       {
         header: 'Желаемый срок',
@@ -95,6 +109,19 @@ export function RequestsAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по желаемому сроку',
         },
+        Cell: ({ cell }) => {
+          const value = cell.getValue<Dayjs | null | undefined | string>();
+
+          if (!value) return '—';
+
+          // если уже Dayjs — форматируем
+          if (dayjs.isDayjs(value)) {
+            return value.format('DD.MM.YYYY HH:mm');
+          }
+
+          // если вдруг пришла строка (на всякий случай)
+          return dayjs(value).format('DD.MM.YYYY HH:mm');
+        },
       },
       {
         header: 'Дата решения заявки',
@@ -104,6 +131,19 @@ export function RequestsAllPage() {
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр по дате решения',
+        },
+        Cell: ({ cell }) => {
+          const value = cell.getValue<Dayjs | null | undefined | string>();
+
+          if (!value) return '—';
+
+          // если уже Dayjs — форматируем
+          if (dayjs.isDayjs(value)) {
+            return value.format('DD.MM.YYYY HH:mm');
+          }
+
+          // если вдруг пришла строка (на всякий случай)
+          return dayjs(value).format('DD.MM.YYYY HH:mm');
         },
       },
       {
@@ -275,8 +315,8 @@ export function RequestsAllPage() {
     if (request.orderState) {
       return false;
     }
-
-    const desiredDate = parseDate(request.dateFinishPlan.split(' ')[0]);
+    const temp = dayjs(request.dateFinishPlan).toString();
+    const desiredDate = parseDate(temp.split(' ')[0]);
 
     // Если дата не распарсилась не считаем просроченной
     if (!desiredDate) return false;

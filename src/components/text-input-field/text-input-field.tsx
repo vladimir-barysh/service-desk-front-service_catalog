@@ -43,7 +43,11 @@ export const TextInputField = ({
   const handleClose = () => setOpen(false);
 
   const handleSave = () => {
-    //onChange(tempValue);
+    const syntheticEvent = {
+      target: { value: tempValue }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    onChange(syntheticEvent);
     setOpen(false);
   };
 
@@ -56,7 +60,6 @@ export const TextInputField = ({
         value={value}
         placeholder={placeholder}
         InputProps={{
-          readOnly: false,
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
@@ -72,7 +75,8 @@ export const TextInputField = ({
           ),
           
         }}
-        onClick={handleOpen} // ← клик по всему полю тоже открывает
+        onChange={onChange}
+        //onClick={handleOpen} // ← клик по всему полю тоже открывает
         sx={{ pointerEvents: disabled ? 'none' : 'auto' }}
       />
 
