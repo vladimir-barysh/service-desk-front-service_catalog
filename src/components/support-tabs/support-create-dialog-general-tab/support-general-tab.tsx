@@ -103,22 +103,22 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     setEditedRequest(prev => prev ? { ...prev, [field]: temp } : null);
   };
 
-  const handleOrderStateChange = (event: SelectChangeEvent<string>) => {
-    const selectedName = event.target.value;
+  const handleOrderStateChange = (event: SelectChangeEvent<number>) => {
+    const selectedId = Number(event.target.value);
 
     const selectedObject = orderStates.find(
-      (item: any) => item.name === selectedName
+      (item: any) => item.idOrderState === selectedId
     ) ?? null;
 
     setEditedRequest(prev => prev ? { ...prev, orderState: selectedObject } : null);
 
   };
 
-  const handleOrderTypeChange = (event: SelectChangeEvent<string>) => {
-    const selectedName = event.target.value;
+  const handleOrderTypeChange = (event: SelectChangeEvent<number>) => {
+    const selectedId = Number(event.target.value);
 
     const selectedObject = orderTypes.find(
-      (item: any) => item.name === selectedName
+      (item: any) => item.idOrderType === selectedId
     ) ?? null;
 
     setEditedRequest(prev => prev ? { ...prev, orderType: selectedObject } : null);
@@ -137,11 +137,11 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     );
   };
 
-  const handleDispatcherChange = (event: SelectChangeEvent<string>) => {
-    const selectedName = event.target.value;
+  const handleDispatcherChange = (event: SelectChangeEvent<number>) => {
+    const selectedId = Number(event.target.value);
 
     const selectedObject = users.find(
-      (item: any) => item.fio1c === selectedName
+      (item: any) => item.idItUser === selectedId
     ) ?? null;
 
     setEditedRequest(prev => prev ? { ...prev, dispatcher: selectedObject } : null);
@@ -156,7 +156,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     queryKey: ['users'],
     queryFn: getUsers,
     staleTime: Infinity
-  })
+  });
 
   const {
     data: orderTypes = [],
@@ -198,17 +198,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
           <Grid2 size="auto">
             <FormControl sx={{ minWidth: 240 }} size="small">
               <Select
-                value={editedRequest.orderState?.name || ''}
+                value={editedRequest.orderState?.idOrderState || ''}
                 onChange={handleOrderStateChange}
                 renderValue={(selected) => {
-                  if (!selected) {
-                    return <em>Не выбрано</em>;
-                  }
-                  return selected;  // или найдите label по имени, если нужно
-                }}
+                    if (!selected) return <em>Не выбрано</em>;
+                    const p = orderStates.find((x: any) => x.idOrderState === selected);
+                    return p?.name;
+                  }}
               >
                 {orderStates.map((item: any) => (
-                  <MenuItem key={item.name} value={item.name}>
+                  <MenuItem key={item.idOrderState} value={item.idOrderState}>
                     {item.name}
                   </MenuItem>
                 ))}
@@ -412,18 +411,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Grid2 size={9}>
               <FormControl fullWidth size="small">
                 <Select
-                  value={editedRequest.dispatcher?.fio1c || ''}
+                  value={editedRequest.dispatcher?.idItUser || ''}
                   onChange={handleDispatcherChange}
 
                   renderValue={(selected) => {
-                    if (!selected) {
-                      return <em>Не выбрано</em>;
-                    }
-                    return selected;  // или найдите label по имени, если нужно
+                    if (!selected) return <em>Не выбрано</em>;
+                    const p = users.find((x: any) => x.idItUser === selected);
+                    return p?.fio1c;
                   }}
                 >
                   {users.map((item: any) => (
-                    <MenuItem key={item.fio1c} value={item.fio1c}>
+                    <MenuItem key={item.idItUser} value={item.idItUser}>
                       {item.fio1c}
                     </MenuItem>
                   ))}
@@ -495,18 +493,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Grid2 size={9}>
               <FormControl fullWidth size="small">
                 <Select
-                  value={editedRequest.orderType?.name || ''}
+                  value={editedRequest.orderType?.idOrderType || ''}
                   onChange={handleOrderTypeChange}
 
                   renderValue={(selected) => {
-                    if (!selected) {
-                      return <em>Не выбрано</em>;
-                    }
-                    return selected;  // или найдите label по имени, если нужно
+                    if (!selected) return <em>Не выбрано</em>;
+                    const p = orderTypes.find((x: any) => x.idOrderType === selected);
+                    return p?.name;
                   }}
                 >
                   {orderTypes.map((item: any) => (
-                    <MenuItem key={item.name} value={item.name}>
+                    <MenuItem key={item.idOrderType} value={item.idOrderType}>
                       {item.name}
                     </MenuItem>
                   ))}

@@ -24,6 +24,10 @@ import { Grid } from '@mui/joy';
 
 import { TextInputField } from '../text-input-field';
 
+import { useQuery } from '@tanstack/react-query';
+import { getServices } from '../../api/services/ServiceService';
+import { getCatItems } from '../../api/services/CatItemService';
+
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
   clipPath: 'inset(50%)',

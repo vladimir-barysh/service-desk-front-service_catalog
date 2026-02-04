@@ -9,7 +9,11 @@ import {
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 
-import { systems as allSystems, ItSystemStatus, type ItSystem } from './makeData';
+import { systems as allSystems, ItSystemStatus, type ItSystem, type Service } from './makeData';
+
+import { useQuery } from '@tanstack/react-query';
+import { getServices } from '../../api/services/ServiceService';
+import { getCatItems } from '../../api/services/CatItemService';
 
 export type ChooseServiceCreateDialogProps = {
   isOpen: boolean;
@@ -27,27 +31,48 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
     []
   );
 
-  const columns = React.useMemo<MRT_ColumnDef<ItSystem>[]>(() => [
+  const {
+    data: services = [],
+    isLoading: serviceLoad,
+    error: serviceError,
+  } = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices,
+    staleTime: Infinity
+  });
+
+  const {
+    data: catitems = [],
+    isLoading: catitemLoad,
+    error: catitemError,
+  } = useQuery({
+    queryKey: ['catitems'],
+    queryFn: getCatItems,
+    staleTime: Infinity
+  })
+
+  const columns = React.useMemo<MRT_ColumnDef<Service>[]>(() => [
     {
       header: 'Наименование',
-      accessorKey: 'name',
+      accessorKey: 'fullname',
       minSize: 240,
       size: 320,
       maxSize: 600,
+      /*{
       Cell: ({ row }) => (
         <span style={{ color: row.original.status === 'archived' ? '#6c757d' : undefined }}>
           {row.original.name}
         </span>
-      ),
+      ),*/
     },
-    { header: 'Статус', accessorKey: 'status', enableHiding: false },
   ], []);
 
   const [rowSelection, setRowSelection] = React.useState<MRT_RowSelectionState>({});
   const selectedId = React.useMemo(() => Object.keys(rowSelection)[0] ?? null, [rowSelection]);
+  //Остановился тут. Почему то не работает выделение пункта
   const selected = React.useMemo(
-    () => (selectedId ? data.find((d) => d.id === selectedId) ?? null : null),
-    [selectedId, data]
+    () => (selectedId ? services.find((d: any) => d.idService === selectedId) ?? null : null),
+    [selectedId, services]
   );
 
   const handleConfirm = () => {
@@ -56,10 +81,10 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
     onClose();
   }
 
-  const table = useMantineReactTable<ItSystem>({
-    columns,
-    data,
-    getRowId: (r) => r.id,
+  const table = useMantineReactTable<Service>({
+    columns: columns,
+    data: services,
+    getRowId: (r) => r.idService?.toString(),
     localization: MRT_Localization_RU,
 
     enableTopToolbar: false,
@@ -86,16 +111,8 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
       onClick: row.getToggleSelectedHandler(),
       sx: (theme: any) => ({
         cursor: 'pointer',
-        backgroundColor: row.getIsSelected()
-          ? theme.colors?.blue?.[1] ?? 'rgba(25,118,210,0.12)'
-          : row.original.status === 'archived'
-            ? theme.colors?.gray?.[1] ?? '#f1f3f5'
-            : undefined,
-        '&:hover': {
-          backgroundColor: row.original.status === 'archived'
-            ? theme.colors?.gray?.[2] ?? '#e9ecef'
-            : theme.colors?.gray?.[0] ?? '#f8f9fa',
-      }}),
+        
+      }),
     }),
 
     onRowSelectionChange: setRowSelection,
@@ -108,7 +125,7 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
       onClose={onClose}
       PaperProps={{ sx: { width: 720, maxWidth: '90vw', height: 520 } }}
     >
-      <DialogTitle>Выберите ИТ-сервис, к которому необходим доступ.</DialogTitle>
+      <DialogTitle>Выберите ИТ-сервис.</DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         <MantineReactTable table={table} />
       </DialogContent>
