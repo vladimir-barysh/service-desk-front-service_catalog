@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Menu, MenuItem, Sidebar, SubMenu } from 'react-pro-sidebar';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Badge, Box, Typography } from '@mui/material';
+import { Badge, Box, Typography} from '@mui/material';
 import {
   ModeEdit, TaskAlt, ChecklistRtl,
   Reorder, Groups, Folder,
@@ -38,8 +38,6 @@ const currentUser = {
   avatarUrl: null, // или "https://..." если есть фото
   initials: "ВА"   // или генерировать автоматически
 };
-
-
 
 function useRequestCounts() {
 
@@ -92,10 +90,13 @@ export function LeftSidebar() {
   } = useRequestCounts();
 
   const menuItemCommon = {
-    style: { marginLeft: '-10px', width: '310px' },
+    style: { 
+      marginLeft: '-10px', 
+      width: '270px'
+    },
     rootStyles: {
       fontWeight: 400,
-      fontSize: '1.0rem',
+      fontSize: '0.8rem'
     }
   };
 
@@ -109,7 +110,7 @@ export function LeftSidebar() {
     },
     rootStyles: {
       fontWeight: 600,
-      fontSize: '1.0rem',
+      fontSize: '0.8rem',
       opacity: 1,
       cursor: "default",
       "&:hover": { background: "none" },
@@ -121,7 +122,7 @@ export function LeftSidebar() {
     <Box className={'box'}
       sx={{
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
       }}
     >
       <Sidebar
@@ -172,7 +173,7 @@ export function LeftSidebar() {
             rootStyles={{
               color: 'sectionTitleColor',
               fontWeight: 600,
-              fontSize: '1.3rem',
+              fontSize: '1.0rem',
               opacity: 1,
               cursor: "default",
               "&:hover": { background: "none" },
@@ -383,15 +384,6 @@ export function LeftSidebar() {
 
           <MenuItem
             {...menuItemCommon}
-            icon={<PersonOutlined />}
-            component={<Link to={'/info/profile'}/>}
-            active={location.pathname.includes('/info/profile')}
-          >
-            Мой профиль
-          </MenuItem>
-
-          <MenuItem
-            {...menuItemCommon}
             icon={<InfoOutlined />}
             component={<Link to={'/info/webservices'}/>}
             active={location.pathname.includes('/info/webservices')}
@@ -415,16 +407,6 @@ export function LeftSidebar() {
             active={location.pathname.includes('/info/knowbase')}
           >
             База знаний
-          </MenuItem>
-
-          <MenuItem
-            {...menuItemCommon}
-            icon={<InfoOutlined />}
-            suffix={<Badge badgeContent={999} color="warning"></Badge>}
-            component={<Link to={'/info/notifications'}/>}
-            active={location.pathname.includes('/info/notifications')}
-          >
-            Уведомления
           </MenuItem>
 
           <MenuItem

@@ -196,23 +196,13 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Typography variant="subtitle2">Статус</Typography>
           </Grid2>
           <Grid2 size="auto">
-            <FormControl sx={{ minWidth: 240 }} size="small">
-              <Select
-                value={editedRequest.orderState?.idOrderState || ''}
-                onChange={handleOrderStateChange}
-                renderValue={(selected) => {
-                    if (!selected) return <em>Не выбрано</em>;
-                    const p = orderStates.find((x: any) => x.idOrderState === selected);
-                    return p?.name;
-                  }}
-              >
-                {orderStates.map((item: any) => (
-                  <MenuItem key={item.idOrderState} value={item.idOrderState}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <TextField
+              value={editedRequest.orderState?.name || ''}
+              fullWidth
+              size="small"
+              variant="outlined"
+              InputProps={{ readOnly: true }}
+            />
           </Grid2>
         </Grid2>
 
@@ -234,7 +224,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 size="md"
                 styles={{ input: { minHeight: '40px' } }}
                 readOnly={!isEditing}
-                //В заявке даты - строка, тут - DateValue
                 value={editedRequest?.dateCreated ? dayjs(editedRequest?.dateCreated).toDate() : null}
                 onChange={(newDateCreated) => handleDateChange('dateCreated', newDateCreated)}
               />
@@ -287,12 +276,8 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         </Grid2>
       </Grid2>
 
-
-      {/* Основная таблица */}
       <Grid2 container spacing={0}>
-        {/* Левая колонка - заголовки и значения */}
         <Grid2 size={6}>
-          {/* Строка 1 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Сервис / Модуль</Typography>
@@ -309,7 +294,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
           </Grid2>
 
-          {/* Строка 2 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Услуга</Typography>
@@ -326,7 +310,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
           </Grid2>
 
-          {/* Строка 3 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Кому доступ</Typography>
@@ -344,7 +327,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
           </Grid2>
 
-          {/* Строка 4 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Заголовок</Typography>
@@ -361,49 +343,8 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
           </Grid2>
 
-          {/* Строка 5 */}
-          <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
-              <Typography variant="subtitle2">Описание</Typography>
-            </Grid2>
-            <Grid2 size={9}>
-              <TextInputField
-                value={editedRequest.description || ''}
-                onChange={handleChange('description')}
-                readonly={!isEditing}
-              />
-            </Grid2>
-          </Grid2>
+          
 
-          {/* Строка 6 */}
-          <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
-              <Typography variant="subtitle2">Решение</Typography>
-            </Grid2>
-            <Grid2 size={9}>
-              <TextInputField
-                value={editedRequest.resultText || ''}
-                onChange={handleChange('resultText')}
-                readonly={!isEditing}
-              />
-            </Grid2>
-          </Grid2>
-
-          {/* Строка 7 */}
-          <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
-              <Typography variant="subtitle2">Комментарий</Typography>
-            </Grid2>
-            <Grid2 size={9}>
-              <TextInputField
-                value={''}
-                onChange={handleChange('comment')}
-                readonly={!isEditing}
-              />
-            </Grid2>
-          </Grid2>
-
-          {/* Строка 8 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Диспетчер</Typography>
@@ -429,8 +370,23 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               </FormControl>
             </Grid2>
           </Grid2>
+          
+          <Grid2 container spacing={0}>
+            <Grid2 size={3} sx={labelStyle}>
+              <Typography variant="subtitle2">Комментарий</Typography>
+            </Grid2>
+            <Grid2 size={9}>
+              <TextInputField
+                value={''}
+                onChange={handleChange('comment')}
+                readonly={!isEditing}
+              />
+            </Grid2>
+          </Grid2>
+          
         </Grid2>
-
+        
+        
         {/* Правая колонка - заголовки и значения */}
         <Grid2 size={6}>
           {/* Строка 1 */}
@@ -571,6 +527,40 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 rows={1}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={(e) => handleFieldChange('knowledgeBase', e.target.value)}
+              />
+            </Grid2>
+          </Grid2>
+        </Grid2>
+
+        <Grid2 size={6}>
+
+          <Grid2 container spacing={0}>
+            <Grid2 size={3} sx={labelStyle}>
+              <Typography variant="subtitle2">Описание</Typography>
+            </Grid2>
+            <Grid2 size={9}>
+              <TextInputField
+                value={editedRequest.description || ''}
+                onChange={handleChange('description')}
+                readonly={!isEditing}
+                rows={3}
+              />
+            </Grid2>
+          </Grid2>
+
+        </Grid2>
+
+        <Grid2 size={6}>
+          <Grid2 container spacing={0}>
+            <Grid2 size={3} sx={labelStyle}>
+              <Typography variant="subtitle2">Решение</Typography>
+            </Grid2>
+            <Grid2 size={9}>
+              <TextInputField
+                value={editedRequest.resultText || ''}
+                onChange={handleChange('resultText')}
+                readonly={!isEditing}
+                rows={3}
               />
             </Grid2>
           </Grid2>

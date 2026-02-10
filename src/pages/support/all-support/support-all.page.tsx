@@ -123,7 +123,7 @@ export function SupportAllPage() {
         accessorKey: 'nomer',
         maxSize: 90,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по №',
+          placeholder: 'Фильтр',
         },
         enableResizing: false,
       },
@@ -131,10 +131,10 @@ export function SupportAllPage() {
         header: 'Дата регистрации',
         accessorKey: 'dateCreated',
         type: 'string',
-        maxSize: 175,
+        maxSize: 130,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по дате регистрации',
+          placeholder: 'Фильтр',
         },
         Cell: ({ cell }) => {
           const value = cell.getValue<Dayjs | null | undefined | string>();
@@ -154,10 +154,10 @@ export function SupportAllPage() {
         header: 'Желаемый срок',
         accessorKey: 'dateFinishPlan',
         type: 'Date',
-        maxSize: 165,
+        maxSize: 120,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по желаемому сроку',
+          placeholder: 'Фильтр',
         },
         Cell: ({ cell }) => {
           const value = cell.getValue<Dayjs | null | undefined | string>();
@@ -177,10 +177,10 @@ export function SupportAllPage() {
         header: 'Дата решения заявки',
         accessorKey: 'dateFinishFact',
         type: 'string',
-        maxSize: 160,
+        maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по дате решения',
+          placeholder: 'Фильтр',
         },
         Cell: ({ cell }) => {
           const value = cell.getValue<Dayjs | null | undefined | string>();
@@ -207,7 +207,7 @@ export function SupportAllPage() {
         mantineFilterTextInputProps: {
           disabled: !!urlStatus,
           readOnly: !!urlStatus,
-          placeholder: urlStatus ? `Зафиксировано: ${urlStatus}` : 'Фильтр по статусу',
+          placeholder: urlStatus ? `Зафиксировано: ${urlStatus}` : 'Фильтр',
         },
         mantineFilterSelectProps: {
           disabled: !!urlStatus || hideClosed,
@@ -222,7 +222,7 @@ export function SupportAllPage() {
         maxSize: 130,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по заголовку',
+          placeholder: 'Фильтр',
         },
       },
       {
@@ -232,7 +232,7 @@ export function SupportAllPage() {
         maxSize: 100,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по запросу',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.orderType?.name || ''
       },
@@ -243,7 +243,7 @@ export function SupportAllPage() {
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по инициатору',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.initiator?.fio1c || ''
       },
@@ -254,7 +254,7 @@ export function SupportAllPage() {
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по пользователю',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.dispatcher?.fio1c || ''
       },
@@ -265,7 +265,7 @@ export function SupportAllPage() {
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по IT-сервису',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.service?.fullname || ''
       },
@@ -276,7 +276,7 @@ export function SupportAllPage() {
         maxSize: 130,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по услуге',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.catalogItem?.name || ''
       },

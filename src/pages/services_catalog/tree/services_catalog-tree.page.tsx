@@ -185,14 +185,10 @@ export function ServicesCatalogTreePage () {
   const [DeleteDialogTypeName, setDeleteDialogTypeName] = useState<string | undefined>("None");
   const [ErrorNotificationText, setErrorNotificationText] = useState<string | undefined>("None");
 
-  let TableRoles: tableClass;
-  TableRoles = new tableClass(roles, rolesColumns);
-  let TableWorkTypes: tableClass;
-  TableWorkTypes = new tableClass(worktypes, worktypesColumns);
-  let TableServicesAll: tableClass;
-  TableServicesAll = new tableClass(servicesAll, getColumns("Доступно"));
-  let TableServicesChoose: tableClass;
-  TableServicesChoose = new tableClass(servicesChoose, getColumns("Выбрано"));
+  const TableRoles = new tableClass(roles, rolesColumns);
+  const TableWorkTypes = new tableClass(worktypes, worktypesColumns);
+  const TableServicesAll = new tableClass(servicesAll, getColumns("Доступно"));
+  const TableServicesChoose = new tableClass(servicesChoose, getColumns("Выбрано"));
 
   function parseDate(dateString: string): Date | null {
     const parts = dateString.split('.');

@@ -7,28 +7,37 @@ import {
   type MRT_ColumnDef,
 } from 'mantine-react-table';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Grid2,
+} from '@mui/material';
 
-import { systems as allSystems, ItSystemStatus, type ItSystem, type Service } from './makeData';
+import {
+  systems as allSystems,
+  ItSystemStatus,
+  type ItSystem,
+  type Service,
+} from './makeData';
 
 import { useQuery } from '@tanstack/react-query';
 import { getServices } from '../../api/services/ServiceService';
-import { getCatItems } from '../../api/services/CatItemService';
 
 export type ChooseServiceCreateDialogProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSelect?: (s: ItSystem | null) => void;
+  onSelect?: (s: Service | null) => void;
 };
 
-export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps> = ({
-  isOpen,
-  onClose,
-  onSelect,
-}) => {
+export const ChooseServiceCreateDialog: React.FC<
+  ChooseServiceCreateDialogProps
+> = ({ isOpen, onClose, onSelect }) => {
   const data = React.useMemo(
     () => allSystems.filter((s) => s.status !== ItSystemStatus.Inactive),
-    []
+    [],
   );
 
   const {
@@ -38,46 +47,40 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
   } = useQuery({
     queryKey: ['services'],
     queryFn: getServices,
-    staleTime: Infinity
+    staleTime: Infinity,
   });
 
-  const {
-    data: catitems = [],
-    isLoading: catitemLoad,
-    error: catitemError,
-  } = useQuery({
-    queryKey: ['catitems'],
-    queryFn: getCatItems,
-    staleTime: Infinity
-  })
-
-  const columns = React.useMemo<MRT_ColumnDef<Service>[]>(() => [
-    {
-      header: 'Наименование',
-      accessorKey: 'fullname',
-      minSize: 240,
-      size: 320,
-      maxSize: 600,
-      /*{
+  const columns = React.useMemo<MRT_ColumnDef<Service>[]>(
+    () => [
+      {
+        header: 'Наименование',
+        accessorKey: 'fullname',
+        minSize: 240,
+        size: 320,
+        maxSize: 600,
+        /*{
       Cell: ({ row }) => (
         <span style={{ color: row.original.status === 'archived' ? '#6c757d' : undefined }}>
           {row.original.name}
         </span>
       ),*/
-    },
-  ], []);
+      },
+    ],
+    [],
+  );
 
-  const [rowSelection, setRowSelection] = React.useState<MRT_RowSelectionState>({});
-  const selectedId = React.useMemo(() => Object.keys(rowSelection)[0] ?? null, [rowSelection]);
-  //Остановился тут. Почему то не работает выделение пункта
-  const selected = React.useMemo(
-    () => (selectedId ? services.find((d: any) => d.idService === selectedId) ?? null : null),
-    [selectedId, services]
+  const [rowSelection, setRowSelection] = React.useState<MRT_RowSelectionState>(
+    {},
   );
 
   const handleConfirm = () => {
     if (!selected) return;
     onSelect?.(selected);
+    onClose();
+  };
+
+  const handleClose = () => {
+    onSelect?.(null);
     onClose();
   }
 
@@ -111,13 +114,14 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
       onClick: row.getToggleSelectedHandler(),
       sx: (theme: any) => ({
         cursor: 'pointer',
-        
       }),
     }),
 
     onRowSelectionChange: setRowSelection,
     state: { rowSelection },
   });
+
+  const selected = table.getSelectedRowModel().rows[0]?.original ?? null;
 
   return (
     <Dialog
@@ -126,18 +130,34 @@ export const ChooseServiceCreateDialog: React.FC<ChooseServiceCreateDialogProps>
       PaperProps={{ sx: { width: 720, maxWidth: '90vw', height: 520 } }}
     >
       <DialogTitle>Выберите ИТ-сервис.</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      
+      <DialogContent sx={{ pt: 1, padding: '20px' }}>
         <MantineReactTable table={table} />
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
+
+      <DialogActions
+        sx={{
+          margin: '0px 15px 15px 0px',
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'flex-end',
+        }}
+      >
         <Button
           variant="contained"
+          color="success"
+          size="small"
           disabled={!selected}
           onClick={handleConfirm}
         >
           Выбрать
         </Button>
-        <Button color="inherit" onClick={onClose}>
+        <Button
+          variant="contained"
+          color="inherit"
+          size="small"
+          onClick={handleClose}
+        >
           Отмена
         </Button>
       </DialogActions>

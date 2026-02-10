@@ -21,6 +21,7 @@ interface TextInputFieldProps {
   disabled?: boolean;
   readonly?: boolean;
   variant?: 'outlined' | 'filled' | 'standard';
+  rows?: number;
 }
 
 export const TextInputField = ({
@@ -30,7 +31,8 @@ export const TextInputField = ({
   placeholder = 'Введите текст...',
   disabled = false,
   readonly = false,
-  variant = 'outlined'
+  variant = 'outlined',
+  rows = 1
 }: TextInputFieldProps) => {
   const [open, setOpen] = useState(false);
   const [tempValue, setTempValue] = useState(value);
@@ -46,7 +48,7 @@ export const TextInputField = ({
     const syntheticEvent = {
       target: { value: tempValue }
     } as React.ChangeEvent<HTMLInputElement>;
-    
+
     onChange(syntheticEvent);
     setOpen(false);
   };
@@ -55,6 +57,9 @@ export const TextInputField = ({
     <>
       <TextField
         fullWidth
+        multiline
+        minRows={rows}
+        maxRows={rows}
         size='small'
         variant={variant}
         value={value}
@@ -73,32 +78,46 @@ export const TextInputField = ({
               </IconButton>
             </InputAdornment>
           ),
-          
+
         }}
         onChange={onChange}
         //onClick={handleOpen} // ← клик по всему полю тоже открывает
-        sx={{ pointerEvents: disabled ? 'none' : 'auto' }}
+        sx={{
+          pointerEvents: disabled ? 'none' : 'auto',
+          '& .MuiInputBase-root': {
+            height: `${20 + 20 * rows}px`,
+            padding: '0px 14px 0px 14px',
+          },
+
+          '& .MuiInputBase-input': {
+            minHeight: `${20}px`,
+            maxHeight: `${9 + 20 * rows}px`
+          },
+          '& .MuiInputAdornment-root': {
+            height: '100%',
+          },
+        }}
       />
 
       {/* Диалог для полноценного редактирования */}
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
 
         <DialogContent>
-            <Grid2 container alignItems="center" justifyContent="space-between">
-                <Grid2></Grid2>
-                <Grid2>
-                    <IconButton
-                        onClick={handleClose}
-                        size="small"
-                        sx={{
-                            color: 'text.secondary',
-                            '&:hover': { color: 'text.primary' }
-                        }}
-                    >
-                        <Close/>
-                    </IconButton>
-                </Grid2>
+          <Grid2 container alignItems="center" justifyContent="space-between">
+            <Grid2></Grid2>
+            <Grid2>
+              <IconButton
+                onClick={handleClose}
+                size="small"
+                sx={{
+                  color: 'text.secondary',
+                  '&:hover': { color: 'text.primary' }
+                }}
+              >
+                <Close />
+              </IconButton>
             </Grid2>
+          </Grid2>
           <Box sx={{ pt: 1 }}>
             <TextField
               fullWidth
@@ -120,24 +139,24 @@ export const TextInputField = ({
         </DialogContent>
 
         <Grid2 size='auto' sx={{ margin: '0px 25px 20px 10px', display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-            <Button
-                variant="contained"
-                size="small"
-                disabled={readonly}
-                onClick={handleSave}
-                sx={{ minWidth: '100px' }}
-            >
-                Сохранить
-            </Button>
-            <Button
-                variant="contained"
-                color="inherit"
-                size="small"
-                onClick={handleClose}
-                sx={{ minWidth: '100px' }}
-            >
-                Отмена
-            </Button>
+          <Button
+            variant="contained"
+            size="small"
+            disabled={readonly}
+            onClick={handleSave}
+            sx={{ minWidth: '100px' }}
+          >
+            Сохранить
+          </Button>
+          <Button
+            variant="contained"
+            color="inherit"
+            size="small"
+            onClick={handleClose}
+            sx={{ minWidth: '100px' }}
+          >
+            Отмена
+          </Button>
         </Grid2>
       </Dialog>
     </>
