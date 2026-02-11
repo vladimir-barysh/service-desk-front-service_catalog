@@ -92,8 +92,7 @@ export const RequestCreateZNODialog = (props: {
                 }),
             });
 
-            // Можно обновить список заявок, если есть где-то useQuery(['zno-requests'])
-            queryClient.invalidateQueries({ queryKey: ['requests'] });
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
 
             handleClose(); // закрываем диалог
             // можно сбросить форму
