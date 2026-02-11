@@ -20,15 +20,19 @@ import { DateTimePicker } from '@mantine/dates';
 import { styled } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
 
+import { notifications } from '@mantine/notifications';
+
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { ItSystem, Service } from '../itservice-choose/makeData';
-import { Grid } from '@mui/joy';
 
 import { TextInputField } from '../text-input-field';
 
-import { useQuery } from '@tanstack/react-query';
-import { getServices } from '../../api/services/ServiceService';
-import { getCatItems } from '../../api/services/CatItemService';
+import { useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query'
+import axios from '../../api/axios';
+import { OrderCreateDTO } from '../../api/dtos';
+import { AxiosError } from 'axios';
+import { createOrder } from '../../api/services/orderService';
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -61,6 +65,69 @@ export const RequestCreateZNODialog = (props: {
     const [expectedResult, setExpectedResult] = useState('');
     const [comment, setComment] = useState('');
 
+    const queryClient = useQueryClient();
+    const mutation = useMutation<OrderCreateDTO, AxiosError, OrderCreateDTO>({
+        mutationFn: createOrder,
+        onSuccess: (newOrder) => {
+            // Успех
+            notifications.show({
+                title: 'Успешно',
+                message: 'ЗНО зарегистрировано',
+                color: 'green',
+                autoClose: 4000,
+                withCloseButton: true,
+                withBorder: false,
+                loading: false,
+                styles: (theme) => ({
+                    root: {
+                        backgroundColor: theme.colors.green[6],
+                        borderColor: theme.colors.green[6],
+                    },
+                    title: { color: theme.white },
+                    description: { color: theme.white },
+                    closeButton: {
+                        color: theme.white,
+                        '&:hover': { backgroundColor: theme.colors.green[6] },
+                    },
+                }),
+            });
+
+            // Можно обновить список заявок, если есть где-то useQuery(['zno-requests'])
+            queryClient.invalidateQueries({ queryKey: ['requests'] });
+
+            handleClose(); // закрываем диалог
+            // можно сбросить форму
+            setChosen(null);
+            setProblemDescription('');
+            setExpectedResult('');
+            setComment('');
+            //setFiles([]);
+        },
+        onError: (error: any) => {
+            notifications.show({
+                title: 'Ошибка',
+                message: error?.response?.data?.message || error.message || 'Не удалось создать заявку',
+                color: 'red',
+                autoClose: 4000,
+                withCloseButton: true,
+                withBorder: false,
+                loading: false,
+                styles: (theme) => ({
+                    root: {
+                        backgroundColor: theme.colors.red[6],
+                        borderColor: theme.colors.red[6],
+                    },
+                    title: { color: theme.white },
+                    description: { color: theme.white },
+                    closeButton: {
+                        color: theme.white,
+                        '&:hover': { backgroundColor: theme.colors.red[8] },
+                    },
+                }),
+            });
+        },
+    });
+
     const isFormValid = useMemo(() => {
         return (
             chosen !== null &&
@@ -85,21 +152,25 @@ export const RequestCreateZNODialog = (props: {
         props.onClose();
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        console.log('chosen', chosen);
+        console.log('chosenId', chosen?.idService);
         if (!isFormValid) {
             alert('Пожалуйста, заполните все обязательные поля');
             return;
         }
 
-        const formData = {
-            service: chosen,
-            problemDescription,
-            expectedResult,
-            comment,
-            files,
+        const payload = {
+            name: 'Второй заголовок',
+            description: problemDescription,
+            dateFinishPlan: '',
+            idService: chosen?.idService,
+            idOrderType: 3,
+            resultText: expectedResult,
         };
 
-        console.log('Данные для сохранения:', formData);
+        // Отправляем
+        mutation.mutate(payload);
 
         handleClose();
     };
@@ -364,9 +435,10 @@ export const RequestCreateZNODialog = (props: {
                             color="success"
                             size={'small'}
                             fullWidth={true}
-                            disabled={!isFormValid}
+                            disabled={!isFormValid || mutation.isPending}
+                            onClick={handleSave}
                         >
-                            Сохранить
+                            {mutation.isPending ? 'Сохранение...' : 'Сохранить'}
                         </Button>
                     </Grid2>
                     <Grid2 size={3}>

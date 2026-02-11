@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { type Request } from './makeData';
+import { Order} from '../../api/models';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
@@ -66,7 +66,7 @@ export function RequestsAllPage() {
     setHideClosed(true);
   }, [location.pathname, location.search]);
 
-  const columns = useMemo<MRT_ColumnDef<Request>[]>(
+  const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
       {
         header: '№ заявки',
@@ -227,7 +227,7 @@ export function RequestsAllPage() {
   );
 
   // Цвет заливки строки
-  const colorRow = (row: MRT_Row<Request>) => {
+  const colorRow = (row: MRT_Row<Order>) => {
     if (row.getIsSelected()) {
       return 'rgba(23, 139, 241, 0.2)';
     }
@@ -307,7 +307,7 @@ export function RequestsAllPage() {
   }
 
   // Функция для проверки просрочки заявки
-  const isRequestOverdue = (request: Request): boolean => {
+  const isRequestOverdue = (request: Order): boolean => {
     if (!request.dateFinishPlan) return false;
 
     // Если заявка уже завершена не считаем просроченной
@@ -329,7 +329,7 @@ export function RequestsAllPage() {
   };
 
   // Обработчик двойного клика
-  const handleRowDoubleClick = (row: MRT_Row<Request>) => {
+  const handleRowDoubleClick = (row: MRT_Row<Order>) => {
     setSelectedRequest(row.original);
     setIsDialogOpen(true);
   };
@@ -343,7 +343,7 @@ export function RequestsAllPage() {
 
 
 
-  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<Order | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType] = useState(0);
 
@@ -396,7 +396,7 @@ export function RequestsAllPage() {
     mantineTableBodyCellProps: ({ row, cell }) => ({
       onClick: (event) => {
         // Если это не ячейка "header", то выделяем строку
-        if (cell.column.id === 'requestNumber') {
+        if (cell.column.id === 'nomer') {
           event.stopPropagation();
           handleRowDoubleClick(row);
         }

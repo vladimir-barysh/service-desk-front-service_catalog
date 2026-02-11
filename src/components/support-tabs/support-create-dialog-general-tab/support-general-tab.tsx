@@ -10,7 +10,7 @@ import { DateTimePicker, DateValue } from '@mantine/dates';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Order, OrderState } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../api/models';
 import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
 import { TextInputField } from '../../text-input-field';
 
@@ -101,17 +101,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   const handleDateChange = (field: string, newDate: DateValue) => {
     const temp = dayjs(newDate);
     setEditedRequest(prev => prev ? { ...prev, [field]: temp } : null);
-  };
-
-  const handleOrderStateChange = (event: SelectChangeEvent<number>) => {
-    const selectedId = Number(event.target.value);
-
-    const selectedObject = orderStates.find(
-      (item: any) => item.idOrderState === selectedId
-    ) ?? null;
-
-    setEditedRequest(prev => prev ? { ...prev, orderState: selectedObject } : null);
-
   };
 
   const handleOrderTypeChange = (event: SelectChangeEvent<number>) => {
@@ -343,8 +332,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
           </Grid2>
 
-          
-
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Диспетчер</Typography>
@@ -567,16 +554,12 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         </Grid2>
       </Grid2>
 
-      {/* Заголовок раздела */}
       <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
         Информация о заявителе
       </Typography>
 
-      {/* Таблица информации о заявителе */}
       <Grid2 container spacing={0}>
-        {/* Левая колонка - заголовки и значения */}
         <Grid2 size={6}>
-          {/* Строка 1 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Инициатор</Typography>
@@ -603,6 +586,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                value={editedRequest.initiator?.dolzh1c || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -621,6 +605,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                value={editedRequest.initiator?.podr?.name || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -642,6 +627,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                value={editedRequest.initiator?.telAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -666,6 +652,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                value={editedRequest.initiator?.telAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -691,6 +678,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                value={editedRequest.initiator?.emailAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"

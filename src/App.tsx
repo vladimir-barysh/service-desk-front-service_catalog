@@ -13,6 +13,7 @@ import { CssVarsProvider as JoyCssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
+import { Notifications } from '@mantine/notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,7 @@ const Main = () => {
         <MaterialCssVarsProvider theme={{ [MATERIAL_THEME_ID]: materialTheme }}>
           <JoyCssVarsProvider>
             <CssBaseline enableColorScheme />
+            <Notifications position='top-right' limit={5}/>
             <App />
           </JoyCssVarsProvider>
         </MaterialCssVarsProvider>

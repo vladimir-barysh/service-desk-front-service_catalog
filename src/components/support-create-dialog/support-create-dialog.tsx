@@ -15,17 +15,19 @@ import {
 import { Close } from '@mui/icons-material';
 
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined} from '@mui/icons-material'
-import { Order } from '../../pages/support/all-support/makeData';
-import { fileDataClass, uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData'; 
+import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined } from '@mui/icons-material'
+import { Order } from '../../api/models';
+import { fileDataClass, uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
-import { SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab, 
-    SupportFilesTab, SupportHistoryTab, SupportTasksTab} from '../support-tabs';
+import {
+  SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab,
+  SupportFilesTab, SupportHistoryTab, SupportTasksTab
+} from '../support-tabs';
 
 interface SupportGeneralDialogProps {
   isOpen: boolean;
   request: Order | null;
-  
+
   onClose: () => void;
 }
 
@@ -38,7 +40,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   const [generalData, setGeneralData] = useState(request);
   const [filesData, setFilesData] = useState<any[]>([]);
   const [discussionData, setDiscussionData] = useState<any[]>([]);
-  
+
   // Флаги изменений для каждого таба
   const [generalChanged, setGeneralChanged] = useState(false);
   const [filesChanged, setFilesChanged] = useState(false);
@@ -58,13 +60,13 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
 
   const handleClose = () => {
     if (hasChanges) {
-     /* const confirmed = window.confirm("У вас есть несохраненные изменения, хотите сохранить их перед закрытием?");
-      if (confirmed) {
-        // Сохраняем изменения
-        handleSave(); // ваша функция сохранения
-      }
-      // Если пользователь нажал "Отмена" - не закрываем диалог
-      if (!confirmed) return;*/
+      /* const confirmed = window.confirm("У вас есть несохраненные изменения, хотите сохранить их перед закрытием?");
+       if (confirmed) {
+         // Сохраняем изменения
+         handleSave(); // ваша функция сохранения
+       }
+       // Если пользователь нажал "Отмена" - не закрываем диалог
+       if (!confirmed) return;*/
       setOpenConfirmDialog(true);
       return; // Не закрываем основной диалог
     }
@@ -74,12 +76,12 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
 
   const handleConfirmClose = (shouldSave: boolean) => {
     setOpenConfirmDialog(false);
-    
+
     if (shouldSave) {
       // Сохраняем изменения
       handleSave();
     }
-    
+
     // В любом случае закрываем основной диалог
     setValue("1");
     onClose();
@@ -101,14 +103,14 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
     const filesForThisRequest = uploadedFiles.filter(
       file => file.idRequest === request.nomer
     );
-    
+
     if (filesForThisRequest.length > 0) {
       setHasFiles(true);
     }
-    else{
+    else {
       setHasFiles(false);
     }
-    
+
   };
 
   const checkMessages = () => {
@@ -121,14 +123,14 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
     const messagesForThisRequest = seed.filter(
       message => message.idRequest === request.nomer
     );
-    
+
     if (messagesForThisRequest.length > 0) {
       setHasMessages(true);
     }
-    else{
+    else {
       setHasMessages(false);
     }
-    
+
   };
 
   useEffect(() => {
@@ -164,77 +166,81 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
         <DialogContent sx={{ minHeight: '60vh', minWidth: '75vh' }}>
           <Grid2 container spacing={0} direction={'row'} alignItems="left" justifyContent="space-between">
             <Grid2 size='auto'>
-                <Box fontSize='20px' fontWeight='700'>
-                    Заявка №{request?.nomer || ''}
-                </Box>
+              <Box fontSize='20px' fontWeight='700'>
+                Заявка №{request?.nomer || ''}
+              </Box>
             </Grid2>
             {/* Крестик */}
             <Grid2 size='auto'>
               <IconButton onClick={handleClose}>
-                  <Close/>
+                <Close />
               </IconButton>
             </Grid2>
           </Grid2>
           <TabContext value={value}>
-                <TabList onChange={handleChange} centered>
-                <Tab label="Общие сведения" value="1"/>
-                <Tab label="Файлы" icon={hasFiles? <AttachFileOutlined/> : undefined} iconPosition='end' value="2"/>
-                <Tab label="Согласование" icon={<PriorityHighOutlined/>} iconPosition='end' value="3"/>
-                <Tab label="Задачи" icon={<LanOutlined/>} iconPosition='end' value="4"/>
-                <Tab label="Обсуждение" icon={hasMessages? <PeopleAltOutlined/> : undefined} iconPosition='end' value="5"/>
-                <Tab label="История" value="6"/>
-                </TabList>
-                <TabPanel value="1" sx={{ padding: "0px" }}>
-                <SupportGeneralTab 
-                  isOpen={true} 
-                  request={request}
-                  onUpdate={(data, hasChanges) => {
-                    setGeneralData(data);
-                    setGeneralChanged(hasChanges);
-                  }}
-                />
-                </TabPanel>
-                <TabPanel value="2" sx={{ padding: "0px" }}>
-                <SupportFilesTab request={request}/>
-                </TabPanel>
-                <TabPanel value="3" sx={{ padding: "0px" }}>                
-                <SupportCoordinationTab request={request}/>
-                </TabPanel>
-                <TabPanel value="4" sx={{ padding: "0px" }}>
-                <SupportTasksTab request={request}/>
-                </TabPanel>
-                <TabPanel value="5" sx={{ padding: "0px" }}>
-                <SupportDiscussionTab request={request}/>
-                </TabPanel>
-                <TabPanel value="6" sx={{ padding: "0px" }}>
-                <SupportHistoryTab/>
-                </TabPanel>
+            <TabList onChange={handleChange} centered>
+              <Tab label="Общие сведения" value="1" />
+              <Tab label="Файлы" icon={hasFiles ? <AttachFileOutlined /> : undefined} iconPosition='end' value="2" />
+              <Tab label="Согласование" icon={<PriorityHighOutlined />} iconPosition='end' value="3" />
+              <Tab label="Задачи" icon={<LanOutlined />} iconPosition='end' value="4" />
+              <Tab label="Обсуждение" icon={hasMessages ? <PeopleAltOutlined /> : undefined} iconPosition='end' value="5" />
+              <Tab label="История" value="6" />
+            </TabList>
+            <TabPanel value="1" sx={{ padding: "0px" }}>
+              <SupportGeneralTab
+                isOpen={true}
+                request={request}
+                onUpdate={(data, hasChanges) => {
+                  setGeneralData(data);
+                  setGeneralChanged(hasChanges);
+                }}
+              />
+            </TabPanel>
+            <TabPanel value="2" sx={{ padding: "0px" }}>
+              <SupportFilesTab request={request} />
+            </TabPanel>
+            <TabPanel value="3" sx={{ padding: "0px" }}>
+              <SupportCoordinationTab request={request} />
+            </TabPanel>
+            <TabPanel value="4" sx={{ padding: "0px" }}>
+              <SupportTasksTab request={request} />
+            </TabPanel>
+            <TabPanel value="5" sx={{ padding: "0px" }}>
+              <SupportDiscussionTab request={request} />
+            </TabPanel>
+            <TabPanel value="6" sx={{ padding: "0px" }}>
+              <SupportHistoryTab />
+            </TabPanel>
           </TabContext>
-
-          {/* Кнопки */}
-          <Grid2 size='auto' sx={{ margin: '20px 0px 0px 0px', display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-            <Button
-              variant="contained"
-              color="success"
-              size="small"
-              disabled={!hasChanges}
-              onClick={handleSave}
-              sx={{ minWidth: '100px' }}
-            >
-              Сохранить
-            </Button>
-            <Button
-              variant="contained"
-              color="inherit"
-              size="small"
-              onClick={handleCancel}
-              sx={{ minWidth: '100px' }}
-            >
-              Отмена
-            </Button>
-          </Grid2>
-
         </DialogContent>
+        <DialogActions
+          sx={{
+            margin: '0px 15px 15px 0px',
+            display: 'flex',
+            gap: 1,
+            justifyContent: 'flex-end',
+          }}
+        >
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            disabled={!hasChanges}
+            onClick={handleSave}
+            sx={{ minWidth: '100px' }}
+          >
+            Сохранить
+          </Button>
+          <Button
+            variant="contained"
+            color="inherit"
+            size="small"
+            onClick={handleCancel}
+            sx={{ minWidth: '100px' }}
+          >
+            Отмена
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <Dialog
@@ -251,30 +257,30 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
             У вас есть несохраненные изменения, хотите сохранить их перед закрытием?
           </DialogContentText>
         </DialogContent>
-          <Grid2 size='auto' sx={{ margin: '0px 0px 20px 0px', display: 'flex', gap: 1, justifyContent: 'center' }}>
-            <Button
-                variant="contained"
-                color="success"
-                size="small"
-                onClick={() => handleConfirmClose(true)}
-                sx={{ minWidth: '100px' }}
-                autoFocus
-              >
-                Да
-              </Button>
-            <Button
-              variant="contained"
-              color="inherit"
-              size="small"
-              onClick={() => handleConfirmClose(false)}
-              sx={{ minWidth: '100px' }}
-            >
-              Нет
-            </Button>
-          </Grid2>
+        <Grid2 size='auto' sx={{ margin: '0px 0px 20px 0px', display: 'flex', gap: 1, justifyContent: 'center' }}>
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            onClick={() => handleConfirmClose(true)}
+            sx={{ minWidth: '100px' }}
+            autoFocus
+          >
+            Да
+          </Button>
+          <Button
+            variant="contained"
+            color="inherit"
+            size="small"
+            onClick={() => handleConfirmClose(false)}
+            sx={{ minWidth: '100px' }}
+          >
+            Нет
+          </Button>
+        </Grid2>
       </Dialog>
     </div>
 
-    
+
   );
 }

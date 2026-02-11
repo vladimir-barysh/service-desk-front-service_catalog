@@ -130,7 +130,7 @@ export const ChooseServiceCreateDialog: React.FC<
       PaperProps={{ sx: { width: 720, maxWidth: '90vw', height: 520 } }}
     >
       <DialogTitle>Выберите ИТ-сервис.</DialogTitle>
-      
+
       <DialogContent sx={{ pt: 1, padding: '20px' }}>
         <MantineReactTable table={table} />
       </DialogContent>
