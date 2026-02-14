@@ -116,6 +116,19 @@ export function SupportAllPage() {
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
+  const formatFIO = (fullName: string): string => {
+    if (!fullName) return '';
+
+    const parts = fullName.trim().split(' ');
+    if (parts.length < 2) return fullName;
+
+    const lastName = parts[0];
+    const firstName = parts[1]?.charAt(0).toUpperCase() || '';
+    const middleName = parts[2]?.charAt(0).toUpperCase() || '';
+
+    return `${lastName} ${firstName}.${middleName ? middleName + '.' : ''}`;
+  };
+
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
       {
@@ -174,10 +187,10 @@ export function SupportAllPage() {
         },
       },
       {
-        header: 'Дата решения заявки',
+        header: 'Дата решения',
         accessorKey: 'dateFinishFact',
         type: 'string',
-        maxSize: 140,
+        maxSize: 120,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -245,7 +258,10 @@ export function SupportAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.initiator?.fio1c || ''
+        Cell: ({ row }) => {
+          const fullName = row.original.initiator?.fio1c || '';
+          return formatFIO(fullName);
+        }
       },
       {
         header: 'Пользователь',
@@ -256,7 +272,10 @@ export function SupportAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.dispatcher?.fio1c || ''
+        Cell: ({ row }) => {
+          const fullName = row.original.dispatcher?.fio1c || '';
+          return formatFIO(fullName);
+        }
       },
       {
         header: 'IT-сервис (модуль)',
