@@ -271,6 +271,7 @@ export const RequestCreateZNIDialog = (props: {
               <TextInputField
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
+                rows={2}
               />
             </Grid2>
           </Grid2>

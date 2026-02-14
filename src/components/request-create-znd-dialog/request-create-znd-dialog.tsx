@@ -81,7 +81,7 @@ export const RequestCreateZNDDialog = (props: {
     () => [
       {
         accessorKey: 'roleName',
-        header: 'Роль',
+        header: 'Профиль',
         size: 100,
         minSize: 20,
         maxSize: 100,

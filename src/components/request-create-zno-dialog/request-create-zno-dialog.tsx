@@ -62,7 +62,6 @@ export const RequestCreateZNODialog = (props: {
     const [chosen, setChosen] = React.useState<Service | null>(null);
 
     const [problemDescription, setProblemDescription] = useState('');
-    const [expectedResult, setExpectedResult] = useState('');
     const [comment, setComment] = useState('');
 
     const queryClient = useQueryClient();
@@ -98,7 +97,6 @@ export const RequestCreateZNODialog = (props: {
             // можно сбросить форму
             setChosen(null);
             setProblemDescription('');
-            setExpectedResult('');
             setComment('');
             //setFiles([]);
         },
@@ -130,10 +128,9 @@ export const RequestCreateZNODialog = (props: {
     const isFormValid = useMemo(() => {
         return (
             chosen !== null &&
-            problemDescription.trim() !== '' &&
-            expectedResult.trim() !== ''
+            problemDescription.trim() !== ''
         );
-    }, [chosen, problemDescription, expectedResult]);
+    }, [chosen, problemDescription]);
 
     function CreateDialog() {
         setIsCreateDialogOpen(true);
@@ -145,7 +142,6 @@ export const RequestCreateZNODialog = (props: {
     const handleClose = () => {
         setChosen(null);
         setProblemDescription('');
-        setExpectedResult('');
         setComment('');
         setFiles([]);
         props.onClose();
@@ -165,7 +161,6 @@ export const RequestCreateZNODialog = (props: {
             dateFinishPlan: '',
             idService: chosen?.idService,
             idOrderType: 3,
-            resultText: expectedResult,
         };
 
         // Отправляем
@@ -212,7 +207,7 @@ export const RequestCreateZNODialog = (props: {
                 maxWidth="md"
             >
                 <DialogContent
-                    sx={{ minHeight: '60vh', minWidth: '75vh', padding: '20x' }}
+                    sx={{ minHeight: '45vh', minWidth: '75vh', padding: '20x' }}
                 >
                     <Grid2
                         container
@@ -323,29 +318,13 @@ export const RequestCreateZNODialog = (props: {
                         margin="0px 0px 10px 0px"
                     >
                         <Grid2 size="auto">
-                            <Text fw={600}>Ожидаемый результат *</Text>
-                        </Grid2>
-                        <Grid2 size="auto">
-                            <TextInputField
-                                value={expectedResult}
-                                onChange={(e) => setExpectedResult(e.target.value)}
-                                rows={3}
-                            />
-                        </Grid2>
-                    </Grid2>
-                    <Grid2
-                        container
-                        spacing={1}
-                        direction="column"
-                        margin="0px 0px 10px 0px"
-                    >
-                        <Grid2 size="auto">
                             <Text fw={600}>Комментарий</Text>
                         </Grid2>
                         <Grid2 size="auto">
                             <TextInputField
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
+                                rows={2}
                             />
                         </Grid2>
                     </Grid2>
