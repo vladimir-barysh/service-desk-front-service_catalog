@@ -17,7 +17,7 @@ import { fileDataClass,
   deleteFileFromMakeData,
   getAllFiles 
 } from './makeData';
-import { Order } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/makeData';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',

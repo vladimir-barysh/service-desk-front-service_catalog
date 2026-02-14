@@ -71,9 +71,9 @@ export function RequestsAllPage() {
       {
         header: '№ заявки',
         accessorKey: 'nomer',
-        maxSize: 90,
+        maxSize: 80,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по №',
+          placeholder: 'Фильтр',
         },
         enableResizing: false,
       },
@@ -81,10 +81,10 @@ export function RequestsAllPage() {
         header: 'Дата регистрации',
         accessorKey: 'dateCreated',
         type: 'string',
-        maxSize: 175,
+        maxSize: 130,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по дате регистрации',
+          placeholder: 'Фильтр',
         },
         Cell: ({ cell }) => {
           const value = cell.getValue<Dayjs | null | undefined | string>();
@@ -104,10 +104,10 @@ export function RequestsAllPage() {
         header: 'Желаемый срок',
         accessorKey: 'dateFinishPlan',
         type: 'string',
-        maxSize: 165,
+        maxSize: 120,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по желаемому сроку',
+          placeholder: 'Фильтр',
         },
         Cell: ({ cell }) => {
           const value = cell.getValue<Dayjs | null | undefined | string>();
@@ -127,10 +127,10 @@ export function RequestsAllPage() {
         header: 'Дата решения заявки',
         accessorKey: 'dateFinishFact',
         type: 'string',
-        maxSize: 160,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по дате решения',
+          placeholder: 'Фильтр',
         },
         Cell: ({ cell }) => {
           const value = cell.getValue<Dayjs | null | undefined | string>();
@@ -150,10 +150,10 @@ export function RequestsAllPage() {
         header: 'Статус',
         accessorKey: 'orderState',
         type: 'string',
-        maxSize: 150,
+        maxSize: 130,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по статусу',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.orderState?.name || 'Статуса нет'
       },
@@ -164,17 +164,17 @@ export function RequestsAllPage() {
         maxSize: 130,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по заголовку',
+          placeholder: 'Фильтр',
         },
       },
       {
         header: 'Тип запроса',
         accessorKey: 'orderType',
         type: 'string',
-        maxSize: 100,
+        maxSize: 90,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по запросу',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.orderType?.name || ''
       },
@@ -185,7 +185,7 @@ export function RequestsAllPage() {
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по инициатору',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.initiator?.fio1c || ''
       },
@@ -196,7 +196,7 @@ export function RequestsAllPage() {
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по пользователю',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.dispatcher?.fio1c || ''
       },
@@ -207,7 +207,7 @@ export function RequestsAllPage() {
         maxSize: 150,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по IT-сервису',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.service?.fullname || ''
       },
@@ -218,7 +218,7 @@ export function RequestsAllPage() {
         maxSize: 130,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по услуге',
+          placeholder: 'Фильтр',
         },
         Cell: ({ row }) => row.original.catalogItem?.name || ''
       },

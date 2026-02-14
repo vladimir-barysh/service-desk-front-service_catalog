@@ -1,4 +1,4 @@
-import { Order } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/makeData';
 
 export interface Coordination {
   id: number;

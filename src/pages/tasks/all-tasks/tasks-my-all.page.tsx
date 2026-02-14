@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
-import { data, type Request } from '../../support/all-support/makeData';
+import { data, type Request } from '../../support/makeData';
 import React, { useEffect, useState, useCallback } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';

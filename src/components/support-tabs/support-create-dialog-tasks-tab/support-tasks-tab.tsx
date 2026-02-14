@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
 import { SchemaNode, schemaData } from './makeData';
 import { RedirectTaskDialog, RedirectData, PostponeTaskDialog, PostponeData } from '../../../components';
-import { Order } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/makeData';
 
 // Пропсы для компонентов
 interface BlockSchemaProps {

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
-import { type Order } from '../../../api/models';
+import { type Order } from '../../api/models';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
@@ -10,17 +10,17 @@ import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog, RequestCreateDialog, } from '../../../components';
-import { ControlDialog, PostponeDialog } from '../../../components/support-button-dialogs';
-import SplitButton from '../../../components/split-button/split-button.component';
-import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
-import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
-import { RequestCreateZNIDialog } from '../../../components/request-create-zni-dialog/request-create-zni-dialog';
-import { useDialogs } from '../../../components/support-hooks/use-dialog-state';
+import { SupportGeneralDialog, RequestCreateDialog, } from '../../components';
+import { ControlDialog, PostponeDialog } from '../../components/support-button-dialogs';
+import SplitButton from '../../components/split-button/split-button.component';
+import { RequestCreateZNODialog } from '../../components/request-create-zno-dialog/request-create-zno-dialog';
+import { RequestCreateZNDDialog } from '../../components/request-create-znd-dialog/request-create-znd-dialog';
+import { RequestCreateZNIDialog } from '../../components/request-create-zni-dialog/request-create-zni-dialog';
+import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { useQuery } from '@tanstack/react-query';
-import { getOrders } from '../../../api/services/orderService';
+import { getOrders } from '../../api/services/orderService';
 import { url } from 'inspector';
 
 export function SupportAllPage() {
@@ -121,7 +121,7 @@ export function SupportAllPage() {
       {
         header: '№ заявки',
         accessorKey: 'nomer',
-        maxSize: 90,
+        maxSize: 80,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
@@ -177,7 +177,7 @@ export function SupportAllPage() {
         header: 'Дата решения заявки',
         accessorKey: 'dateFinishFact',
         type: 'string',
-        maxSize: 150,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -200,7 +200,7 @@ export function SupportAllPage() {
         header: 'Статус',
         accessorKey: 'orderState',
         type: 'string',
-        maxSize: 150,
+        maxSize: 130,
         enableResizing: false,
         // Блокируем фильтр если есть URL параметры
         enableColumnFilter: !urlStatus,
@@ -229,7 +229,7 @@ export function SupportAllPage() {
         header: 'Тип запроса',
         accessorKey: 'orderType',
         type: 'string',
-        maxSize: 100,
+        maxSize: 90,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',

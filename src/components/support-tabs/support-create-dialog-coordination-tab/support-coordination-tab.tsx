@@ -11,7 +11,7 @@ import {
   Paper,
   Typography
 } from '@mui/material';
-import { Order } from '../../../pages/support/all-support/makeData';
+import { Order } from '../../../pages/support/makeData';
 import { generateCoordinationData} from './makeData';
 
 interface SupportCoordinationTabProps {

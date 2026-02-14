@@ -1,1 +1,1 @@
-export * from './all-support';
+export * from './support-all.page';

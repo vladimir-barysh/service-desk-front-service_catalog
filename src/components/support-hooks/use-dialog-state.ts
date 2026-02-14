@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Order } from '../../pages/support/all-support/makeData';
+import { Order } from '../../pages/support/makeData';
 
 type DialogState = {
   postpone: { open: boolean; request: Order | null };
