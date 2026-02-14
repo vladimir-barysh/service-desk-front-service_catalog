@@ -23,7 +23,7 @@ import { Close } from '@mui/icons-material';
 import { notifications } from '@mantine/notifications';
 
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { ItSystem, Service } from '../itservice-choose/makeData';
+import { Service } from '../../api/models';
 
 import { TextInputField } from '../text-input-field';
 

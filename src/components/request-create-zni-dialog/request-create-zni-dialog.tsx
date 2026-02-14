@@ -21,7 +21,7 @@ import { styled } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
 
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { ItSystem, Service } from '../itservice-choose/makeData';
+import { Service } from '../../api/models';
 import { Grid } from '@mui/joy';
 
 import { TextInputField } from '../text-input-field';

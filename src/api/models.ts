@@ -29,9 +29,39 @@ export class CatItem{
     idCatitem: number | undefined;
     name: string | undefined;
 }
-export class Service{
-    idService: number | undefined;
-    fullname: string | undefined;
+export interface Service {
+  idService: number | undefined;
+  fullname: string | undefined;
+  sname: string | undefined;
+  description: string | undefined;
+  developer: string | undefined;
+  dateS: Dayjs | undefined;
+  dateF: Dayjs | undefined;
+  priznakIs: boolean | undefined;
+  serviceType: ServiceType | undefined;
+  serviceState: ServiceState | undefined;
+  expType: ExpType | undefined;
+  serviceParent: Service | undefined;
+  isNeedApproval: boolean | undefined;
+  isService: boolean | undefined;
+  businessCritical: number | undefined;
+  basisS: string | undefined;
+}
+
+export interface ServiceType {
+  idServiceType: number | undefined;
+  name: string | undefined;
+  fullname: string | undefined;
+}
+
+export interface ServiceState {
+  idServiceState: number | undefined;
+  name: string | undefined;
+}
+
+export interface ExpType {
+  idExpType: number | undefined;
+  name: string | undefined;
 }
 export class OrderState{
     idOrderState: number | undefined;
