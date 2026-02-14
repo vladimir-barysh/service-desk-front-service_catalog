@@ -1,10 +1,11 @@
 /* eslint-disable no-undef, react/prop-types */
-import * as React from 'react';
+import React, { useState } from 'react';
 import {
   MantineReactTable,
   useMantineReactTable,
   type MRT_RowSelectionState,
   type MRT_ColumnDef,
+  type MRT_ColumnFiltersState,
 } from 'mantine-react-table';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
@@ -16,12 +17,7 @@ import {
   Grid2,
 } from '@mui/material';
 
-import {
-  systems as allSystems,
-  ItSystemStatus,
-  type ItSystem,
-  type Service,
-} from './makeData';
+import { type Service } from '../../api/models';
 
 import { useQuery } from '@tanstack/react-query';
 import { getServices } from '../../api/services/ServiceService';
@@ -35,10 +31,6 @@ export type ChooseServiceCreateDialogProps = {
 export const ChooseServiceCreateDialog: React.FC<
   ChooseServiceCreateDialogProps
 > = ({ isOpen, onClose, onSelect }) => {
-  const data = React.useMemo(
-    () => allSystems.filter((s) => s.status !== ItSystemStatus.Inactive),
-    [],
-  );
 
   const {
     data: services = [],
@@ -50,6 +42,11 @@ export const ChooseServiceCreateDialog: React.FC<
     staleTime: Infinity,
   });
 
+  const filteredData = React.useMemo(
+    () => services.filter((s: Service) => s.serviceState?.name !== 'Выведена из эксплуатации' && s.isService),
+    [services],
+  );
+
   const columns = React.useMemo<MRT_ColumnDef<Service>[]>(
     () => [
       {
@@ -58,12 +55,9 @@ export const ChooseServiceCreateDialog: React.FC<
         minSize: 240,
         size: 320,
         maxSize: 600,
-        /*{
-      Cell: ({ row }) => (
-        <span style={{ color: row.original.status === 'archived' ? '#6c757d' : undefined }}>
-          {row.original.name}
-        </span>
-      ),*/
+        mantineFilterTextInputProps: {
+          placeholder: 'Поиск',
+        },
       },
     ],
     [],
@@ -72,6 +66,10 @@ export const ChooseServiceCreateDialog: React.FC<
   const [rowSelection, setRowSelection] = React.useState<MRT_RowSelectionState>(
     {},
   );
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
+  const handleFiltersChange = (updater: any) => {
+    setColumnFilters(updater);
+  };
 
   const handleConfirm = () => {
     if (!selected) return;
@@ -86,14 +84,21 @@ export const ChooseServiceCreateDialog: React.FC<
 
   const table = useMantineReactTable<Service>({
     columns: columns,
-    data: services,
+    data: filteredData,
     getRowId: (r) => r.idService?.toString(),
     localization: MRT_Localization_RU,
 
+    mantineTableContainerProps: {
+      style: {
+        maxHeight: '400px', // или любая нужная высота
+        overflowY: 'auto',
+      },
+    },
+
     enableTopToolbar: false,
     enableColumnActions: false,
-    enableColumnFilters: false,
-    enableSorting: false,
+    enableColumnFilters: true,
+    enableSorting: true,
     enableRowNumbers: false,
     enableRowSelection: true,
     enableMultiRowSelection: false,
@@ -102,12 +107,15 @@ export const ChooseServiceCreateDialog: React.FC<
     enableHiding: false,
     enableDensityToggle: false,
     enableBottomToolbar: false,
+    filterFromLeafRows: true,
     positionToolbarAlertBanner: 'none',
+    enableStickyHeader: true,
 
     initialState: {
       pagination: { pageIndex: 0, pageSize: 100 },
       expanded: true,
-      columnVisibility: { status: false },
+      columnVisibility: { 'mrt-row-select': false },
+      showColumnFilters: true,
     },
 
     mantineTableBodyRowProps: ({ row }) => ({
@@ -117,8 +125,22 @@ export const ChooseServiceCreateDialog: React.FC<
       }),
     }),
 
+    state: {
+      rowSelection,
+      columnFilters
+    },
     onRowSelectionChange: setRowSelection,
-    state: { rowSelection },
+    onColumnFiltersChange: handleFiltersChange,
+    mantineFilterTextInputProps: {
+      size: 'xs',
+    },
+    mantineTableHeadCellProps: {
+      style: {
+        fontSize: '15px',
+        fontWeight: 600,
+        padding: '10px 10px 10px 10px',
+      },
+    },
   });
 
   const selected = table.getSelectedRowModel().rows[0]?.original ?? null;
@@ -127,7 +149,7 @@ export const ChooseServiceCreateDialog: React.FC<
     <Dialog
       open={isOpen}
       onClose={onClose}
-      PaperProps={{ sx: { width: 720, maxWidth: '90vw', height: 520 } }}
+      PaperProps={{ sx: { width: 700, maxWidth: '90vw', height: 550 } }}
     >
       <DialogTitle>Выберите ИТ-сервис.</DialogTitle>
 

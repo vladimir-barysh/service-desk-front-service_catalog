@@ -28,7 +28,7 @@ import { Close } from '@mui/icons-material';
 import { IconAt, IconPhone } from '@tabler/icons-react';
 import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { ItSystem, Service } from '../itservice-choose/makeData';
+import { Service } from '../../api/models';
 import { employees, tableDataClass, roles, rolesDataClass } from './makeData';
 import {
   MantineReactTable,
