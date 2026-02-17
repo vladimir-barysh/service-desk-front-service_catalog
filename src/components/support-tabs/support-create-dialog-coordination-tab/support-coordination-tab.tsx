@@ -15,13 +15,13 @@ import { Order } from '../../../pages/support/makeData';
 import { generateCoordinationData} from './makeData';
 
 interface SupportCoordinationTabProps {
-  request: Order | null;
+  order: Order | null;
 }
 
-export function SupportCoordinationTab({ request }: SupportCoordinationTabProps) {
+export function SupportCoordinationTab({ order }: SupportCoordinationTabProps) {
 
   // Получаем данные для таблицы в зависимости от типа заявки
-  const coordinationData = generateCoordinationData(request);
+  const coordinationData = generateCoordinationData(order);
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Согласовано': return 'success.main';
@@ -34,31 +34,28 @@ export function SupportCoordinationTab({ request }: SupportCoordinationTabProps)
   return (
     <Box sx={{ p: 2 }}>
       {/* Панель кнопок */}
-      <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-        <Button variant="contained" color="primary" size="small" sx={{ flex: '1 1 auto', maxWidth: '170px' }}>
+      <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
           Создать согласование
         </Button>
-        <Button variant="contained" color="primary" size="small" sx={{ flex: '1 1 auto', maxWidth: '170px' }}>
+        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
           Изменить согласование
         </Button>
-        <Button variant="contained" color="primary" size="small" sx={{ flex: '1 1 auto', maxWidth: '170px' }}>
+        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
           Удалить согласование
         </Button>
-        <Button variant="contained" color="primary" size="small" sx={{ flex: '1 1 auto', maxWidth: '170px' }}>
+        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
           Запустить процесс
         </Button>
-        <Button variant="contained" color="primary" size="small" sx={{ flex: '1 1 auto', maxWidth: '170px' }}>
-          Повторить согласование
-        </Button>
-        <Button variant="contained" color="primary" size="small" sx={{ flex: '1 1 auto', maxWidth: '220px' }}>
+        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
           Подтянуть согласующих из ИТ-каталога
         </Button>
       </Box>
 
       {/* Информация о типе заявки */}
-      <Box>
-        <Typography variant="subtitle2" color="text.secondary">
-          Тип заявки: <strong>{request?.orderType?.name || 'не определен'}</strong>
+      <Box padding='0px 0px 10px 0px'>
+        <Typography variant="subtitle2" color="text.secondary" fontSize='1.0rem'>
+          Тип заявки: <strong>{order?.orderType?.name || 'не определен'}</strong>
         </Typography>
       </Box>
 

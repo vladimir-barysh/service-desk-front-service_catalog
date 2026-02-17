@@ -7,7 +7,6 @@ import {
   Button,
   TextField,
   Box,
-  MenuItem
 } from '@mui/material';
 
 interface RedirectTaskDialogProps {
@@ -26,7 +25,6 @@ export interface RedirectData {
 export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: RedirectTaskDialogProps) {
   // Состояния компонентов
   const [formData, setFormData] = useState<RedirectData>({ from: currentExecutor, to: '', reason: '' });
-  const [selectedReasonType, setSelectedReasonType] = useState<string>('');
   const [customReason, setCustomReason] = useState('');
 
   // Для обновления формы при изменении currentExecutor
@@ -38,13 +36,6 @@ export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: R
         }));
     }
   }, [open, currentExecutor]);
-  
-  // Предустановленные причины
-  const predefinedReasons = [
-    'Выбран не верный исполнитель',
-    'Ответственный исполнитель отсутствует', 
-    'Перераспределение нагрузки'
-  ];
 
   const handleSave = () => {
     // Проверка обязательных полей
@@ -63,21 +54,6 @@ export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: R
         reason: ''
     }));
     setCustomReason('');
-    setSelectedReasonType('');
-  };
-
-  const handleReasonChange = (value: string) => {
-    setSelectedReasonType(value); // Сохраняем выбранный тип причины
-    
-    if (value === 'other') {
-        // Если выбрана "Другая причина", очищаем основную причину
-        setFormData({ ...formData, reason: '' });
-        setCustomReason('');
-    } else {
-        // Если выбрана предустановленная причина
-        setFormData({ ...formData, reason: value });
-        setCustomReason('');
-    }
   };
 
   const handleCustomReasonChange = (value: string) => {
@@ -116,38 +92,15 @@ export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: R
 
           {/* Поле "Причина" */}
           <TextField
-            select
-            label="Причина"
-            value={selectedReasonType || ''}
-            onChange={(e) => handleReasonChange(e.target.value)}
+            label="Укажите причину"
+            value={customReason}
+            onChange={(e) => handleCustomReasonChange(e.target.value)}
             fullWidth
+            multiline
+            rows={3}
             size="small"
             required
-            helperText="Выберите из перечня или введите свою причину"
-          >
-            {predefinedReasons.map((reason, index) => (
-              <MenuItem key={index} value={reason}>
-                {reason}
-              </MenuItem>
-            ))}
-            <MenuItem value="other">
-              Другая причина
-            </MenuItem>
-          </TextField>
-
-          {/* Поле для ввода своей причины */}
-          {selectedReasonType === 'other' && (
-            <TextField
-              label="Укажите причину"
-              value={customReason}
-              onChange={(e) => handleCustomReasonChange(e.target.value)}
-              fullWidth
-              multiline
-              rows={3}
-              size="small"
-              required
-            />
-          )}
+          />
         </Box>
       </DialogContent>
 

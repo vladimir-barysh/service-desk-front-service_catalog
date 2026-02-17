@@ -519,7 +519,7 @@ export function SupportAllPage() {
     }
   };
 
-  // Обработчик нажатия кнопки На контроль
+  /*/ Обработчик нажатия кнопки На контроль
   const handleControlClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length > 0) {
@@ -542,7 +542,7 @@ export function SupportAllPage() {
       //
       closeDialog('control');
     }
-  };
+  };*/
 
   return (
     <div>
@@ -571,13 +571,13 @@ export function SupportAllPage() {
           onConfirm={handlePostponeConfirm}
           request={dialogs.postpone.request}
         />
-        {/* Диалог на контроль */}
+        {/* Диалог на контроль 
         <ControlDialog
           open={dialogs.control.open}
           onClose={() => closeDialog('control')}
           onConfirm={handleControlConfirm}
           request={dialogs.control.request}
-        />
+        />*/}
         <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
@@ -631,17 +631,6 @@ export function SupportAllPage() {
               disabled={hasSelectedRows}
             >
               Закрыть заявку
-            </Button>
-          </Grid2>
-          <Grid2 size="auto">
-            <Button
-              variant="contained"
-              color="inherit"
-              size={'small'}
-              disabled={hasSelectedRows}
-              onClick={handleControlClick}
-            >
-              На контроль
             </Button>
           </Grid2>
           <Grid2 size="auto">
