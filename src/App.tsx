@@ -41,7 +41,7 @@ const Main = () => {
         <MaterialCssVarsProvider theme={{ [MATERIAL_THEME_ID]: materialTheme }}>
           <JoyCssVarsProvider>
             <CssBaseline enableColorScheme />
-            <Notifications position='top-right' limit={5}/>
+            <Notifications position='top-right' limit={5} zIndex={10000}/>
             <App />
           </JoyCssVarsProvider>
         </MaterialCssVarsProvider>

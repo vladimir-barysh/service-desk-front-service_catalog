@@ -19,7 +19,7 @@ import { RequestCreateZNIDialog } from '../../components/request-create-zni-dial
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getOrders } from '../../api/services/orderService';
 import { url } from 'inspector';
 
@@ -138,7 +138,7 @@ export function SupportAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        enableResizing: false,
+        enableResizing: false
       },
       {
         header: 'Дата регистрации',
@@ -432,6 +432,7 @@ export function SupportAllPage() {
     enableRowNumbers: false,
     enableMultiRowSelection: false,
     enableSelectAll: false,
+    enableSorting: true,
     enableHiding: false,
     enableColumnResizing: false,
     layoutMode: 'grid',
@@ -444,6 +445,7 @@ export function SupportAllPage() {
       pagination: { pageIndex: 0, pageSize: 100 },
       columnVisibility: { 'mrt-row-select': false },
       showColumnFilters: true,
+      sorting: [{ id: 'nomer', desc: true }],
     },
 
     state: { columnFilters },
