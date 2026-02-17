@@ -364,7 +364,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextInputField
-                value={''}
+                value={editedRequest.comment || ''}
                 onChange={handleChange('comment')}
                 readonly={!isEditing}
               />
@@ -386,6 +386,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <DateTimePicker
+                value={editedRequest?.datePostpone ? dayjs(editedRequest?.datePostpone).toDate() : null}
                 placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
                 valueFormat="DD.MM.YYYY HH:mm"
                 withSeconds={false}
@@ -396,7 +397,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 size="md"
                 styles={{ input: { minHeight: '40px' } }}
                 readOnly={!isEditing}
-              //value={editedRequest?.dateFinishFact ? dayjs(editedRequest?.dateFinishFact).toDate() : null}
               //onChange={(newDateFinishFact) => handleDateChange('dateFinishFact', newDateFinishFact)}
               />
             </Grid2>

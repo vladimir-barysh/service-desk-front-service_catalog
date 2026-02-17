@@ -1,12 +1,14 @@
 import { Dayjs } from "dayjs";
 
 export class Order {
+  idOrder: number | undefined;
   nomer: string | undefined;
   name: string | undefined;
   description: string | undefined;
   dateCreated: Dayjs | undefined;
   dateFinishPlan: Dayjs | undefined;
   dateFinishFact: Dayjs | undefined;
+  datePostpone: Dayjs | undefined;
   orderParent: Order | undefined;
   orderType: OrderType | undefined;
   catalogItem: CatItem | undefined;
@@ -19,6 +21,7 @@ export class Order {
   executor: User | undefined;
   orderSource: OrderSource | undefined;
   resultText: string | undefined;
+  comment: string | undefined;
 }
 
 export class OrderType{

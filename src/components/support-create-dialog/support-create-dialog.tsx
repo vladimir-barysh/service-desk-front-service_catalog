@@ -23,6 +23,14 @@ import {
   SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab,
   SupportFilesTab, SupportHistoryTab, SupportTasksTab
 } from '../support-tabs';
+import { updateOrder } from '../../api/services/orderService';
+import { useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query'
+import { OrderUpdateDTO } from '../../api/dtos';
+import { notifications } from '@mantine/notifications';
+import { AxiosError } from 'axios';
+import { useUpdateOrder } from '../../api/hooks/useUpdateOrder';
+import dayjs from 'dayjs';
 
 interface SupportGeneralDialogProps {
   isOpen: boolean;
@@ -47,7 +55,11 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   const [discussionChanged, setDiscussionChanged] = useState(false);
 
   // Общий флаг изменений
-  const hasChanges = generalChanged || filesChanged || discussionChanged;
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    setHasChanges(generalChanged || filesChanged || discussionChanged);
+  }, [generalChanged, filesChanged, discussionChanged]);
 
   const [editableRequest, setEditableRequest] = useState<Order | null>(request);
   const isEditing = !editableRequest?.orderState?.name?.includes('Закрыта');              // флаг режима редактирования
@@ -60,13 +72,6 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
 
   const handleClose = () => {
     if (hasChanges) {
-      /* const confirmed = window.confirm("У вас есть несохраненные изменения, хотите сохранить их перед закрытием?");
-       if (confirmed) {
-         // Сохраняем изменения
-         handleSave(); // ваша функция сохранения
-       }
-       // Если пользователь нажал "Отмена" - не закрываем диалог
-       if (!confirmed) return;*/
       setOpenConfirmDialog(true);
       return; // Не закрываем основной диалог
     }
@@ -138,10 +143,34 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
     checkMessages();
   }, [request]);
 
-  const handleSave = () => {
-    // Здесь будет логика сохранения изменений
-    console.log('Сохранение данных:', editableRequest);
-    //setHasChanges(false);
+  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
+
+  const handleSave = async () => {
+    console.log('Сохранение данных:', generalData);
+    const safeToIso = (value: any): string => {
+      if (!value) return '';
+
+      const d = dayjs(value);
+      return d.isValid() ? d.toISOString() : '';
+    };
+    updateOrderMutate(
+      {
+        id: generalData?.idOrder,
+        data: {
+          name: generalData?.name,
+          description: generalData?.description,
+          dateFinishPlan: safeToIso(generalData?.dateFinishPlan),
+          datePostpone: safeToIso(generalData?.datePostpone),
+          idService: generalData?.service?.idService,
+          idOrderType: generalData?.orderType?.idOrderType,
+          idOrderState: generalData?.orderState?.idOrderState,
+          idOrderPriority: generalData?.orderPriority?.idOrderPriority,
+          resultText: generalData?.resultText,
+          comment: generalData?.comment,
+        },
+      },
+    );
+    setHasChanges(false);
   };
 
   const handleCancel = () => {
