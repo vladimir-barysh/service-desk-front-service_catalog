@@ -18,13 +18,15 @@ import { url } from 'inspector';
 
 import { notifications } from '@mantine/notifications';
 
-import { Order } from '../../../api/models';
+import { Order, OrderTask } from '../../../api/models';
 import * as XLSX from 'xlsx';
 
 import dayjs from 'dayjs';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getOrders } from '../../../api/services/orderService';
+import { getTasks } from '../../../api/services/taskService';
+
 
 export function TasksMyAllPage() {
   const currUser = 'Христорождественская В.А.';
@@ -44,16 +46,16 @@ export function TasksMyAllPage() {
   };
 
   const {
-    data: orders = [],
+    data: tasks = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['orders'],
-    queryFn: getOrders,
+    queryKey: ['tasks'],
+    queryFn: getTasks,
   });
 
   const filteredData = useMemo(() => {
-    let result = orders;
+    let result = tasks;
 
     // Фильтр по статусу из URL
     if (urlStatus === 'onAgree') {
