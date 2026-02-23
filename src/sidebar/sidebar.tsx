@@ -11,7 +11,6 @@ import {
   SupportAgentOutlined
 } from '@mui/icons-material'
 import '../styles/sidebar.scss';
-import { data, type Request } from '../pages/support/makeData';
 import { stat } from "fs";
 import {
   Drawer, List, ListItem, ListItemButton, ListItemIcon,

@@ -23,6 +23,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getOrders } from '../../api/services/orderService';
 import { url } from 'inspector';
 
+import * as XLSX from 'xlsx';
+
+import { notifications } from '@mantine/notifications';
+
 export function SupportAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
@@ -34,7 +38,6 @@ export function SupportAllPage() {
   const currUser = "Воронин Владимир Владимирович";
   const currUser1 = "Борисов Борис Борисович";
 
-  // фильтр по статусу
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
   const [searchParams] = useSearchParams();
   const urlStatus = searchParams.get('status');
@@ -52,11 +55,9 @@ export function SupportAllPage() {
     queryFn: getOrders,
   });
 
-  // Функция для получения данных с учетом всех фильтров
   const filteredData = useMemo(() => {
     let result = orders;
 
-    // Фильтр по статусу из URL
     if (urlStatus === 'Новая') {
       result = result.filter((item: any) => item.orderState?.name === urlStatus);
     }
@@ -92,12 +93,10 @@ export function SupportAllPage() {
     setColumnFilters(next);
   };
 
-  // Эффект для синхронизации URL параметров с состоянием фильтров
   useEffect(() => {
     setColumnFilters((prev) => {
       let newFilters = prev.filter(f => f.id !== 'status');
 
-      // Добавляем фильтр из URL если есть
       if (urlStatus === 'nAgreed' || urlStatus === 'nConfirmed' || urlStatus === 'onControl' || urlStatus === 'mine') {
         return newFilters;
       }
@@ -112,7 +111,7 @@ export function SupportAllPage() {
   useEffect(() => {
     setHideClosed(true);
     table.setRowSelection({});
-  }, [location.pathname, location.search]); // Сбрасываем при изменении пути или параметров
+  }, [location.pathname, location.search]);
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
@@ -154,12 +153,10 @@ export function SupportAllPage() {
 
           if (!value) return '—';
 
-          // если уже Dayjs — форматируем
           if (dayjs.isDayjs(value)) {
             return value.format('DD.MM.YYYY HH:mm');
           }
 
-          // если вдруг пришла строка (на всякий случай)
           return dayjs(value).format('DD.MM.YYYY HH:mm');
         },
       },
@@ -177,12 +174,10 @@ export function SupportAllPage() {
 
           if (!value) return '—';
 
-          // если уже Dayjs — форматируем
           if (dayjs.isDayjs(value)) {
             return value.format('DD.MM.YYYY HH:mm');
           }
 
-          // если вдруг пришла строка (на всякий случай)
           return dayjs(value).format('DD.MM.YYYY HH:mm');
         },
       },
@@ -200,12 +195,10 @@ export function SupportAllPage() {
 
           if (!value) return '—';
 
-          // если уже Dayjs — форматируем
           if (dayjs.isDayjs(value)) {
             return value.format('DD.MM.YYYY HH:mm');
           }
 
-          // если вдруг пришла строка (на всякий случай)
           return dayjs(value).format('DD.MM.YYYY HH:mm');
         },
       },
@@ -215,7 +208,6 @@ export function SupportAllPage() {
         type: 'string',
         maxSize: 130,
         enableResizing: false,
-        // Блокируем фильтр если есть URL параметры
         enableColumnFilter: !urlStatus,
         mantineFilterTextInputProps: {
           disabled: !!urlStatus,
@@ -303,16 +295,13 @@ export function SupportAllPage() {
     [urlStatus],
   );
 
-  // Цвет заливки строки
   const colorRow = (row: MRT_Row<Order>) => {
     if (row.getIsSelected()) {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
-    // Получаем тип заявки из данных строки
     const requestType = row.original.orderType?.name;
 
-    // Цвета для разных типов заявок
     switch (requestType) {
       case 'ЗНО':
         return 'rgba(76, 175, 80, 0.1)';
@@ -379,11 +368,9 @@ export function SupportAllPage() {
     return new Date(year, month, day);
   }
 
-  // Функция для проверки просрочки заявки
   const isRequestOverdue = (request: Order): boolean => {
     if (!request.dateFinishPlan) return false;
 
-    // Если заявка уже завершена не считаем просроченной
     const completedStatuses = ['Закрыта', 'Отклонена'];
     if (request.orderState) {
       return false;
@@ -391,28 +378,23 @@ export function SupportAllPage() {
     const temp = dayjs(request.dateFinishPlan).toString();
     const desiredDate = parseDate(temp.split(' ')[0]);
 
-    // Если дата не распарсилась не считаем просроченной
     if (!desiredDate) return false;
 
-    // Сравниваем с текущей датой (без времени)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     return desiredDate < today;
   };
 
-  // Обработчик выбора строки
   const handleRowClick = (row: MRT_Row<Request>) => {
     row.getToggleSelectedHandler();
   };
 
-  // Обработчик двойного клика
   const handleRowDoubleClick = (row: MRT_Row<Order>) => {
     setSelectedRequest(row.original);
     setIsDialogOpen(true);
   };
 
-  // Обработчик закрытия диалога
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedRequest(null);
@@ -422,7 +404,6 @@ export function SupportAllPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType] = useState(0);
 
-  // Создание таблицы
   const table = useMantineReactTable({
     columns: columns,
     data: filteredData,
@@ -518,6 +499,77 @@ export function SupportAllPage() {
       // Реальная реализация
       //
       closeDialog('postpone');
+    }
+  };
+
+  const exportToExcel = () => {
+    try {
+      const exportData = filteredData.map((order: Order) => ({
+        '№ заявки': order.nomer || '',
+        'Дата регистрации':  order.dateCreated ? dayjs(order.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
+        'Желаемый срок': order.dateFinishPlan ? dayjs(order.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
+        'Дата решения': order.dateFinishFact ? dayjs(order.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
+        'Статус': order.orderState?.name || '',
+        'Заголовок': order.name || '',
+        'Тип запроса': order.orderType?.name || '',
+        'Инициатор': order.initiator?.fio1c || '',
+        'Пользователь': order.dispatcher || '',
+        'IT-сервис/модуль': order.service?.fullname || '',
+        'Услуга': order.catalogItem?.name || '',
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Заявки');
+
+      const filename = `zayavki_${new Date().toLocaleDateString()}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+
+      notifications.show({
+        title: 'Успешно',
+        message: `Файл ${filename} сохранен`,
+        color: 'green',
+        autoClose: 4000,
+        withCloseButton: true,
+        withBorder: false,
+        loading: false,
+        styles: (theme) => ({
+          root: {
+            backgroundColor: theme.colors.green[6],
+            borderColor: theme.colors.green[6],
+          },
+          title: { color: theme.white },
+          description: { color: theme.white },
+          closeButton: {
+            color: theme.white,
+            '&:hover': { backgroundColor: theme.colors.green[6] },
+          },
+        }),
+      });
+    }
+    catch (error) {
+      notifications.show({
+        title: 'Ошибка',
+        message: 'Не удалось сохранить файл',
+        color: 'red',
+        autoClose: 4000,
+        withCloseButton: true,
+        withBorder: false,
+        loading: false,
+        styles: (theme) => ({
+          root: {
+            backgroundColor: theme.colors.red[6],
+            borderColor: theme.colors.red[6],
+          },
+          title: { color: theme.white },
+          description: { color: theme.white },
+          closeButton: {
+            color: theme.white,
+            '&:hover': { backgroundColor: theme.colors.red[8] },
+          },
+        }),
+      });
     }
   };
 
@@ -652,6 +704,7 @@ export function SupportAllPage() {
               startIcon={<Save />}
               size={'small'}
               fullWidth={true}
+              onClick={exportToExcel}
             >
               В Excel
             </Button>

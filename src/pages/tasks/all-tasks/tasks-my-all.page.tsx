@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { MantineReactTable, type MRT_ColumnDef,  MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
+import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
-import { data, type Request } from '../../support/makeData';
 import React, { useEffect, useState, useCallback } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
@@ -17,6 +16,15 @@ import { RequestCreateZNODialog } from '../../../components/request-create-zno-d
 import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
 import { url } from 'inspector';
 
+import { notifications } from '@mantine/notifications';
+
+import { Order } from '../../../api/models';
+import * as XLSX from 'xlsx';
+
+import dayjs from 'dayjs';
+
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getOrders } from '../../../api/services/orderService';
 
 export function TasksMyAllPage() {
   const currUser = 'Христорождественская В.А.';
@@ -35,22 +43,31 @@ export function TasksMyAllPage() {
     setColumnFilters([]);
   };
 
+  const {
+    data: orders = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['orders'],
+    queryFn: getOrders,
+  });
+
   const filteredData = useMemo(() => {
-    let result = data;
-    
+    let result = orders;
+
     // Фильтр по статусу из URL
     if (urlStatus === 'onAgree') {
-      result = result.filter(item => (item.status === 'На согласовании' || item.status === 'Закрыта') && item.user === currUser);
+      result = result.filter((item: any) => (item.status === 'На согласовании' || item.status === 'Закрыта') && item.user === currUser);
     }
     else if (urlStatus === 'onExecution') {
-      result = result.filter(item => item.user === currUser);
+      result = result.filter((item: any) => item.user === currUser);
     }
     else if (urlStatus) {
-      result = result.filter(item => item.status === urlStatus);
+      result = result.filter((item: any) => item.status === urlStatus);
     }
-    
+
     if (hideClosed) {
-      result = result.filter(item => item.status !== 'Закрыта');
+      result = result.filter((item: any) => item.status !== 'Закрыта');
     }
     return result;
   }, [urlStatus, hideClosed, currUser]);
@@ -74,11 +91,11 @@ export function TasksMyAllPage() {
   useEffect(() => {
     setHideClosed(true);
     table.setRowSelection({});
-  }, [location.pathname, location.search]); // Сбрасываем при изменении пути или параметров
+  }, [location.pathname, location.search]);
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
-  const columns = useMemo<MRT_ColumnDef<Request>[]>(
+  const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
       {
         header: '№ заявки',
@@ -194,23 +211,22 @@ export function TasksMyAllPage() {
   );
 
   // Цвет заливки строки
-  const colorRow = (row: MRT_Row<Request>) => {
-    if (row.getIsSelected())
-    {
+  const colorRow = (row: MRT_Row<Order>) => {
+    if (row.getIsSelected()) {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
     // Получаем тип заявки из данных строки
-    const requestType = row.original.requestType;
-  
+    const requestType = row.original.orderType?.name;
+
     // Цвета для разных типов заявок
     switch (requestType) {
       case 'ЗНО':
-        return 'rgba(76, 175, 80, 0.1)'; 
+        return 'rgba(76, 175, 80, 0.1)';
       case 'ЗНД':
-        return 'rgba(255, 152, 0, 0.1)'; 
+        return 'rgba(255, 152, 0, 0.1)';
       case 'ЗНИ':
-        return 'rgba(244, 67, 54, 0.1)'; 
+        return 'rgba(244, 67, 54, 0.1)';
       case 'инцидент':
         return 'rgba(33, 150, 243, 0.1)';
       default:
@@ -263,31 +279,31 @@ export function TasksMyAllPage() {
 
     return new Date(year, month, day);
   }
-  
+
   // Функция для проверки просрочки заявки
-  const isRequestOverdue = (request: Request): boolean => {
-    if (!request.dateDesired) return false;
-    
+  const isRequestOverdue = (request: Order): boolean => {
+    if (!request.dateFinishPlan) return false;
+
     // Если заявка уже завершена не считаем просроченной
     const completedStatuses = ['Закрыта', 'Отклонена'];
-    if (request.status && completedStatuses.includes(request.status)) {
+    if (request.orderState) {
       return false;
     }
-    
-    const desiredDate = parseDate(request.dateDesired.split(' ')[0]);
-    
+    const temp = dayjs(request.dateFinishPlan).toString();
+    const desiredDate = parseDate(temp.split(' ')[0]);
+
     // Если дата не распарсилась не считаем просроченной
     if (!desiredDate) return false;
-    
+
     // Сравниваем с текущей датой (без времени)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     return desiredDate < today;
   };
 
   // Обработчик двойного клика
-  const handleRowDoubleClick = (row: MRT_Row<Request>) => {
+  const handleRowDoubleClick = (row: MRT_Row<Order>) => {
     setSelectedRequest(row.original);
     setIsDialogOpen(true);
   };
@@ -298,7 +314,78 @@ export function TasksMyAllPage() {
     setSelectedRequest(null);
   };
 
-  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const exportToExcel = () => {
+    try {
+      const exportData = filteredData.map((order: Order) => ({
+        '№ заявки': order.nomer || '',
+        'Дата регистрации': order.dateCreated ? dayjs(order.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
+        'Желаемый срок': order.dateFinishPlan ? dayjs(order.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
+        'Дата решения': order.dateFinishFact ? dayjs(order.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
+        'Статус': order.orderState?.name || '',
+        'Заголовок': order.name || '',
+        'Тип запроса': order.orderType?.name || '',
+        'Инициатор': order.initiator?.fio1c || '',
+        'Пользователь': order.dispatcher || '',
+        'IT-сервис/модуль': order.service?.fullname || '',
+        'Услуга': order.catalogItem?.name || '',
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Заявки');
+
+      const filename = `zayavki_${new Date().toLocaleDateString()}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+
+      notifications.show({
+        title: 'Успешно',
+        message: `Файл ${filename} сохранен`,
+        color: 'green',
+        autoClose: 4000,
+        withCloseButton: true,
+        withBorder: false,
+        loading: false,
+        styles: (theme) => ({
+          root: {
+            backgroundColor: theme.colors.green[6],
+            borderColor: theme.colors.green[6],
+          },
+          title: { color: theme.white },
+          description: { color: theme.white },
+          closeButton: {
+            color: theme.white,
+            '&:hover': { backgroundColor: theme.colors.green[6] },
+          },
+        }),
+      });
+    }
+    catch (error) {
+      notifications.show({
+        title: 'Ошибка',
+        message: 'Не удалось сохранить файл',
+        color: 'red',
+        autoClose: 4000,
+        withCloseButton: true,
+        withBorder: false,
+        loading: false,
+        styles: (theme) => ({
+          root: {
+            backgroundColor: theme.colors.red[6],
+            borderColor: theme.colors.red[6],
+          },
+          title: { color: theme.white },
+          description: { color: theme.white },
+          closeButton: {
+            color: theme.white,
+            '&:hover': { backgroundColor: theme.colors.red[8] },
+          },
+        }),
+      });
+    }
+  };
+
+  const [selectedRequest, setSelectedRequest] = useState<Order | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType] = useState(0);
 
@@ -307,33 +394,33 @@ export function TasksMyAllPage() {
     columns: columns,
     data: filteredData,
     enableExpanding: false,
-    enableTopToolbar:false,
-    enableRowSelection:true,
-    enableRowNumbers:false,
-    enableMultiRowSelection:false,
-    enableSelectAll:false,
-    enableHiding:false,
-    enableColumnResizing:false,
-    layoutMode:'grid',
-    columnResizeMode:'onChange',
-    filterFromLeafRows:true,
-    enableColumnActions:false,
-    localization:MRT_Localization_RU,
-    initialState:{
+    enableTopToolbar: false,
+    enableRowSelection: true,
+    enableRowNumbers: false,
+    enableMultiRowSelection: false,
+    enableSelectAll: false,
+    enableHiding: false,
+    enableColumnResizing: false,
+    layoutMode: 'grid',
+    columnResizeMode: 'onChange',
+    filterFromLeafRows: true,
+    enableColumnActions: false,
+    localization: MRT_Localization_RU,
+    initialState: {
       density: 'xs',
       pagination: { pageIndex: 0, pageSize: 100 },
-      columnVisibility: {'mrt-row-select': false},
-      showColumnFilters:true,
+      columnVisibility: { 'mrt-row-select': false },
+      showColumnFilters: true,
     },
 
-    state: {columnFilters},
+    state: { columnFilters },
     onColumnFiltersChange: handleFiltersChange,
 
     mantineTableProps: {
       fontSize: '11px',
     },
 
-    mantineTableContainerProps: { sx: { minHeight: 150,maxHeight: 800 } },
+    mantineTableContainerProps: { sx: { minHeight: 150, maxHeight: 800 } },
 
     mantineTableHeadCellProps: {
       style: {
@@ -347,13 +434,13 @@ export function TasksMyAllPage() {
       size: 'xs',
     },
 
-    mantineTableBodyCellProps:({row}) => ({
+    mantineTableBodyCellProps: ({ row }) => ({
       onClick: row.getToggleSelectedHandler(),
       sx: {
         backgroundColor: colorRow(row),
         cursor: 'pointer',
         border: '1px solid #dde7ee',
-        fontWeight: row.original.status === 'Новая' ? 'bold' : 'normal',
+        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
       }
     }),
@@ -365,7 +452,7 @@ export function TasksMyAllPage() {
       },
     }),
   });
-  
+
   return (
     <div>
       <Box height={50}>
@@ -412,7 +499,7 @@ export function TasksMyAllPage() {
               Отклонить заявку
             </Button>
           </Grid2>
-            <Grid2 size="auto">
+          <Grid2 size="auto">
             <Button
               variant="contained"
               color="warning"
@@ -422,7 +509,7 @@ export function TasksMyAllPage() {
               Отложить заявку
             </Button>
           </Grid2>
-            <Grid2 size="auto">
+          <Grid2 size="auto">
             <Button
               variant="contained"
               color="success"
@@ -462,7 +549,7 @@ export function TasksMyAllPage() {
             </Button>
           </Grid2>
           <Grid2 size="auto" alignContent="center">
-            <MantineProvider theme={{cursorType: 'pointer'}}>
+            <MantineProvider theme={{ cursorType: 'pointer' }}>
               <Checkbox
                 checked={hideClosed}
                 onChange={(event) => setHideClosed(event.currentTarget.checked)}
