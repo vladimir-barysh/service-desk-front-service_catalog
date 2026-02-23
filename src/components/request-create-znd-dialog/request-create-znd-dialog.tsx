@@ -1,35 +1,37 @@
 import React from 'react';
 import { useState, useMemo } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  DialogActions,
-  Box,
-  Button,
-  Grid2,
-  IconButton,
-  Typography,
+  Dialog, DialogContent,
+  DialogContentText, DialogTitle,
+  DialogActions, Box,
+  Button, Grid2,
+  IconButton, Typography,
+  TextField, InputAdornment,
+  FormControl, MenuItem, Select,
+  SelectChangeEvent,
 } from '@mui/material';
 import {
-  Input,
-  Textarea,
-  Text,
-  CloseButton,
-  Radio,
-  Group,
-  Select,
+  Input, Textarea,
+  Text, CloseButton,
+  Radio, Group,
   Checkbox,
 } from '@mantine/core';
 
-import { Close } from '@mui/icons-material';
+import {
+  AlternateEmail, Close,
+  EmailOutlined, PhoneOutlined
+} from '@mui/icons-material';
 
 import { IconAt, IconPhone } from '@tabler/icons-react';
 import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { Service } from '../../api/models';
-import { employees, tableDataClass, roles, rolesDataClass } from './makeData';
+import { Service, User } from '../../api/models';
+
+import { 
+  employees, tableDataClass, 
+  roles, rolesDataClass 
+} from './makeData';
+
 import {
   MantineReactTable,
   useMantineReactTable,
@@ -40,22 +42,39 @@ import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 
 import { TextInputField } from '../text-input-field';
 
+import { notifications } from '@mantine/notifications';
+
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query'
+import { OrderCreateDTO } from '../../api/dtos';
+import { AxiosError } from 'axios';
+import { createOrder } from '../../api/services/orderService';
+import { getUsers } from '../../api/services/userService';
+
 export const RequestCreateZNDDialog = (props: {
   isOpen: boolean;
   onClose: any;
 }) => {
+  const labelStyle = {
+    margin: '0px 0px -15px 0px',
+  };
   const [value, setValue] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [chosen, setChosen] = React.useState<Service | null>(null);
-  const [selected, setSelected] = useState<tableDataClass | null>(null);
+
+  const [comment, setComment] = useState('');
+  const [sDate, setSDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  const [selected, setSelected] = useState<User | null>(null);
   const [search, setSearch] = useState('');
   const shouldFilterOptions = !employees.some(
     (item) => item.mainName?.toLowerCase() === search.toLowerCase().trim(),
   );
   const filteredEmployees = shouldFilterOptions
     ? employees.filter((item) =>
-        item.mainName?.toLowerCase().includes(search.toLowerCase().trim()),
-      )
+      item.mainName?.toLowerCase().includes(search.toLowerCase().trim()),
+    )
     : employees;
   const employeeOptions = employees.map((emp) => ({
     value: emp.mainName || '',
@@ -76,6 +95,72 @@ export const RequestCreateZNDDialog = (props: {
       Object.keys(rowSelection).length > 0
     );
   }, [reqType, chosen, selected, accessType, rowSelection]);
+
+  const {
+    data: users = [],
+    isLoading: userLoad,
+    error: userError,
+  } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+    staleTime: Infinity
+  });
+
+  const queryClient = useQueryClient();
+  const mutation = useMutation<any, AxiosError, FormData>({
+    mutationFn: createOrder,
+    onSuccess: (newOrder) => {
+      // Успех
+      notifications.show({
+        title: 'Успешно',
+        message: 'ЗНД зарегистрировано',
+        color: 'green',
+        autoClose: 4000,
+        withCloseButton: true,
+        withBorder: false,
+        loading: false,
+        styles: (theme) => ({
+          root: {
+            backgroundColor: theme.colors.green[6],
+            borderColor: theme.colors.green[6],
+          },
+          title: { color: theme.white },
+          description: { color: theme.white },
+          closeButton: {
+            color: theme.white,
+            '&:hover': { backgroundColor: theme.colors.green[6] },
+          },
+        }),
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+
+      handleClose();
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: 'Ошибка',
+        message: error?.response?.data?.message || error.message || 'Не удалось создать заявку',
+        color: 'red',
+        autoClose: 4000,
+        withCloseButton: true,
+        withBorder: false,
+        loading: false,
+        styles: (theme) => ({
+          root: {
+            backgroundColor: theme.colors.red[6],
+            borderColor: theme.colors.red[6],
+          },
+          title: { color: theme.white },
+          description: { color: theme.white },
+          closeButton: {
+            color: theme.white,
+            '&:hover': { backgroundColor: theme.colors.red[8] },
+          },
+        }),
+      });
+    },
+  });
 
   const columns = React.useMemo<MRT_ColumnDef<rolesDataClass>[]>(
     () => [
@@ -116,26 +201,59 @@ export const RequestCreateZNDDialog = (props: {
     setChosen(null);
     setSelected(null);
     setRowSelection({});
+    setComment('');
     props.onClose();
   };
 
   const handleSave = () => {
     if (!isFormValid) {
-      alert('Пожалуйста, заполните все обязательные поля');
+      notifications.show({
+        title: 'Ошибка',
+        message: 'Пожалуйста, заполните все обязательные поля',
+        color: 'red',
+        autoClose: 4000,
+        withCloseButton: true,
+        withBorder: false,
+        loading: false,
+        styles: (theme) => ({
+          root: {
+            backgroundColor: theme.colors.red[6],
+            borderColor: theme.colors.red[6],
+          },
+          title: { color: theme.white },
+          description: { color: theme.white },
+          closeButton: {
+            color: theme.white,
+            '&:hover': { backgroundColor: theme.colors.red[8] },
+          },
+        }),
+      });
       return;
     }
 
-    const formData = {
-      service: chosen,
-      requestType: reqType,
-      accessType: accessType,
-      employee: selected,
-      roles: Object.keys(rowSelection).map((rowId) =>
-        data.find((role) => String(role.id) === rowId),
-      ),
+    /*
+      Запрещено менять строки, относящиеся к description, так как от них зависит конечное форматирование описания ЗНД
+    */
+    const name = `${reqType} к ${chosen?.fullname || ''}. ${selected?.fio1c || ''}`;
+    const description = `Прошу ${reqType === 'Предоставить/изменить доступ' ? 'предоставить' : 'закрыть'} доступ к ${chosen?.fullname}.
+Пользователю: ${selected?.fio1c}
+( ${selected?.dolzh1c || 'не указан'}, ${selected?.podr?.name || 'не указан'}, Почта: ${selected?.emailAd || 'не указан'}, Телефон: ${selected?.telAd || 'не указан'} )
+Доступ: ${accessType}
+Роль: ${Object.keys(rowSelection).map((rowId) => data.find((role) => String(role.id) === rowId)?.roleName).join(', ') || 'не указана'}
+Фиксрованный срок доступа: ${checked ? `${sDate} - ${toDate}` : 'не ограничен'}`
+
+    const dto: OrderCreateDTO = {
+      name: name,
+      description: description,
+      idService: chosen?.idService,
+      idOrderType: 1,
+      comment: comment,
     };
 
-    console.log('Данные для сохранения:', formData);
+    const formData = new FormData();
+    formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+
+    mutation.mutate(formData);
 
     handleClose();
   };
@@ -147,10 +265,21 @@ export const RequestCreateZNDDialog = (props: {
     setAccessType(value);
   };
 
-  const handleSelect = (value: string | null) => {
-    if (!value) return;
-    const found = employees.find((e) => e.mainName === value) || null;
-    setSelected(found);
+  const handleDispatcherChange = (event: SelectChangeEvent<number>) => {
+    const selectedId = Number(event.target.value);
+
+    const selectedObject = users.find(
+      (item: any) => item.idItUser === selectedId
+    ) ?? null;
+    setSelected(selectedObject);
+  };
+
+  const handleSChange = (date: Date | null) => {
+    setSDate(date ? date.toLocaleDateString() : '');
+  };
+
+  const handleToChange = (date: Date | null) => {
+    setToDate(date ? date.toLocaleDateString() : '');
   };
 
   const table = useMantineReactTable<rolesDataClass>({
@@ -302,28 +431,68 @@ export const RequestCreateZNDDialog = (props: {
             alignItems="center"
             justifyContent="center"
           >
-            <Grid2 size={6}>
-              <Input.Wrapper label="Кому доступ *" size="md">
-                <Select
-                  data={employeeOptions}
-                  maxDropdownHeight={200}
-                  searchable={true}
-                  clearable={false}
-                  value={selected?.mainName || null}
-                  onChange={handleSelect}
-                  variant="filled"
-                />
-              </Input.Wrapper>
+            <Grid2
+              container
+              size={6}
+              spacing={2}
+              direction={'column'}
+              alignItems="left"
+              justifyContent="left"
+              margin="0px 0px 0px 0px"
+            >
+              <Grid2 size="auto" sx={labelStyle}>
+                <Text fw={600}>Кому доступ*</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <FormControl fullWidth size="small">
+                  <Select
+                    onChange={handleDispatcherChange}
+                    renderValue={(selected) => {
+                      if (!selected) return <em>Не выбрано</em>;
+                      const p = users.find((x: any) => x.idItUser === selected);
+                      return p?.fio1c;
+                    }}
+                  >
+                    {users.map((item: any) => (
+                      <MenuItem key={item.idItUser} value={item.idItUser}>
+                        {item.fio1c}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid2>
             </Grid2>
-            <Grid2 size={6}>
-              <Input.Wrapper label="Email" size="md">
-                <Input
-                  value={selected?.email || ''}
-                  readOnly
-                  rightSection={<IconAt size={16} />}
-                  variant="filled"
+
+            <Grid2
+              container
+              size={6}
+              spacing={2}
+              direction={'column'}
+              alignItems="left"
+              justifyContent="left"
+              margin="0px 0px 0px 0px"
+            >
+              <Grid2 size="auto" sx={labelStyle}>
+                <Text fw={600}>Email</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <TextField
+                  value={selected?.emailAd || ''}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <AlternateEmail />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
                 />
-              </Input.Wrapper>
+              </Grid2>
             </Grid2>
           </Grid2>
 
@@ -332,22 +501,65 @@ export const RequestCreateZNDDialog = (props: {
             spacing={2}
             direction={'row'}
             alignItems="center"
-            justifyContent="left"
+            justifyContent="center"
           >
-            <Grid2 size={6}>
-              <Input.Wrapper label="Должность" size="md">
-                <Input value={selected?.post || ''} readOnly variant="filled" />
-              </Input.Wrapper>
-            </Grid2>
-            <Grid2 size={6}>
-              <Input.Wrapper label="Сотовый телефон" size="md">
-                <Input
-                  value={selected?.mobilePhoneNumber || ''}
-                  readOnly
-                  rightSection={<IconPhone size={16} />}
-                  variant="filled"
+            <Grid2
+              container
+              size={6}
+              spacing={2}
+              direction={'column'}
+              alignItems="left"
+              justifyContent="left"
+              margin="0px 0px 0px 0px"
+            >
+              <Grid2 size="auto" sx={labelStyle}>
+                <Text fw={600}>Должность</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <TextField
+                  value={selected?.dolzh1c || ''}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                    },
+                  }}
                 />
-              </Input.Wrapper>
+              </Grid2>
+            </Grid2>
+
+            <Grid2
+              container
+              size={6}
+              spacing={2}
+              direction={'column'}
+              alignItems="left"
+              justifyContent="left"
+              margin="0px 0px 0px 0px"
+            >
+              <Grid2 size="auto" sx={labelStyle}>
+                <Text fw={600}>Сотовый телефон</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <TextField
+                  value={selected?.telAd || ''}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <PhoneOutlined />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Grid2>
             </Grid2>
           </Grid2>
 
@@ -356,27 +568,65 @@ export const RequestCreateZNDDialog = (props: {
             spacing={2}
             direction={'row'}
             alignItems="center"
-            justifyContent="left"
-            paddingBottom="10px"
+            justifyContent="center"
           >
-            <Grid2 size={6}>
-              <Input.Wrapper label="Подразделение" size="md">
-                <Input
-                  value={selected?.subdivison || ''}
-                  readOnly
-                  variant="filled"
+            <Grid2
+              container
+              size={6}
+              spacing={2}
+              direction={'column'}
+              alignItems="left"
+              justifyContent="left"
+              margin="0px 0px 0px 0px"
+            >
+              <Grid2 size="auto" sx={labelStyle}>
+                <Text fw={600}>Подразделение</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <TextField
+                  value={selected?.podr?.name || ''}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                    },
+                  }}
                 />
-              </Input.Wrapper>
+              </Grid2>
             </Grid2>
-            <Grid2 size={6}>
-              <Input.Wrapper label="Внутренний телефон" size="md">
-                <Input
-                  value={selected?.internalPhoneNumber || ''}
-                  readOnly
-                  rightSection={<IconPhone size={16} />}
-                  variant="filled"
+
+            <Grid2
+              container
+              size={6}
+              spacing={2}
+              direction={'column'}
+              alignItems="left"
+              justifyContent="left"
+              margin="0px 0px 0px 0px"
+            >
+              <Grid2 size="auto" sx={labelStyle}>
+                <Text fw={600}>Внутренний телефон</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <TextField
+                  value={selected?.telAd || ''}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <PhoneOutlined />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
                 />
-              </Input.Wrapper>
+              </Grid2>
             </Grid2>
           </Grid2>
 
@@ -386,7 +636,7 @@ export const RequestCreateZNDDialog = (props: {
             direction={'row'}
             alignItems="center"
             justifyContent="left"
-            paddingBottom="10px"
+            padding="10px 0px 10px 0px"
           >
             <Grid2 size={5}>
               <Checkbox
@@ -408,6 +658,7 @@ export const RequestCreateZNDDialog = (props: {
                 clearable
                 locale="ru"
                 disabled={!checked}
+                onChange={handleSChange}
               />
             </Grid2>
             <Text fw={600}>по:</Text>
@@ -421,6 +672,7 @@ export const RequestCreateZNDDialog = (props: {
                 clearable
                 locale="ru"
                 disabled={!checked}
+                onChange={handleToChange}
               />
             </Grid2>
           </Grid2>
@@ -473,8 +725,8 @@ export const RequestCreateZNDDialog = (props: {
             </Grid2>
             <Grid2 size="auto">
               <TextInputField
-                value={''}
-                onChange={(e) => setValue(e.currentTarget.value)}
+                value={comment}
+                onChange={(e) => setComment(e.currentTarget.value)}
               />
             </Grid2>
           </Grid2>
@@ -495,6 +747,7 @@ export const RequestCreateZNDDialog = (props: {
               size={'small'}
               fullWidth={true}
               disabled={!isFormValid}
+              onClick={handleSave}
             >
               Сохранить
             </Button>
