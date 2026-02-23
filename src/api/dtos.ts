@@ -1,6 +1,6 @@
 export interface OrderCreateDTO {
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
   dateFinishPlan?: string;
   idService?: number;
   idOrderType: number;
@@ -19,4 +19,12 @@ export interface OrderUpdateDTO {
   idOrderPriority?: number;
   resultText?: string;
   comment?: string;
+}
+
+export interface OrderBindingDTO {
+  idOrderBinding: number;
+  name: string;
+  dC: string;
+  idOrder: number;
+  idUser: number;
 }

@@ -1,6 +1,6 @@
 import { Dayjs } from "dayjs";
 
-export class Order {
+export interface Order {
   idOrder: number | undefined;
   nomer: string | undefined;
   name: string | undefined;
@@ -24,11 +24,18 @@ export class Order {
   comment: string | undefined;
 }
 
-export class OrderType{
+export interface OrderBinding {
+  idOrderBinding: number;
+  name: string;
+  dC: string;
+  idOrder: number;
+  idUser: number;
+}
+export interface OrderType{
     idOrderType: number | undefined;
     name: string | undefined;
 }
-export class CatItem{
+export interface CatItem{
     idCatitem: number | undefined;
     name: string | undefined;
 }
@@ -66,15 +73,15 @@ export interface ExpType {
   idExpType: number | undefined;
   name: string | undefined;
 }
-export class OrderState{
+export interface OrderState{
     idOrderState: number | undefined;
     name: string | undefined;
 }
-export class OrderPriority{
+export interface OrderPriority{
     idOrderPriority: number | undefined;
     name: string | undefined;
 }
-export class User{
+export interface User{
     idItUser: number | undefined;
     emailAd: string | undefined;
     telAd: string | undefined;
@@ -82,11 +89,11 @@ export class User{
     podr: Podr | undefined;
     dolzh1c: string | undefined;
 }
-export class OrderSource{
+export interface OrderSource{
     idOrderSource: number | undefined;
     name: string | undefined;
 }
-export class Request {
+export interface Request {
   requestNumber: string | undefined;
   dateRegistration: string | undefined;
   dateDesired: string | undefined;
@@ -101,7 +108,7 @@ export class Request {
   description: string | undefined;
 }
 
-export class Podr{
+export interface Podr{
     idPodr: number | undefined;
     name: string | undefined;
 }

@@ -301,23 +301,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
-              <Typography variant="subtitle2">Кому доступ</Typography>
-            </Grid2>
-            <Grid2 size={9}>
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                InputProps={{ readOnly: !isEditing }}
-                onChange={handleChange('accessTo')}
-                disabled={editedRequest.orderType?.name === 'ЗНД' ? false : true}
-                value={editedRequest.orderType?.name === 'ЗНД' ? editedRequest.initiator?.fio1c : 'Не тот тип заявки'}
-              />
-            </Grid2>
-          </Grid2>
-
-          <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Заголовок</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -328,6 +311,23 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('name')}
+              />
+            </Grid2>
+          </Grid2>
+
+          <Grid2 container spacing={0}>
+            <Grid2 size={3} sx={labelStyle}>
+              <Typography variant="subtitle2">Кому доступ (нужно ли?)</Typography>
+            </Grid2>
+            <Grid2 size={9}>
+              <TextField
+                fullWidth
+                size="small"
+                variant="outlined"
+                InputProps={{ readOnly: !isEditing }}
+                onChange={handleChange('accessTo')}
+                disabled={editedRequest.orderType?.name === 'ЗНД' ? false : true}
+                value={editedRequest.orderType?.name === 'ЗНД' ? editedRequest.initiator?.fio1c : 'Не тот тип заявки'}
               />
             </Grid2>
           </Grid2>
