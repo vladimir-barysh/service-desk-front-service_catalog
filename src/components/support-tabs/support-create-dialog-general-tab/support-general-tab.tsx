@@ -175,6 +175,32 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     queryFn: getOrderPriorities,
   });
 
+  const addWorkDays = (startDate: Date, daysToAdd: number): Date => {
+    const result = new Date(startDate);
+    let addedDays = 0;
+
+    while (addedDays < daysToAdd) {
+      result.setDate(result.getDate() + 1);
+      // Если это рабочий день (пн-пт), увеличиваем счетчик
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        addedDays++;
+      }
+    }
+
+    return result;
+  };
+
+  const getMinDate = (): Date => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (editedRequest?.orderType?.name === 'ЗНО') {
+      return addWorkDays(today, 3);
+    } else {
+      return addWorkDays(today, 5);
+    }
+  };
+
   return (
     <Box sx={{ mt: 2, position: 'relative', minHeight: '500px' }}>
       {/* Первая строка - заголовки таблицы */}
@@ -238,6 +264,10 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               readOnly={!isEditing}
               value={editedRequest?.dateFinishPlan ? dayjs(editedRequest?.dateFinishPlan).toDate() : null}
               onChange={(newDateFinishPlan) => handleDateChange('dateFinishPlan', newDateFinishPlan)}
+              minDate={getMinDate()}
+              excludeDate={(date) => {
+                return date.getDay() === 0 || date.getDay() === 6;
+              }}
             />
           </Grid2>
         </Grid2>

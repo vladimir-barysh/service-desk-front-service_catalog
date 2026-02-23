@@ -33,6 +33,7 @@ import { useMutation } from '@tanstack/react-query'
 import { OrderCreateDTO } from '../../api/dtos';
 import { AxiosError } from 'axios';
 import { createOrder } from '../../api/services/orderService';
+import { minTime } from 'date-fns/constants';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -220,6 +221,21 @@ export const RequestCreateZNODialog = (props: {
     setFinishDate(temp);
   };
 
+  const addWorkDays = (startDate: Date, daysToAdd: number): Date => {
+    const result = new Date(startDate);
+    let addedDays = 0;
+
+    while (addedDays < daysToAdd) {
+      result.setDate(result.getDate() + 1);
+      // Если это рабочий день (пн-пт), увеличиваем счетчик
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        addedDays++;
+      }
+    }
+
+    return result;
+  };
+
   return (
     <div>
       <ChooseServiceCreateDialog
@@ -318,6 +334,10 @@ export const RequestCreateZNODialog = (props: {
                   clearable
                   locale="ru"
                   onChange={(finishDate) => handleDateChange(finishDate)}
+                  minDate={addWorkDays(new Date(), 3)}
+                  excludeDate={(date) => {
+                    return date.getDay() === 0 || date.getDay() === 6;
+                  }}
                 />
               </Grid2>
             </Grid2>
