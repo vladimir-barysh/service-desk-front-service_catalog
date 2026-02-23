@@ -15,3 +15,8 @@ export const updateOrder = async (id: number | undefined, payload: OrderUpdateDT
   const response = await api.put(`/api/order/${id}`, payload);
   return response.data;
 }
+
+export const updateOrderStatus = async (id: number, statusId: number) => {
+  const { data } = await api.patch(`/api/order/${id}/status`, { idOrderState: statusId });
+  return data;
+};

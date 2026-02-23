@@ -22,6 +22,8 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getOrders } from '../../api/services/orderService';
 import { url } from 'inspector';
+import { useUpdateOrderStatus } from '../../api';
+import { getOrderStates } from '../../api';
 
 export function SupportAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
@@ -51,6 +53,14 @@ export function SupportAllPage() {
     queryKey: ['orders'],
     queryFn: getOrders,
   });
+
+  // Получение всех статусов заявок
+  const { data: orderStates } = useQuery({
+    queryKey: ['orderStates'],
+    queryFn: getOrderStates,
+  });
+
+  const inWork = orderStates?.find(state => state.name === 'В работе');
 
   // Функция для получения данных с учетом всех фильтров
   const filteredData = useMemo(() => {
@@ -494,15 +504,28 @@ export function SupportAllPage() {
   const selectedRowsCount = table.getSelectedRowModel().rows.length;
   const hasSelectedRows = !(selectedRowsCount > 0);
 
-  // Хук для управления диалогами
+  // Хуки для управления диалогами
   const { dialogs, openDialog, closeDialog } = useDialogs();
+  const updateStatus = useUpdateOrderStatus();
 
-  // Обработчик нажатия кнопки Отложить заявку
+  // Обработчики нажатия кнопок
   const handlePostponeClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length > 0) {
       openDialog('postpone', selectedRows[0].original);
     }
+  };
+
+  const handleAcceptClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    console.log('order.idOrder:', order.idOrder);
+    console.log('inWork:', inWork);
+    console.log('inWork?.idOrderState:', inWork?.idOrderState);
+    if (order.idOrder == null || inWork?.idOrderState == null) return;
+  
+    updateStatus.mutate({ id: order.idOrder, statusId: inWork.idOrderState });
   };
 
   // Обработчик подтверждения откладывания
@@ -597,6 +620,7 @@ export function SupportAllPage() {
               startIcon={<Build />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleAcceptClick}
             >
               Принять в работу
             </Button>
