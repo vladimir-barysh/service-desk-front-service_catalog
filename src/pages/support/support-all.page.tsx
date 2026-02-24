@@ -40,11 +40,9 @@ export function SupportAllPage() {
 
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
   const [searchParams] = useSearchParams();
-  const urlStatus = searchParams.get('status');
-
-  const clearAllFilters = () => {
-    setColumnFilters([]);
-  };
+  const urlStatus = searchParams.get('status') || null;
+  // Хук для управления диалогами
+  const { dialogs, openDialog, closeDialog } = useDialogs();
 
   const {
     data: orders = [],
@@ -53,7 +51,15 @@ export function SupportAllPage() {
   } = useQuery({
     queryKey: ['orders'],
     queryFn: getOrders,
+    enabled: true,
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
+
+  const clearAllFilters = () => {
+    setColumnFilters([]);
+  };
 
   const filteredData = useMemo(() => {
     let result = orders;
@@ -81,7 +87,7 @@ export function SupportAllPage() {
     }
 
     return result;
-  }, [urlStatus, hideClosed]);
+  }, [urlStatus, hideClosed, orders]);
 
 
 
@@ -185,7 +191,7 @@ export function SupportAllPage() {
         header: 'Дата решения',
         accessorKey: 'dateFinishFact',
         type: 'string',
-        maxSize: 120,
+        maxSize: 100,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -224,20 +230,23 @@ export function SupportAllPage() {
         header: 'Заголовок',
         accessorKey: 'name',
         type: 'string',
-        maxSize: 130,
+        maxSize: 190,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
       },
       {
-        header: 'Тип запроса',
+        header: 'Тип',
         accessorKey: 'orderType',
         type: 'string',
-        maxSize: 90,
+        maxSize: 50,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
+        },
+        mantineTableBodyCellProps: {
+          align: 'center',
         },
         Cell: ({ row }) => row.original.orderType?.name || ''
       },
@@ -245,7 +254,7 @@ export function SupportAllPage() {
         header: 'Инициатор',
         accessorKey: 'initiator',
         type: 'string',
-        maxSize: 150,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -259,7 +268,7 @@ export function SupportAllPage() {
         header: 'Пользователь',
         accessorKey: 'dispatcher',
         type: 'string',
-        maxSize: 150,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -273,7 +282,7 @@ export function SupportAllPage() {
         header: 'IT-сервис (модуль)',
         accessorKey: 'service',
         type: 'string',
-        maxSize: 150,
+        maxSize: 160,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -282,9 +291,9 @@ export function SupportAllPage() {
       },
       {
         header: 'Услуга',
-        accessorKey: 'catalogItem',
+        accessorKey: 'catitem',
         type: 'string',
-        maxSize: 130,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -407,37 +416,38 @@ export function SupportAllPage() {
   const table = useMantineReactTable({
     columns: columns,
     data: filteredData,
+    enableBottomToolbar: false,
+    enableColumnActions: false,
+    enableColumnResizing: false,
     enableExpanding: false,
-    enableTopToolbar: false,
+    enableHiding: false,
+    enableMultiRowSelection: false,
+    enablePagination: false,
     enableRowSelection: true,
     enableRowNumbers: false,
-    enableMultiRowSelection: false,
-    enableSelectAll: false,
+    enableRowVirtualization: true,
     enableSorting: true,
-    enableHiding: false,
-    enableColumnResizing: false,
+    enableSelectAll: false,
+    enableTopToolbar: false,
     layoutMode: 'grid',
     columnResizeMode: 'onChange',
     filterFromLeafRows: true,
-    enableColumnActions: false,
     localization: MRT_Localization_RU,
     initialState: {
       density: 'xs',
-      pagination: { pageIndex: 0, pageSize: 100 },
       columnVisibility: { 'mrt-row-select': false },
       showColumnFilters: true,
       sorting: [{ id: 'nomer', desc: true }],
     },
-
-    state: { columnFilters },
-    onColumnFiltersChange: handleFiltersChange,
-
     mantineTableProps: {
       fontSize: '11px',
+    }, 
+    mantineTableContainerProps: {
+      sx: {
+        minHeight: 150,
+        maxHeight: 850,
+      }
     },
-
-    mantineTableContainerProps: { sx: { minHeight: 150, maxHeight: 800 } },
-
     mantineTableHeadCellProps: {
       style: {
         fontSize: '13px',
@@ -445,14 +455,12 @@ export function SupportAllPage() {
         padding: '10px 4px',
       },
     },
-
     mantineFilterTextInputProps: {
       size: 'xs',
     },
-
     mantineTableBodyCellProps: ({ row, cell }) => ({
       onClick: (event) => {
-        // Если это не ячейка "header", то выделяем строку
+        // Если это не ячейка "nomer", то выделяем строку
         if (cell.column.id === 'nomer') {
           event.stopPropagation();
           handleRowDoubleClick(row);
@@ -463,20 +471,22 @@ export function SupportAllPage() {
       },
       sx: {
         backgroundColor: colorRow(row),
-        cursor: 'pointer',
-        border: '1px solid #dde7ee',
-        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
+        borderLeft: '1px solid #dde7ee !important',
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
+        cursor: 'pointer',
+        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
       }
     }),
+    onColumnFiltersChange: handleFiltersChange,
+    state: { 
+      columnFilters,
+    },
   });
 
-  // Доступность кнопок по нажатию на строку таблицы
   const selectedRowsCount = table.getSelectedRowModel().rows.length;
   const hasSelectedRows = !(selectedRowsCount > 0);
 
-  // Хук для управления диалогами
-  const { dialogs, openDialog, closeDialog } = useDialogs();
+  
 
   // Обработчик нажатия кнопки Отложить заявку
   const handlePostponeClick = () => {
@@ -506,7 +516,7 @@ export function SupportAllPage() {
     try {
       const exportData = filteredData.map((order: Order) => ({
         '№ заявки': order.nomer || '',
-        'Дата регистрации':  order.dateCreated ? dayjs(order.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
+        'Дата регистрации': order.dateCreated ? dayjs(order.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
         'Желаемый срок': order.dateFinishPlan ? dayjs(order.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
         'Дата решения': order.dateFinishFact ? dayjs(order.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
         'Статус': order.orderState?.name || '',
@@ -618,7 +628,6 @@ export function SupportAllPage() {
           isOpen={isCreateDialogZNIOpen}
           onClose={onCreateDialogClose}
         />
-        {/* Диалог откладывания */}
         <PostponeDialog
           open={dialogs.postpone.open}
           onClose={() => closeDialog('postpone')}
