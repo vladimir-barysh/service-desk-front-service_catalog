@@ -38,6 +38,9 @@ export function RequestsAllPage() {
   } = useQuery({
     queryKey: ['orders'],
     queryFn: getOrders,
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   const {
@@ -60,7 +63,7 @@ export function RequestsAllPage() {
     }
 
     return result;
-  }, [hideClosed]);
+  }, [hideClosed, orders]);
 
   useEffect(() => {
     setHideClosed(true);
