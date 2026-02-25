@@ -34,6 +34,7 @@ export function SupportAllPage() {
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
+  const [rowSelection, setRowSelection] = useState({});
 
   const currUser = "Воронин Владимир Владимирович";
   const currUser1 = "Борисов Борис Борисович";
@@ -57,10 +58,6 @@ export function SupportAllPage() {
     refetchOnWindowFocus: true,
   });
 
-  const clearAllFilters = () => {
-    setColumnFilters([]);
-  };
-
   const filteredData = useMemo(() => {
     let result = orders;
 
@@ -79,9 +76,6 @@ export function SupportAllPage() {
     else if (urlStatus === 'mine') {
       result = result.filter((item: any) => item.dispatcher?.name === currUser);
     }
-    else {
-      clearAllFilters();
-    }
     if (hideClosed) {
       result = result.filter((item: any) => item.orderState?.name !== 'Закрыта');
     }
@@ -89,7 +83,11 @@ export function SupportAllPage() {
     return result;
   }, [urlStatus, hideClosed, orders]);
 
-
+  useEffect(() => {
+    if (!urlStatus) {
+      setColumnFilters([]);
+    }
+  }, [urlStatus]);
 
   const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
     if (urlStatus) {
@@ -116,7 +114,7 @@ export function SupportAllPage() {
 
   useEffect(() => {
     setHideClosed(true);
-    table.setRowSelection({});
+    //table.setRowSelection({});
   }, [location.pathname, location.search]);
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
@@ -478,8 +476,10 @@ export function SupportAllPage() {
       }
     }),
     onColumnFiltersChange: handleFiltersChange,
+    onRowSelectionChange: setRowSelection,
     state: { 
       columnFilters,
+      rowSelection,
     },
   });
 
