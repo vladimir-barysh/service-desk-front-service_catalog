@@ -10,7 +10,7 @@ import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog, RequestCreateDialog, } from '../../components';
+import { SupportGeneralDialog, RequestCreateDialog, formatFIO, } from '../../components';
 import { ControlDialog, PostponeDialog } from '../../components/support-button-dialogs';
 import SplitButton from '../../components/split-button/split-button.component';
 import { RequestCreateZNODialog } from '../../components/request-create-zno-dialog/request-create-zno-dialog';
@@ -118,19 +118,6 @@ export function SupportAllPage() {
   }, [location.pathname, location.search]);
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
-
-  const formatFIO = (fullName: string): string => {
-    if (!fullName) return '';
-
-    const parts = fullName.trim().split(' ');
-    if (parts.length < 2) return fullName;
-
-    const lastName = parts[0];
-    const firstName = parts[1]?.charAt(0).toUpperCase() || '';
-    const middleName = parts[2]?.charAt(0).toUpperCase() || '';
-
-    return `${lastName} ${firstName}.${middleName ? middleName + '.' : ''}`;
-  };
 
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [

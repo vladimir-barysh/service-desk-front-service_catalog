@@ -1,4 +1,17 @@
-export interface OrderCreateDTO {
+export interface ArticleCreateDTO {
+  title?: string;
+  content?: string;
+  idArticleCategory?: number;
+  dateCreated?: string;
+}
+
+export interface ArticleUpdateDTO {
+  title?: string;
+  content?: string;
+  idArticleCategory?: number;
+}
+  
+  export interface OrderCreateDTO {
   name?: string;
   description?: string;
   dateFinishPlan?: string;

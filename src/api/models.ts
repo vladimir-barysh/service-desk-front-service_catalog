@@ -1,5 +1,18 @@
-import { Day } from "date-fns";
 import { Dayjs } from "dayjs";
+
+export interface Article {
+  idArticle: number | undefined;
+  title: string | undefined;
+  content: string | undefined;
+  dateCreated: Dayjs | undefined;
+  articleCategory: ArticleCategory | undefined;
+  userCreator: User | undefined;
+}
+
+export interface ArticleCategory {
+  idArticleCategory: number | undefined;
+  name: string | undefined;
+}
 
 export interface Order {
   idOrder: number | undefined;
