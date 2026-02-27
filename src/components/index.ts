@@ -11,3 +11,4 @@ export *from './redirectTask-dialog'
 export *from './postponeTask-dialog'
 export *from './support-hooks';
 export *from './support-button-dialogs';
+export * from './usefulFuncs'

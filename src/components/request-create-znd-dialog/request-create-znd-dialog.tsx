@@ -67,6 +67,7 @@ export const RequestCreateZNDDialog = (props: {
   const [toDate, setToDate] = useState('');
 
   const [selected, setSelected] = useState<User | null>(null);
+  const [selectedName, setSelectedName] = useState<string | ''>('');
   const [search, setSearch] = useState('');
   const shouldFilterOptions = !employees.some(
     (item) => item.mainName?.toLowerCase() === search.toLowerCase().trim(),
@@ -200,6 +201,7 @@ export const RequestCreateZNDDialog = (props: {
     setAccessType('');
     setChosen(null);
     setSelected(null);
+    setSelectedName('');
     setRowSelection({});
     setComment('');
     props.onClose();
@@ -272,6 +274,7 @@ export const RequestCreateZNDDialog = (props: {
       (item: any) => item.idItUser === selectedId
     ) ?? null;
     setSelected(selectedObject);
+    setSelectedName(selectedObject.fio1c);
   };
 
   const handleSChange = (date: Date | null) => {
