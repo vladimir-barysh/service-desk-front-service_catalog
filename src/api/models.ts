@@ -97,11 +97,13 @@ export interface OrderPriority {
 }
 export interface User {
   idItUser: number | undefined;
+  loginAd: string | undefined;
   emailAd: string | undefined;
   telAd: string | undefined;
   fio1c: string | undefined;
   podr: Podr | undefined;
   dolzh1c: string | undefined;
+  tabNum1c: string | undefined;
 }
 export interface OrderSource {
   idOrderSource: number | undefined;
