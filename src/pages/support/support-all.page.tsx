@@ -44,8 +44,6 @@ export function SupportAllPage() {
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
   const [searchParams] = useSearchParams();
   const urlStatus = searchParams.get('status') || null;
-  // Хук для управления диалогами
-  const { dialogs, openDialog, closeDialog } = useDialogs();
 
   const {
     data: orders = [],
