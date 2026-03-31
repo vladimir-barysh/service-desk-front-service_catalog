@@ -20,10 +20,11 @@ import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getOrders } from '../../api/services/orderService';
+import { getOrders, updateOrder } from '../../api/services/orderService';
 import { url } from 'inspector';
 import { useUpdateOrderStatus } from '../../api';
 import { getOrderStates } from '../../api';
+import { useUpdateOrder } from '../../api';
 
 import * as XLSX from 'xlsx';
 
@@ -65,6 +66,8 @@ export function SupportAllPage() {
   });
 
   const inWork = orderStates?.find(state => state.name === 'В работе');
+  const declined = orderStates?.find(state => state.name === 'Отклонена');
+  const onWait = orderStates?.find(state => state.name === 'В ожидании');
 
   // Функция для получения данных с учетом всех фильтров
   const filteredData = useMemo(() => {
@@ -435,7 +438,7 @@ export function SupportAllPage() {
     },
     mantineTableProps: {
       fontSize: '11px',
-    }, 
+    },
     mantineTableContainerProps: {
       sx: {
         minHeight: 150,
@@ -473,7 +476,7 @@ export function SupportAllPage() {
     }),
     onColumnFiltersChange: handleFiltersChange,
     onRowSelectionChange: setRowSelection,
-    state: { 
+    state: {
       columnFilters,
       rowSelection,
     },
@@ -485,15 +488,13 @@ export function SupportAllPage() {
   // Хуки для управления диалогами
   const { dialogs, openDialog, closeDialog } = useDialogs();
   const updateStatus = useUpdateOrderStatus();
+
+  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
+
   
 
   // Обработчики нажатия кнопок
-  const handlePostponeClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length > 0) {
-      openDialog('postpone', selectedRows[0].original);
-    }
-  };
+
 
   const handleAcceptClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
@@ -503,24 +504,41 @@ export function SupportAllPage() {
     console.log('inWork:', inWork);
     console.log('inWork?.idOrderState:', inWork?.idOrderState);
     if (order.idOrder == null || inWork?.idOrderState == null) return;
-  
+
     updateStatus.mutate({ id: order.idOrder, statusId: inWork.idOrderState });
+  };
+
+  const handleDeclineClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    if (order.idOrder == null || declined?.idOrderState == null) return;
+
+    updateStatus.mutate({ id: order.idOrder, statusId: declined.idOrderState });
+
+  };
+
+  const handlePostponeClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length > 0) {
+      openDialog('postpone', selectedRows[0].original);
+    }
   };
 
   // Обработчик подтверждения откладывания
   const handlePostponeConfirm = (comment: string) => {
-    const request = dialogs.postpone.request;
-    if (request) {
-      console.log('Откладываем заявку:', {
-        request: request.nomer,
-        newStatus: 'В ожидании',
-        comment: comment
-      });
-      //
-      // Реальная реализация
-      //
-      closeDialog('postpone');
-    }
+    const order = dialogs.postpone.order;
+    if (order?.idOrder == null || onWait?.idOrderState == null) return;
+
+    updateOrderMutate(
+      {
+        id: order.idOrder,
+        data: {
+          idOrderState: onWait.idOrderState,
+          comment: comment
+        },
+      },
+    );
   };
 
   const exportToExcel = () => {
@@ -643,7 +661,7 @@ export function SupportAllPage() {
           open={dialogs.postpone.open}
           onClose={() => closeDialog('postpone')}
           onConfirm={handlePostponeConfirm}
-          request={dialogs.postpone.request}
+          request={dialogs.postpone.order}
         />
         {/* Диалог на контроль 
         <ControlDialog
@@ -681,6 +699,7 @@ export function SupportAllPage() {
               startIcon={<Clear />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleDeclineClick}
             >
               Отклонить заявку
             </Button>

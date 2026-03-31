@@ -25,6 +25,7 @@ export interface OrderUpdateDTO {
   name?: string;
   description?: string;
   dateFinishPlan?: string;
+  dateFinishFact?: string;
   datePostpone?: string;
   idService?: number;
   idOrderType?: number;
