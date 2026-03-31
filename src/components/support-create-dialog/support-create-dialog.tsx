@@ -226,7 +226,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
               />
             </TabPanel>
             <TabPanel value="2" sx={{ padding: "0px" }}>
-              <SupportFilesTab request={request} />
+              <SupportFilesTab order={request} />
             </TabPanel>
             <TabPanel value="3" sx={{ padding: "0px" }}>
               <SupportCoordinationTab order={request} />

@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { Box, Button as MUIButton, Grid2 } from "@mui/material";
 import { Card, Group, Text, Textarea, ScrollArea, Divider, Anchor, Badge } from "@mantine/core";
 import { IconEdit, IconCheck, IconX } from "@tabler/icons-react";
-import { Order, data } from '../../../pages/support/makeData';
+import { Order } from '../../../pages/support/makeData';
 import { Message, seed } from './makeData';
 
 function formatDT(iso: string) {

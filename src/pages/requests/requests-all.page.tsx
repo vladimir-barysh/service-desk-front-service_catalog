@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { Order} from '../../api/models';
+import { Order } from '../../api/models';
 import React, { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
@@ -9,7 +9,7 @@ import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog } from '../../components';
+import { formatFIO, SupportGeneralDialog } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import { RequestCreateDialog } from '../../components';
 import { RequestCreateZNODialog } from '../../components/request-create-zno-dialog/request-create-zno-dialog';
@@ -38,6 +38,9 @@ export function RequestsAllPage() {
   } = useQuery({
     queryKey: ['orders'],
     queryFn: getOrders,
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   const {
@@ -60,25 +63,12 @@ export function RequestsAllPage() {
     }
 
     return result;
-  }, [hideClosed]);
+  }, [hideClosed, orders]);
 
   useEffect(() => {
     setHideClosed(true);
   }, [location.pathname, location.search]);
 
-  const formatFIO = (fullName: string): string => {
-    if (!fullName) return '';
-
-    const parts = fullName.trim().split(' ');
-    if (parts.length < 2) return fullName;
-
-    const lastName = parts[0];
-    const firstName = parts[1]?.charAt(0).toUpperCase() || '';
-    const middleName = parts[2]?.charAt(0).toUpperCase() || '';
-
-    return `${lastName} ${firstName}.${middleName ? middleName + '.' : ''}`;
-  };
-  
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
       {
@@ -104,12 +94,10 @@ export function RequestsAllPage() {
 
           if (!value) return '—';
 
-          // если уже Dayjs — форматируем
           if (dayjs.isDayjs(value)) {
             return value.format('DD.MM.YYYY HH:mm');
           }
 
-          // если вдруг пришла строка (на всякий случай)
           return dayjs(value).format('DD.MM.YYYY HH:mm');
         },
       },
@@ -127,12 +115,10 @@ export function RequestsAllPage() {
 
           if (!value) return '—';
 
-          // если уже Dayjs — форматируем
           if (dayjs.isDayjs(value)) {
             return value.format('DD.MM.YYYY HH:mm');
           }
 
-          // если вдруг пришла строка (на всякий случай)
           return dayjs(value).format('DD.MM.YYYY HH:mm');
         },
       },
@@ -140,7 +126,7 @@ export function RequestsAllPage() {
         header: 'Дата решения',
         accessorKey: 'dateFinishFact',
         type: 'string',
-        maxSize: 120,
+        maxSize: 100,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -150,12 +136,10 @@ export function RequestsAllPage() {
 
           if (!value) return '—';
 
-          // если уже Dayjs — форматируем
           if (dayjs.isDayjs(value)) {
             return value.format('DD.MM.YYYY HH:mm');
           }
 
-          // если вдруг пришла строка (на всякий случай)
           return dayjs(value).format('DD.MM.YYYY HH:mm');
         },
       },
@@ -174,20 +158,23 @@ export function RequestsAllPage() {
         header: 'Заголовок',
         accessorKey: 'name',
         type: 'string',
-        maxSize: 130,
+        maxSize: 190,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
       },
       {
-        header: 'Тип запроса',
+        header: 'Тип',
         accessorKey: 'orderType',
         type: 'string',
-        maxSize: 90,
+        maxSize: 50,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
+        },
+        mantineTableBodyCellProps: {
+          align: 'center',
         },
         Cell: ({ row }) => row.original.orderType?.name || ''
       },
@@ -195,7 +182,7 @@ export function RequestsAllPage() {
         header: 'Инициатор',
         accessorKey: 'initiator',
         type: 'string',
-        maxSize: 150,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -209,7 +196,7 @@ export function RequestsAllPage() {
         header: 'Пользователь',
         accessorKey: 'dispatcher',
         type: 'string',
-        maxSize: 150,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -223,7 +210,7 @@ export function RequestsAllPage() {
         header: 'IT-сервис (модуль)',
         accessorKey: 'service',
         type: 'string',
-        maxSize: 150,
+        maxSize: 160,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -234,7 +221,7 @@ export function RequestsAllPage() {
         header: 'Услуга',
         accessorKey: 'catalogItem',
         type: 'string',
-        maxSize: 130,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -374,32 +361,38 @@ export function RequestsAllPage() {
   const table = useMantineReactTable({
     columns: columns,
     data: orders,
+    enableBottomToolbar: false,
+    enableColumnActions: false,
+    enableColumnResizing: false,
     enableExpanding: false,
-    enableTopToolbar: false,
+    enableHiding: false,
+    enableMultiRowSelection: false,
+    enablePagination: false,
     enableRowSelection: true,
     enableRowNumbers: false,
-    enableMultiRowSelection: false,
+    enableRowVirtualization: true,
+    enableSorting: true,
     enableSelectAll: false,
-    enableHiding: false,
-    enableColumnResizing: false,
+    enableTopToolbar: false,
     layoutMode: 'grid',
     columnResizeMode: 'onChange',
     filterFromLeafRows: true,
-    enableColumnActions: false,
     localization: MRT_Localization_RU,
     initialState: {
       density: 'xs',
-      pagination: { pageIndex: 0, pageSize: 100 },
       columnVisibility: { 'mrt-row-select': false },
       showColumnFilters: true,
+      sorting: [{ id: 'nomer', desc: true }],
     },
-
     mantineTableProps: {
       fontSize: '11px',
     },
-
-    mantineTableContainerProps: { sx: { minHeight: 150, maxHeight: 800 } },
-
+    mantineTableContainerProps: {
+      sx: {
+        minHeight: 150,
+        maxHeight: 850
+      }
+    },
     mantineTableHeadCellProps: {
       style: {
         fontSize: '13px',
@@ -407,11 +400,9 @@ export function RequestsAllPage() {
         padding: '10px 4px',
       },
     },
-
     mantineFilterTextInputProps: {
       size: 'xs',
     },
-
     mantineTableBodyCellProps: ({ row, cell }) => ({
       onClick: (event) => {
         // Если это не ячейка "header", то выделяем строку
@@ -425,10 +416,10 @@ export function RequestsAllPage() {
       },
       sx: {
         backgroundColor: colorRow(row),
-        cursor: 'pointer',
-        border: '1px solid #dde7ee',
-        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
+        borderLeft: '1px solid #dde7ee !important',
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
+        cursor: 'pointer',
+        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
       }
     }),
   });

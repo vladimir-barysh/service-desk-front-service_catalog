@@ -1,6 +1,19 @@
-export interface OrderCreateDTO {
-  name: string;
-  description: string;
+export interface ArticleCreateDTO {
+  title?: string;
+  content?: string;
+  idArticleCategory?: number;
+  dateCreated?: string;
+}
+
+export interface ArticleUpdateDTO {
+  title?: string;
+  content?: string;
+  idArticleCategory?: number;
+}
+  
+  export interface OrderCreateDTO {
+  name?: string;
+  description?: string;
   dateFinishPlan?: string;
   idService?: number;
   idOrderType: number;
@@ -19,4 +32,12 @@ export interface OrderUpdateDTO {
   idOrderPriority?: number;
   resultText?: string;
   comment?: string;
+}
+
+export interface OrderBindingDTO {
+  idOrderBinding: number;
+  name: string;
+  dC: string;
+  idOrder: number;
+  idUser: number;
 }

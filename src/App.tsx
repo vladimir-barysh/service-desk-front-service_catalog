@@ -21,7 +21,8 @@ const queryClient = new QueryClient({
       retry: 1,                     // повторять 1 раз при ошибке
       staleTime: 1000 * 60 * 5,     // 5 минут данные свежие
       gcTime: 1000 * 60 * 10,       // кэш 10 минут
-      refetchOnWindowFocus: false,  // не перезагружать при возврате на вкладку
+      refetchOnWindowFocus: true,  // перезагружать при возврате на вкладку
+      refetchOnMount: true,
     },
   },
 });

@@ -1,6 +1,20 @@
 import { Dayjs } from "dayjs";
 
-export class Order {
+export interface Article {
+  idArticle: number | undefined;
+  title: string | undefined;
+  content: string | undefined;
+  dateCreated: Dayjs | undefined;
+  articleCategory: ArticleCategory | undefined;
+  userCreator: User | undefined;
+}
+
+export interface ArticleCategory {
+  idArticleCategory: number | undefined;
+  name: string | undefined;
+}
+
+export interface Order {
   idOrder: number | undefined;
   nomer: string | undefined;
   name: string | undefined;
@@ -11,7 +25,7 @@ export class Order {
   datePostpone: Dayjs | undefined;
   orderParent: Order | undefined;
   orderType: OrderType | undefined;
-  catalogItem: CatItem | undefined;
+  catalogItem: CatalogItem | undefined;
   service: Service | undefined;
   orderState: OrderState | undefined;
   orderPriority: OrderPriority | undefined;
@@ -24,13 +38,20 @@ export class Order {
   comment: string | undefined;
 }
 
-export class OrderType{
-    idOrderType: number | undefined;
-    name: string | undefined;
+export interface OrderBinding {
+  idOrderBinding: number;
+  name: string;
+  dC: string;
+  idOrder: number;
+  idUser: number;
 }
-export class CatItem{
-    idCatitem: number | undefined;
-    name: string | undefined;
+export interface OrderType {
+  idOrderType: number | undefined;
+  name: string | undefined;
+}
+export interface CatalogItem {
+  idCatitem: number | undefined;
+  name: string | undefined;
 }
 export interface Service {
   idService: number | undefined;
@@ -66,42 +87,70 @@ export interface ExpType {
   idExpType: number | undefined;
   name: string | undefined;
 }
-export class OrderState{
-    idOrderState: number | undefined;
-    name: string | undefined;
+export interface OrderState {
+  idOrderState: number | undefined;
+  name: string | undefined;
 }
-export class OrderPriority{
-    idOrderPriority: number | undefined;
-    name: string | undefined;
+export interface OrderPriority {
+  idOrderPriority: number | undefined;
+  name: string | undefined;
 }
-export class User{
-    idItUser: number | undefined;
-    emailAd: string | undefined;
-    telAd: string | undefined;
-    fio1c: string | undefined;
-    podr: Podr | undefined;
-    dolzh1c: string | undefined;
+export interface User {
+  idItUser: number | undefined;
+  emailAd: string | undefined;
+  telAd: string | undefined;
+  fio1c: string | undefined;
+  podr: Podr | undefined;
+  dolzh1c: string | undefined;
 }
-export class OrderSource{
-    idOrderSource: number | undefined;
-    name: string | undefined;
-}
-export class Request {
-  requestNumber: string | undefined;
-  dateRegistration: string | undefined;
-  dateDesired: string | undefined;
-  dateSolution: string | undefined;
-  status: string | undefined;
-  header: string | undefined;
-  requestType: string | undefined;
-  initiator: string | undefined;
-  user: string | undefined;
-  itModule: string | undefined;
-  service: string | undefined;
-  description: string | undefined;
+export interface OrderSource {
+  idOrderSource: number | undefined;
+  name: string | undefined;
 }
 
-export class Podr{
-    idPodr: number | undefined;
-    name: string | undefined;
+export interface Podr {
+  idPodr: number | undefined;
+  name: string | undefined;
+}
+
+export interface OrderTask { 
+  idOrderTask: number | undefined;
+  order: Order | undefined;
+  orderTaskParent: OrderTask | undefined;
+  work: Work | undefined;
+  executor: User | undefined;
+  dateFinishPlan: Dayjs | undefined;
+  dateFinishFact: Dayjs | undefined;
+  description: string | undefined;
+  closeParentCheck: boolean | undefined;
+  taskState: TaskState | undefined;
+  dateCrated: Dayjs | undefined;
+  resultText: string | undefined;
+}
+
+export interface TaskState {
+  idTaskState: number | undefined;
+  name: string | undefined;
+}
+
+export interface Work {
+  idWork: number | undefined;
+  workParent: number | undefined;
+  catitem: CatalogItem | undefined;
+  service: Service | undefined;
+  group: Group | undefined;
+  workType: WorkType | undefined;
+  remark: string | undefined;
+  podr: Podr | undefined;
+}
+
+export interface WorkType {
+  idWorkType: number | undefined;
+  name: string | undefined;
+  description: string | undefined;
+}
+// TODO: дописать
+export interface Group {
+  idGroup: number | undefined;
+  name: string | undefined;
 }

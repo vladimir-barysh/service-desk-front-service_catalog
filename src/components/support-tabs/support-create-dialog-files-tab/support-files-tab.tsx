@@ -18,6 +18,8 @@ import { fileDataClass,
   getAllFiles 
 } from './makeData';
 import { Order } from '../../../pages/support/makeData';
+import { getOrderBindings, downloadBinding } from '../../../api/services/orderBindingService';
+import { OrderBindingDTO } from '../../../api/dtos';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -32,24 +34,27 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 interface SupportGeneralFirstTabProps {
-  request: Order | null;
+  order: Order | null;
 }
 
-export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
+export function SupportFilesTab({ order }: SupportGeneralFirstTabProps) {
   
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [loadedFiles, setLoadedFiles] = useState<fileDataClass[]>([]);
 
+  const [dataB, setDataB] = useState<OrderBindingDTO[]>([]);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    if (request?.nomer) {
+    if (order?.nomer) {
       const requestFiles = uploadedFiles.filter(
-        file => file.idRequest === request.nomer);
+        file => file.idRequest === order.nomer);
       setLoadedFiles(requestFiles);
     }
     else {
       setLoadedFiles([]);
     }
-  }, [request?.nomer]);
+  }, [order?.nomer]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -63,7 +68,7 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
           fileName: file.name,
           dateOfCreation: new Date().toISOString(),
           author: 'Текущий пользователь',
-          idRequest: request?.nomer,
+          idRequest: order?.nomer,
           fileSize: file.size,
           fileType: file.type
         };
@@ -250,16 +255,13 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
             variant="contained"
             tabIndex={-1}
             startIcon={<CloudUploadIcon />}
-            disabled={request?.orderState?.name === 'Закрыта'}
+            disabled={order?.orderState?.name === 'Закрыта'}
             sx={{ whiteSpace: 'nowrap' }}
           >
             Добавить файлы
             <VisuallyHiddenInput
               type="file"
-              onChange={
-                // Загрузить файл
-                handleFileUpload
-              }
+              
               multiple
             />
           </Button>
@@ -272,8 +274,8 @@ export function SupportFilesTab({ request }: SupportGeneralFirstTabProps) {
           color="error"
           tabIndex={-1}
           startIcon={<Delete />}
-          disabled={request?.orderState?.name === 'Закрыта' || !selectedRowId}
-          onClick={handleDeleteFile}
+          disabled={order?.orderState?.name === 'Закрыта' || !selectedRowId}
+          //onClick={handleDeleteFile}
           >
             Удалить файл
           </Button>
