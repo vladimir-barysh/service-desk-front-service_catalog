@@ -16,7 +16,7 @@ import { Close } from '@mui/icons-material';
 
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined } from '@mui/icons-material'
-import { Order } from '../../api/models';
+import { Order, OrderTask } from '../../api/models';
 import { fileDataClass, uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
 import {
@@ -24,13 +24,14 @@ import {
   SupportFilesTab, SupportHistoryTab, SupportTasksTab
 } from '../support-tabs';
 import { updateOrder } from '../../api/services/orderService';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query'
 import { OrderUpdateDTO } from '../../api/dtos';
 import { notifications } from '@mantine/notifications';
 import { AxiosError } from 'axios';
 import { useUpdateOrder } from '../../api/hooks/useUpdateOrder';
 import dayjs from 'dayjs';
+import { getTasks } from '../../api/services/taskService';
 
 interface SupportGeneralDialogProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   const [value, setValue] = useState('1');
   const [hasFiles, setHasFiles] = useState(false);
   const [hasMessages, setHasMessages] = useState(false);
+  const [hasTasks, setHasTasks] = useState(false);
 
   // Состояния для каждого таба
   const [generalData, setGeneralData] = useState(request);
@@ -66,6 +68,19 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
 
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
+  const {
+      data: tasks = [],
+      isLoading,
+      error,
+    } = useQuery({
+      queryKey: ['tasks'],
+      queryFn: getTasks,
+      enabled: true,
+      staleTime: 5 * 60 * 1000,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    });
+    
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
   };
@@ -138,9 +153,29 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
 
   };
 
+  const checkTasks = () => {
+    if (!request?.nomer) {
+      setHasTasks(false);
+      return;
+    }
+
+    const tasksForThisOrder = tasks.filter(
+      (task: OrderTask) => task.order?.nomer === request.nomer
+    );
+
+    if (tasksForThisOrder.length > 0) {
+      setHasTasks(true);
+    }
+    else {
+      setHasTasks(false);
+    }
+
+  };
+
   useEffect(() => {
     checkFiles();
     checkMessages();
+    checkTasks();
   }, [request]);
 
   const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
@@ -211,7 +246,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
               <Tab label="Общие сведения" value="1" />
               <Tab label="Файлы" icon={hasFiles ? <AttachFileOutlined /> : undefined} iconPosition='end' value="2" />
               <Tab label="Согласование" icon={<PriorityHighOutlined />} iconPosition='end' value="3" />
-              <Tab label="Задачи" icon={<LanOutlined />} iconPosition='end' value="4" />
+              <Tab label="Задачи" icon={hasTasks ? <LanOutlined /> : undefined} iconPosition='end' value="4" />
               <Tab label="Обсуждение" icon={hasMessages ? <PeopleAltOutlined /> : undefined} iconPosition='end' value="5" />
               <Tab label="История" value="6" />
             </TabList>
@@ -232,7 +267,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
               <SupportCoordinationTab order={request} />
             </TabPanel>
             <TabPanel value="4" sx={{ padding: "0px" }}>
-              <SupportTasksTab request={request} />
+              <SupportTasksTab order={request} />
             </TabPanel>
             <TabPanel value="5" sx={{ padding: "0px" }}>
               <SupportDiscussionTab request={request} />
