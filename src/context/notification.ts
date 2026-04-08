@@ -2,20 +2,31 @@ import { notifications } from '@mantine/notifications';
 
 interface NotificationProps {
   title: string;
-  message: string;
+  message?: string;
   color?: string;
 }
 
 export const showNotification = ({
-  title,
-  message,
-  color = 'blue',
+  title = 'Ошибка',
+  message = 'Пустое уведомление',
+  color = 'red',
 }: NotificationProps) => {
+  
+  // Определяем время автозакрытия в зависимости от цвета
+  let autoCloseDuration: number;
+  switch (color) {
+    case 'green':
+      autoCloseDuration = 2500;
+      break;
+    default:
+      autoCloseDuration = 7000;
+  }
+
   notifications.show({
     title,
     message,
     color,
-    autoClose: 3000,
+    autoClose: autoCloseDuration,
     styles: (theme) => ({
       root: {
         background: `linear-gradient(135deg, ${theme.white}, ${theme.colors[color][3]})`,
