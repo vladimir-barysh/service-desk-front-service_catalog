@@ -11,12 +11,15 @@ export const showNotification = ({
   message = 'Пустое уведомление',
   color = 'red',
 }: NotificationProps) => {
-  
+
   // Определяем время автозакрытия в зависимости от цвета
   let autoCloseDuration: number;
   switch (color) {
     case 'green':
       autoCloseDuration = 2500;
+      break;
+    case 'orange':
+      autoCloseDuration = 3000;
       break;
     default:
       autoCloseDuration = 7000;

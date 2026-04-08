@@ -30,7 +30,7 @@ import { useMutation } from '@tanstack/react-query'
 import { OrderUpdateDTO } from '../../api/dtos';
 import { notifications } from '@mantine/notifications';
 import { AxiosError } from 'axios';
-import { useUpdateOrder } from '../../api/hooks/useUpdateOrder';
+import { useUpdateOrder } from '../../api/hooks/useOrder';
 import dayjs from 'dayjs';
 import { getTasks } from '../../api/services/taskService';
 

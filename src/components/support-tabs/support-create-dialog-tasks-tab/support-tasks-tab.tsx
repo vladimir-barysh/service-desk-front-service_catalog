@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
-import { SchemaNode, schemaData } from './makeData';
 import { RedirectTaskDialog, RedirectData, PostponeTaskDialog, PostponeData, formatFIO } from '../../../components';
 import { Order } from '../../../pages/support/makeData';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createTask, getTasks } from '../../../api/services/taskService';
 import { OrderTask } from '../../../api';
 import dayjs from 'dayjs';
-import { useUpdateTask } from '../../../api/hooks/useUpdateTask';
+import { useUpdateTask } from '../../../api/hooks/useTask';
 import { NewTaskDialog } from '../../newTask-dialog/newTask-dialog';
 import { AxiosError } from 'axios';
 import { showNotification } from '../../../context';
 import { TaskCreateDTO } from '../../../api/dtos';
+
 // Пропсы для компонентов
 interface BlockSchemaProps {
   data: OrderTask[];

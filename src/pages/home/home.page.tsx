@@ -47,7 +47,7 @@ import { AxiosError } from 'axios';
 import { notifications } from '@mantine/notifications';
 import dayjs from 'dayjs';
 import { formatFIO } from '../../components';
-import { useUpdateArticle } from '../../api/hooks/useUpdateArticle';
+import { useUpdateArticle } from '../../api/hooks/useArticle';
 interface Article1 {
   id: number;
   title: string;

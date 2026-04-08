@@ -3,37 +3,25 @@ import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogContentText,
-  DialogTitle,
   Box,
   Button,
   Grid2,
   Chip,
   Paper,
   IconButton,
-  Typography,
   DialogActions,
 } from '@mui/material';
 import dayjs from 'dayjs';
-import { Input, Textarea, Text, CloseButton } from '@mantine/core';
+import { Input, Text, CloseButton } from '@mantine/core';
 import { DateTimePicker, DateValue } from '@mantine/dates';
-
 import { styled } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
-
-import { notifications } from '@mantine/notifications';
-
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { Service } from '../../api/models';
-
 import { TextInputField } from '../text-input-field';
-
-import { useQueryClient } from '@tanstack/react-query';
-import { useMutation } from '@tanstack/react-query'
 import { OrderCreateDTO } from '../../api/dtos';
-import { AxiosError } from 'axios';
-import { createOrder } from '../../api/services/orderService';
-import { minTime } from 'date-fns/constants';
+import { useCreateOrder } from '../../api';
+import { showNotification } from './../../context';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -66,61 +54,7 @@ export const RequestCreateZNODialog = (props: {
   const [comment, setComment] = useState('');
   const [finishDate, setFinishDate] = useState('');
 
-  const queryClient = useQueryClient();
-  const mutation = useMutation<any, AxiosError, FormData>({
-    mutationFn: createOrder,
-    onSuccess: (newOrder) => {
-      // Успех
-      notifications.show({
-        title: 'Успешно',
-        message: 'ЗНО зарегистрировано',
-        color: 'green',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.green[6],
-            borderColor: theme.colors.green[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.green[6] },
-          },
-        }),
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-
-      handleClose();
-    },
-    onError: (error: any) => {
-      notifications.show({
-        title: 'Ошибка',
-        message: error?.response?.data?.message || error.message || 'Не удалось создать заявку',
-        color: 'red',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.red[6],
-            borderColor: theme.colors.red[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.red[8] },
-          },
-        }),
-      });
-    },
-  });
+  const { mutate: createOrderMutation, isPending } = useCreateOrder();
 
   const isFormValid = useMemo(() => {
     return (
@@ -144,28 +78,11 @@ export const RequestCreateZNODialog = (props: {
     props.onClose();
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!isFormValid) {
-      notifications.show({
-        title: 'Ошибка',
-        message: 'Пожалуйста, заполните все обязательные поля',
-        color: 'red',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.red[6],
-            borderColor: theme.colors.red[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.red[8] },
-          },
-        }),
+      showNotification({
+        title: 'Заполните обязательные поля',
+        color: 'orange',
       });
       return;
     }
@@ -188,9 +105,9 @@ export const RequestCreateZNODialog = (props: {
       });
     }
     
-    mutation.mutate(formData);
-
-    handleClose();
+    createOrderMutation(formData, {
+      onSuccess: () => handleClose(),
+    });
   };
 
   
@@ -273,14 +190,6 @@ export const RequestCreateZNODialog = (props: {
               </IconButton>
             </Grid2>
           </Grid2>
-          <Box
-            fontSize="15px"
-            fontWeight="500"
-            marginBottom="10px"
-            sx={{ color: 'error.main' }}
-          >
-            Пункты с * обязательны к заполнению
-          </Box>
 
           <Grid2
             container
@@ -322,7 +231,7 @@ export const RequestCreateZNODialog = (props: {
 
             <Grid2 container spacing={1} alignItems="center" size="auto">
               <Grid2 size="auto">
-                <Text fw={600}>Желаемый срок:</Text>
+                <Text fw={600}>Желаемый срок *</Text>
               </Grid2>
               <Grid2 size="auto">
                 <DateTimePicker
@@ -463,10 +372,10 @@ export const RequestCreateZNODialog = (props: {
               color="success"
               size={'small'}
               fullWidth={true}
-              disabled={!isFormValid || mutation.isPending}
+              disabled={!isFormValid || isPending}
               onClick={handleSave}
             >
-              {mutation.isPending ? 'Сохранение...' : 'Сохранить'}
+              {isPending ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </Grid2>
           <Grid2 size={3}>
