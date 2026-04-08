@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import type { SyntheticEvent } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,

@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
 import { type Order } from '../../api/models';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';

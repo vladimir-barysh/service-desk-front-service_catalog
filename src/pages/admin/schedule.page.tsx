@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState, useMemo } from "react";
 import {
   Box,
   Card,
@@ -79,13 +79,13 @@ function typeLabel(type: AbsenceType) {
 // -------------------- Основной компонент --------------------
 
 export function SchedulePage() {
-  const [department, setDepartment] = React.useState("");
-  const [type, setType] = React.useState("");
-  const [dateFrom, setDateFrom] = React.useState("");
-  const [dateTo, setDateTo] = React.useState("");
+  const [department, setDepartment] = useState("");
+  const [type, setType] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   // Фильтрация
-  const filtered = React.useMemo(() => {
+  const filtered = useMemo(() => {
     return MOCK_DATA.filter((a) => {
       if (department && a.department !== department) return false;
       if (type && a.type !== type) return false;

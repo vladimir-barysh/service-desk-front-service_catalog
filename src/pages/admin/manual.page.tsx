@@ -1,5 +1,5 @@
 // DictionaryPage.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import {
     Box,
     Paper,
@@ -367,7 +367,7 @@ export function ManualPage() {
     };
 
     return (
-        <Box sx={{ minHeight: '50vh', height: '96vh', padding: '0px 0px 10px 0px', display: 'flex', flexDirection: 'column' }}>
+        (<Box sx={{ minHeight: '50vh', height: '96vh', padding: '0px 0px 10px 0px', display: 'flex', flexDirection: 'column' }}>
             <Grid container component={Paper} sx={{ flex: 1, overflow: 'hidden' }}>
                 {/* Список справочников */}
                 <Grid item xs={12} md={3} sx={{ borderRight: '1px solid #e0e0e0', overflowY: 'auto' }}>
@@ -376,7 +376,7 @@ export function ManualPage() {
                     </Typography>
                     <List disablePadding>
                         {DICTIONARIES.map((dict) => (
-                            <React.Fragment key={dict.key}>
+                            <Fragment key={dict.key}>
                                 <ListItem disablePadding>
                                     <ListItemButton
                                         selected={selectedDict?.key === dict.key}
@@ -386,7 +386,7 @@ export function ManualPage() {
                                     </ListItemButton>
                                 </ListItem>
                                 <Divider />
-                            </React.Fragment>
+                            </Fragment>
                         ))}
                     </List>
                 </Grid>
@@ -414,6 +414,6 @@ export function ManualPage() {
                     )}
                 </Grid>
             </Grid>
-        </Box>
+        </Box>)
     );
 }

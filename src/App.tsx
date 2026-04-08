@@ -1,4 +1,3 @@
-import React from 'react';
 import './App.css';
 import {AuthProvider, useAuth} from "./context";
 import {Content} from "./content";

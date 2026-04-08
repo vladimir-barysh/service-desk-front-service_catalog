@@ -1,5 +1,4 @@
 import { Box, createTheme, ThemeProvider } from '@mui/material';
-import React from "react";
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HomePage, LoginPage, RequestsAllPage, 
   ServicesCatalogTreePage, ServicesCatalogItCatalogPage, ServicesCatalogItServicesPage, 

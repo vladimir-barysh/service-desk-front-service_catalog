@@ -1,4 +1,4 @@
-import * as React from "react";
+import type { KeyboardEvent } from "react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Box, Button as MUIButton, Grid2 } from "@mui/material";
 import { Card, Group, Text, Textarea, ScrollArea, Divider, Anchor, Badge } from "@mantine/core";
@@ -82,7 +82,7 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
   };
 
   // хоткеи в редакторах
-  const onEditorKey = (e: React.KeyboardEvent<HTMLTextAreaElement>, mode: "add" | "edit") => {
+  const onEditorKey = (e: KeyboardEvent<HTMLTextAreaElement>, mode: "add" | "edit") => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       mode === "add" ? addMessage() : saveEdit();
