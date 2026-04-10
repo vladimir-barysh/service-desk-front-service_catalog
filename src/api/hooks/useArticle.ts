@@ -1,6 +1,6 @@
 import { createCRUDMutation } from './createCRUDMutation';
-import { updateArticle } from '../services/articleService';
-import { ArticleUpdateDTO } from '../dtos';
+import { updateArticle, createArticle } from '../services/articleService';
+import { ArticleUpdateDTO, ArticleCreateDTO } from '../dtos';
 
 export const useUpdateArticle = createCRUDMutation({
   type: 'update',
@@ -11,4 +11,13 @@ export const useUpdateArticle = createCRUDMutation({
   idField: 'idArticle',
   successMessage: 'Статья обновлена',
   errorMessage: 'Не удалось обновить статью',
+});
+
+export const useCreateArticle = createCRUDMutation({
+  type: 'create',
+  mutationFn: (data: ArticleCreateDTO) => createArticle(data),
+  queryKey: ['articles'],
+  addToCache: (old, newArticle) => (old ? [newArticle, ...old] : [newArticle]),
+  successMessage: 'Статья создана',
+  errorMessage: 'Не удалось создать статью',
 });

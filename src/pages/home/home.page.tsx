@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import * as React from 'react';
 import {
   Grid2, Card,
@@ -7,27 +7,19 @@ import {
   Chip, Box,
   Dialog, DialogTitle,
   DialogContent, DialogActions,
-  TextField, Snackbar,
-  Alert, List,
-  ListItem, ListItemAvatar,
-  ListItemText, Badge,
-  Paper, ListItemButton, Button, CircularProgress, Stack,
+  TextField, List,
+  ListItemText,
+  Paper, ListItemButton, Button,
   FormControl, Select, SelectChangeEvent, MenuItem,
 } from '@mui/material';
 import {
-  ArticleOutlined, DeleteOutlined,
-  Favorite, FavoriteBorder,
-  Comment, Share,
-  Star, Event, Lock, LockOpen, TextFields
+  ArticleOutlined, DeleteOutlined, Star
 } from '@mui/icons-material';
 import { IconPencil } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { getAuthorities } from '../../api/services/authorityService';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import {
   LinkBubbleMenu,
-  MenuButton,
   RichTextEditor,
   RichTextReadOnly,
   TableBubbleMenu,
@@ -37,48 +29,16 @@ import {
 import type { EditorOptions } from "@tiptap/core";
 import useExtensions from './useExtensions';
 import EditorMenuControls from './EditorMenuControls';
-import { getArticles, createArticle } from '../../api/services/articleService';
 import { getArticleCategories } from '../../api/services/articleCategoryService';
 import { ArticleCreateDTO } from '../../api/dtos';
 import { Article, ArticleCategory } from '../../api/models';
-import { useQueryClient } from '@tanstack/react-query';
-import { useMutation } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
-import { notifications } from '@mantine/notifications';
 import dayjs from 'dayjs';
 import { formatFIO } from '../../components';
-import { useUpdateArticle } from '../../api/hooks/useArticle';
-interface Article1 {
-  id: number;
-  title: string;
-  content: string;
-  author: string;
-  date: Date;
-  category: string;
-  likes: number;
-  comments: number;
-  isLiked: boolean;
-  isFeatured?: boolean;
-}
-
-interface OnlineUser {
-  id: number;
-  name: string;
-  position: string;
-  isOnline: boolean;
-}
-
-interface CalendarEvent {
-  id: number;
-  title: string;
-  date: Date;
-  type: 'event' | 'deadline';
-}
+import { getArticles } from '../../api/services/articleService';
+import { useUpdateArticle, useCreateArticle } from '../../api';
+import { showNotification } from '../../context';
 
 function fileListToImageFiles(fileList: FileList): File[] {
-  // You may want to use a package like attr-accept
-  // (https://www.npmjs.com/package/attr-accept) to restrict to certain file
-  // types.
   return Array.from(fileList).filter((file) => {
     const mimeType = (file.type || "").toLowerCase();
     return mimeType.startsWith("image/");
@@ -86,18 +46,13 @@ function fileListToImageFiles(fileList: FileList): File[] {
 }
 
 export function HomePage() {
-
-  const [articles1, setArticles] = useState<Article1[]>([]);
-
   const [selectedCategory, setSelectedCategory] = useState<string>('Все');
   const [openDialog, setOpenDialog] = useState(false);
   const [editingArticle, setEditinArticle] = useState<Article | null>(null);
-  const [newArticle, setNewArticle] = useState<Article>();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = React.useState<ArticleCategory | null>(null);
   const [categoryName, setCategoryName] = useState<string | ''>('');
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const CurrUser = 'Ананьев Александр Александрович';
 
   const categories = ['Все', 'Новости', 'Технические работы', 'Мои статьи', 'Архив', 'Черновики'];
@@ -135,60 +90,8 @@ export function HomePage() {
     refetchOnWindowFocus: true,
   });
 
-  const queryClient = useQueryClient();
-  const mutation = useMutation<any, AxiosError, ArticleCreateDTO>({
-    mutationFn: createArticle,
-    onSuccess: (newArticle) => {
-      notifications.show({
-        title: 'Успешно',
-        message: 'Статья создана',
-        color: 'green',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.green[6],
-            borderColor: theme.colors.green[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.green[6] },
-          },
-        }),
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['articles'] });
-
-      handleClose();
-    },
-    onError: (error: any) => {
-      notifications.show({
-        title: 'Ошибка',
-        message: error?.response?.data?.message || error.message || 'Не удалось создать статью',
-        color: 'red',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.red[6],
-            borderColor: theme.colors.red[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.red[8] },
-          },
-        }),
-      });
-    },
-  });
+  const { mutate: createArticleMutation, isPending: isCreatePending } = useCreateArticle();
+  const { mutate: updateArticleMutation, isPending: isUpdatePending } = useUpdateArticle();
 
   const filteredData = useMemo(() => {
     let result = articles;
@@ -259,15 +162,6 @@ export function HomePage() {
       if (!rteRef.current?.editor) {
         return;
       }
-
-      // For the sake of a demo, we don't have a server to upload the files to,
-      // so we'll instead convert each one to a local "temporary" object URL.
-      // This will not persist properly in a production setting. You should
-      // instead upload the image files to your server, or perhaps convert the
-      // images to bas64 if you would like to encode the image data directly
-      // into the editor content, though that can make the editor content very
-      // large. You will probably want to use the same upload function here as
-      // for the MenuButtonImageUpload `onUploadFiles` prop.
       const attributesForImageFiles = files.map((file) => ({
         src: URL.createObjectURL(file),
         alt: file.name,
@@ -282,7 +176,6 @@ export function HomePage() {
     []
   );
 
-  // Allow for dropping images into the editor
   const handleDrop: NonNullable<EditorOptions["editorProps"]["handleDrop"]> =
     useCallback(
       (view, event, _slice, _moved) => {
@@ -298,9 +191,6 @@ export function HomePage() {
           })?.pos;
 
           handleNewImageFiles(imageFiles, insertPosition);
-
-          // Return true to treat the event as handled. We call preventDefault
-          // ourselves for good measure.
           event.preventDefault();
           return true;
         }
@@ -310,7 +200,7 @@ export function HomePage() {
       [handleNewImageFiles]
     );
 
-  // Allow for pasting images
+  // Вставка изображений
   const handlePaste: NonNullable<EditorOptions["editorProps"]["handlePaste"]> =
     useCallback(
       (_view, event, _slice) => {
@@ -323,165 +213,100 @@ export function HomePage() {
         );
         if (pastedImageFiles.length > 0) {
           handleNewImageFiles(pastedImageFiles);
-          // Return true to mark the paste event as handled. This can for
-          // instance prevent redundant copies of the same image showing up,
-          // like if you right-click and copy an image from within the editor
-          // (in which case it will be added to the clipboard both as a file and
-          // as HTML, which Tiptap would otherwise separately parse.)
           return true;
         }
-
-        // We return false here to allow the standard paste-handler to run.
         return false;
       },
       [handleNewImageFiles]
     );
 
-  const [submittedContent, setSubmittedContent] = useState("");
-
-  // Загрузка статей при монтировании
-  useEffect(() => {
-    const mockArticles: Article1[] = [
-      {
-        id: 1,
-        title: 'Обновление системы документооборота',
-        content: 'Уважаемые коллеги! Сообщаем о плановом обновлении системы электронного документооборота, которое запланировано на ближайшие выходные.',
-        author: 'Алексей Петров',
-        date: new Date(2024, 0, 15),
-        category: 'Новости',
-        likes: 12,
-        comments: 5,
-        isLiked: false,
-        isFeatured: true
-      },
-      {
-        id: 2,
-        title: 'Инструкция по работе с новым CRM',
-        content: 'Разработана подробная инструкция по работе с обновленной CRM-системой. Все сотрудники могут ознакомиться с материалами в разделе "База знаний".',
-        author: 'Мария Сидорова',
-        date: new Date(2024, 0, 10),
-        category: 'Инструкции',
-        likes: 8,
-        comments: 3,
-        isLiked: true,
-        isFeatured: true
-      },
-      {
-        id: 3,
-        title: 'Плановые работы на сервере',
-        content: 'В ночь с 20 на 21 января будут проводиться плановые работы на основном сервере. Возможны кратковременные перебои в работе.',
-        author: 'Иван Козлов',
-        date: new Date(2024, 0, 12),
-        category: 'Важные объявления',
-        likes: 15,
-        comments: 7,
-        isLiked: false
-      },
-      {
-        id: 4,
-        title: 'Решение проблемы с почтой',
-        content: 'Обнаружена и исправлена проблема с отправкой писем через корпоративную почту. Все системы работают в штатном режиме.',
-        author: 'Алексей Петров',
-        date: new Date(2024, 0, 8),
-        category: 'Техподдержка',
-        likes: 6,
-        comments: 2,
-        isLiked: false
-      }
-    ];
-    setArticles(mockArticles);
-    //setFilteredArticles(mockArticles);
-  }, []);
-
-  const { mutate: updateArticleMutate, isPending } = useUpdateArticle();
-
   const handleCreateArticle = async () => {
     if (!title || !content || !category?.idArticleCategory) {
-      setSnackbar({
-        open: true,
-        message: 'Заполните все поля',
-        severity: 'error'
-      });
+      showNotification({ title: 'Заполните все поля', message: '', color: 'orange' });
       return;
     }
 
     const dto: ArticleCreateDTO = {
       title: title,
       content: content,
-      idArticleCategory: category?.idArticleCategory
-    }
+      idArticleCategory: category.idArticleCategory,
+    };
 
     if (editingArticle) {
-      updateArticleMutate(
+      updateArticleMutation(
         {
-          id: editingArticle?.idArticle,
+          id: editingArticle.idArticle,
           data: {
-            title: dto?.title,
-            content: dto?.content,
-            idArticleCategory: dto.idArticleCategory
+            title: dto.title,
+            content: dto.content,
+            idArticleCategory: dto.idArticleCategory,
           },
         },
+        { onSuccess: () => handleClose() }
       );
     } else {
-      mutation.mutate(dto);
+      createArticleMutation(dto, { onSuccess: () => handleClose() });
     }
-
-    handleClose();
-    setSnackbar({ open: true, message: 'Статья успешно создана', severity: 'success' });
   };
 
   const handleDraftArticle = () => {
     if (!title) {
-      setSnackbar({
-        open: true,
-        message: 'Введите заголовок',
-        severity: 'error'
-      });
+      showNotification({ title: 'Введите заголовок', message: '', color: 'orange' });
       return;
     }
     const draftCat = articlecategories.find((cat: ArticleCategory) => cat.name === 'Черновики');
     const dto: ArticleCreateDTO = {
       title: title,
       content: content,
-      idArticleCategory: draftCat?.idArticleCategory
-    }
+      idArticleCategory: draftCat?.idArticleCategory,
+    };
 
     if (editingArticle) {
-      updateArticleMutate(
+      updateArticleMutation(
         {
-          id: editingArticle?.idArticle,
+          id: editingArticle.idArticle,
           data: {
-            title: dto?.title,
-            content: dto?.content,
-            idArticleCategory: dto.idArticleCategory
+            title: dto.title,
+            content: dto.content,
+            idArticleCategory: dto.idArticleCategory,
           },
         },
+        { onSuccess: () => handleClose() }
       );
     } else {
-      mutation.mutate(dto);
+      createArticleMutation(dto, { onSuccess: () => handleClose() });
     }
-
-    handleClose();
-    setSnackbar({ open: true, message: 'Статья помещена в черновик', severity: 'success' });
   };
 
   const handleDeleteArticle = (article: Article | undefined) => {
     const newCat = articlecategories.find((cat: ArticleCategory) => cat.name === 'Архив');
-    updateArticleMutate(
+    if (!newCat) {
+      showNotification({ title: 'Ошибка', message: 'Категория "Архив" не найдена', color: 'red' });
+      return;
+    }
+    updateArticleMutation(
       {
         id: article?.idArticle,
         data: {
           title: article?.title,
           content: article?.content,
-          idArticleCategory: newCat.idArticleCategory
+          idArticleCategory: newCat.idArticleCategory,
         },
       },
+      {
+        onSuccess: () => {
+          showNotification({ title: 'Ошибка', message: 'Категория "Архив" не найдена', color: 'red' });
+        }
+      }
     );
+  }
 
-    setSnackbar({ open: true, message: 'Статья удалена', severity: 'success' });
-  };
 
-  const handleLike = (id: number) => {
+/*  *
+    * Логика избранных статей и лайка статьи
+    *
+    
+    const handleLike = (id: number) => {
     setArticles(articles.map((article: any) =>
       article.id === id
         ? {
@@ -492,8 +317,8 @@ export function HomePage() {
         : article
     ));
   };
+  const featuredArticles = articles.filter((article: any) => article.isFeatured); */
 
-  const featuredArticles = articles.filter((article: any) => article.isFeatured);
 
   const handleEditorUpdate = () => {
     if (rteRef.current) {
@@ -684,7 +509,12 @@ export function HomePage() {
               Избранные статьи
             </Typography>
             <List dense>
-              {featuredArticles.map((article: any) => (
+
+            {/* *
+                * Отображение избранных статей
+                *
+
+              { {featuredArticles.map((article: any) => (
                 <ListItemButton
                   key={article.id}
                   sx={{ borderRadius: 1, mb: 0.5 }}
@@ -696,7 +526,8 @@ export function HomePage() {
                     secondaryTypographyProps={{ fontSize: '0.85rem' }}
                   />
                 </ListItemButton>
-              ))}
+              ))} } */}
+
             </List>
           </Paper>
 
@@ -771,24 +602,12 @@ export function HomePage() {
             renderControls={() => <EditorMenuControls />}
 
             RichTextFieldProps={{
-              // The "outlined" variant is the default (shown here only as
-              // example), but can be changed to "standard" to remove the outlined
-              // field border from the editor
               variant: "outlined",
               MenuBarProps: {
                 hide: !showMenuBar,
               },
-              // Below is an example of adding a toggle within the outlined field
-              // for showing/hiding the editor menu bar, and a "submit" button for
-              // saving/viewing the HTML content
-
             }}
             sx={{
-              // An example of how editor styles can be overridden. In this case,
-              // setting where the scroll anchors to when jumping to headings. The
-              // scroll margin isn't built in since it will likely vary depending on
-              // where the editor itself is rendered (e.g. if there's a sticky nav
-              // bar on your site).
               "& .ProseMirror": {
                 "& h1, & h2, & h3, & h4, & h5, & h6": {
                   scrollMarginTop: showMenuBar ? 50 : 0,
@@ -812,7 +631,7 @@ export function HomePage() {
             variant="contained"
             color="success"
             onClick={handleCreateArticle}
-            disabled={category?.name === 'Черновики'}
+            disabled={category?.name === 'Черновики' || isCreatePending || isUpdatePending}
           >
             Опубликовать
           </Button>
@@ -821,6 +640,7 @@ export function HomePage() {
             variant="contained"
             color="info"
             onClick={handleDraftArticle}
+            disabled={isCreatePending || isUpdatePending}
           >
             Черновик
           </Button>
@@ -834,16 +654,6 @@ export function HomePage() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert severity={snackbar.severity}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </div >
   );
 }

@@ -1,4 +1,3 @@
-import type { SyntheticEvent } from 'react';
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -8,8 +7,6 @@ import {
   Box,
   Button,
   Grid2,
-  Chip,
-  Paper,
   IconButton, DialogActions, DialogContentText
 } from '@mui/material';
 
@@ -18,18 +15,13 @@ import { Close } from '@mui/icons-material';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined } from '@mui/icons-material'
 import { Order, OrderTask } from '../../api/models';
-import { fileDataClass, uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
+import { uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
 import {
   SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab,
   SupportFilesTab, SupportHistoryTab, SupportTasksTab
 } from '../support-tabs';
-import { updateOrder } from '../../api/services/orderService';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMutation } from '@tanstack/react-query'
-import { OrderUpdateDTO } from '../../api/dtos';
-import { notifications } from '@mantine/notifications';
-import { AxiosError } from 'axios';
+import { useQuery} from '@tanstack/react-query';
 import { useUpdateOrder } from '../../api/hooks/useOrder';
 import dayjs from 'dayjs';
 import { getTasks } from '../../api/services/taskService';
