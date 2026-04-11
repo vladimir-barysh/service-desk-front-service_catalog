@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable } from 'mantine-react-table';
 import { Order } from '../../api/models';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
 import Button from '@mui/material/Button';

@@ -16,7 +16,7 @@ export const createOrder = async (data: FormData) => {
 }
 
 export const updateOrder = async (id: number | undefined, payload: OrderUpdateDTO) => {
-  const response = await api.put(`/api/order/${id}`, payload);
+  const response = await api.patch(`/api/order/${id}`, payload);
   return response.data;
 }
 

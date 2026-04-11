@@ -1,33 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
-import { type Order } from '../../api/models';
-import React, { useEffect, useState } from 'react';
-import { Grid2 } from '@mui/material';
+import { Grid2, Box } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
-import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog, RequestCreateDialog, formatFIO, } from '../../components';
-import { ControlDialog, PostponeDialog } from '../../components/support-button-dialogs';
+import { SupportGeneralDialog, RequestCreateDialog, formatFIO, ControlDialog, PostponeDialog,
+         RequestCreateZNODialog, RequestCreateZNDDialog, RequestCreateZNIDialog,
+ } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
-import { RequestCreateZNODialog } from '../../components/request-create-zno-dialog/request-create-zno-dialog';
-import { RequestCreateZNDDialog } from '../../components/request-create-znd-dialog/request-create-znd-dialog';
-import { RequestCreateZNIDialog } from '../../components/request-create-zni-dialog/request-create-zni-dialog';
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
-
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getOrders } from '../../api/services/orderService';
-import { url } from 'inspector';
-import { useUpdateOrderStatus } from '../../api';
-import { getOrderStates } from '../../api';
-
+import { useQuery} from '@tanstack/react-query';
+import { getOrders, updateOrder, useUpdateOrderStatus, getOrderStates, useUpdateOrder, type Order } from '../../api';
 import * as XLSX from 'xlsx';
-
-import { notifications } from '@mantine/notifications';
+import { showNotification } from '../../context';
 
 export function SupportAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
@@ -65,6 +54,8 @@ export function SupportAllPage() {
   });
 
   const inWork = orderStates?.find(state => state.name === 'В работе');
+  const declined = orderStates?.find(state => state.name === 'Отклонена');
+  const onWait = orderStates?.find(state => state.name === 'В ожидании');
 
   // Функция для получения данных с учетом всех фильтров
   const filteredData = useMemo(() => {
@@ -435,7 +426,7 @@ export function SupportAllPage() {
     },
     mantineTableProps: {
       fontSize: '11px',
-    }, 
+    },
     mantineTableContainerProps: {
       sx: {
         minHeight: 150,
@@ -473,7 +464,7 @@ export function SupportAllPage() {
     }),
     onColumnFiltersChange: handleFiltersChange,
     onRowSelectionChange: setRowSelection,
-    state: { 
+    state: {
       columnFilters,
       rowSelection,
     },
@@ -485,16 +476,12 @@ export function SupportAllPage() {
   // Хуки для управления диалогами
   const { dialogs, openDialog, closeDialog } = useDialogs();
   const updateStatus = useUpdateOrderStatus();
+
+  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
+
   
 
   // Обработчики нажатия кнопок
-  const handlePostponeClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length > 0) {
-      openDialog('postpone', selectedRows[0].original);
-    }
-  };
-
   const handleAcceptClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
@@ -503,24 +490,41 @@ export function SupportAllPage() {
     console.log('inWork:', inWork);
     console.log('inWork?.idOrderState:', inWork?.idOrderState);
     if (order.idOrder == null || inWork?.idOrderState == null) return;
-  
+
     updateStatus.mutate({ id: order.idOrder, statusId: inWork.idOrderState });
+  };
+
+  const handleDeclineClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    if (order.idOrder == null || declined?.idOrderState == null) return;
+
+    updateStatus.mutate({ id: order.idOrder, statusId: declined.idOrderState });
+
+  };
+
+  const handlePostponeClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length > 0) {
+      openDialog('postpone', selectedRows[0].original);
+    }
   };
 
   // Обработчик подтверждения откладывания
   const handlePostponeConfirm = (comment: string) => {
-    const request = dialogs.postpone.request;
-    if (request) {
-      console.log('Откладываем заявку:', {
-        request: request.nomer,
-        newStatus: 'В ожидании',
-        comment: comment
-      });
-      //
-      // Реальная реализация
-      //
-      closeDialog('postpone');
-    }
+    const order = dialogs.postpone.order;
+    if (order?.idOrder == null || onWait?.idOrderState == null) return;
+
+    updateOrderMutate(
+      {
+        id: order.idOrder,
+        data: {
+          idOrderState: onWait.idOrderState,
+          comment: comment
+        },
+      },
+    );
   };
 
   const exportToExcel = () => {
@@ -547,50 +551,10 @@ export function SupportAllPage() {
 
       XLSX.writeFile(wb, filename);
 
-      notifications.show({
-        title: 'Успешно',
-        message: `Файл ${filename} сохранен`,
-        color: 'green',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.green[6],
-            borderColor: theme.colors.green[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.green[6] },
-          },
-        }),
-      });
+      showNotification({ title: `Файл ${filename} сохранен`, message: '', color: 'green' });
     }
     catch (error) {
-      notifications.show({
-        title: 'Ошибка',
-        message: 'Не удалось сохранить файл',
-        color: 'red',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.red[6],
-            borderColor: theme.colors.red[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.red[8] },
-          },
-        }),
-      });
+      showNotification({ title: 'Ошибка', message: 'Не удалось сохранить файл', color: 'red' });
     }
   };
 
@@ -643,7 +607,7 @@ export function SupportAllPage() {
           open={dialogs.postpone.open}
           onClose={() => closeDialog('postpone')}
           onConfirm={handlePostponeConfirm}
-          request={dialogs.postpone.request}
+          request={dialogs.postpone.order}
         />
         {/* Диалог на контроль 
         <ControlDialog
@@ -681,6 +645,7 @@ export function SupportAllPage() {
               startIcon={<Clear />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleDeclineClick}
             >
               Отклонить заявку
             </Button>

@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { MantineReactTable, type MRT_ColumnDef, useMantineReactTable } from 'mantine-react-table';
 import { data, type Service } from './makeData';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import * as React from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Delete, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';

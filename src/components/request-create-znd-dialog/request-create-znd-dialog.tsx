@@ -1,35 +1,26 @@
-import React from 'react';
+import * as React from 'react';
 import { useState, useMemo } from 'react';
 import {
   Dialog, DialogContent,
-  DialogContentText, DialogTitle,
   DialogActions, Box,
   Button, Grid2,
-  IconButton, Typography,
+  IconButton,
   TextField, InputAdornment,
   FormControl, MenuItem, Select,
   SelectChangeEvent,
 } from '@mui/material';
 import {
-  Input, Textarea,
-  Text, CloseButton,
-  Radio, Group,
-  Checkbox,
+  Input, Text, CloseButton, Radio, Group, Checkbox,
 } from '@mantine/core';
-
 import {
-  AlternateEmail, Close,
-  EmailOutlined, PhoneOutlined
+  AlternateEmail, Close, PhoneOutlined,
 } from '@mui/icons-material';
-
-import { IconAt, IconPhone } from '@tabler/icons-react';
 import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { Service, User } from '../../api/models';
 
 import { 
-  employees, tableDataClass, 
-  roles, rolesDataClass 
+  employees, roles, rolesDataClass 
 } from './makeData';
 
 import {
@@ -39,17 +30,12 @@ import {
   type MRT_ColumnDef,
 } from 'mantine-react-table';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-
 import { TextInputField } from '../text-input-field';
-
-import { notifications } from '@mantine/notifications';
-
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query';
 import { OrderCreateDTO } from '../../api/dtos';
-import { AxiosError } from 'axios';
-import { createOrder } from '../../api/services/orderService';
 import { getUsers } from '../../api/services/userService';
+import { useCreateOrder } from '../../api';
+import { showNotification } from './../../context';
 
 export const RequestCreateZNDDialog = (props: {
   isOpen: boolean;
@@ -83,9 +69,8 @@ export const RequestCreateZNDDialog = (props: {
   }));
   const [checked, setChecked] = useState(false);
 
-  //
-  const [reqType, setReqType] = useState<string>('');
-  const [accessType, setAccessType] = useState<string>('');
+  const [reqType, setReqType] = useState<string>('Предоставить/изменить доступ');
+  const [accessType, setAccessType] = useState<string>('Чтение');
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
   const isFormValid = useMemo(() => {
     return (
@@ -107,61 +92,7 @@ export const RequestCreateZNDDialog = (props: {
     staleTime: Infinity
   });
 
-  const queryClient = useQueryClient();
-  const mutation = useMutation<any, AxiosError, FormData>({
-    mutationFn: createOrder,
-    onSuccess: (newOrder) => {
-      // Успех
-      notifications.show({
-        title: 'Успешно',
-        message: 'ЗНД зарегистрировано',
-        color: 'green',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.green[6],
-            borderColor: theme.colors.green[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.green[6] },
-          },
-        }),
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-
-      handleClose();
-    },
-    onError: (error: any) => {
-      notifications.show({
-        title: 'Ошибка',
-        message: error?.response?.data?.message || error.message || 'Не удалось создать заявку',
-        color: 'red',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.red[6],
-            borderColor: theme.colors.red[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.red[8] },
-          },
-        }),
-      });
-    },
-  });
+  const { mutate: createOrderMutation } = useCreateOrder();
 
   const columns = React.useMemo<MRT_ColumnDef<rolesDataClass>[]>(
     () => [
@@ -209,26 +140,9 @@ export const RequestCreateZNDDialog = (props: {
 
   const handleSave = () => {
     if (!isFormValid) {
-      notifications.show({
-        title: 'Ошибка',
-        message: 'Пожалуйста, заполните все обязательные поля',
-        color: 'red',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.red[6],
-            borderColor: theme.colors.red[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.red[8] },
-          },
-        }),
+      showNotification({
+        title: 'Заполните обязательные поля',
+        color: 'orange',
       });
       return;
     }
@@ -255,9 +169,9 @@ export const RequestCreateZNDDialog = (props: {
     const formData = new FormData();
     formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
 
-    mutation.mutate(formData);
-
-    handleClose();
+    createOrderMutation(formData, {
+      onSuccess: () => handleClose(),
+    });
   };
 
   const handleReqTypeChange = (value: string) => {
@@ -358,9 +272,6 @@ export const RequestCreateZNDDialog = (props: {
               </IconButton>
             </Grid2>
           </Grid2>
-          <Box fontSize="15px" fontWeight="500" sx={{ color: 'error.main' }}>
-            Пункты с * обязательны к заполнению
-          </Box>
           <Grid2
             container
             spacing={3}
@@ -371,7 +282,7 @@ export const RequestCreateZNDDialog = (props: {
             paddingBottom="10px"
           >
             <Grid2 size={2}>
-              <Text fw={600}>Вид заявки *:</Text>
+              <Text fw={600}>Вид заявки *</Text>
             </Grid2>
             <Radio.Group
               value={reqType}
@@ -444,7 +355,7 @@ export const RequestCreateZNDDialog = (props: {
               margin="0px 0px 0px 0px"
             >
               <Grid2 size="auto" sx={labelStyle}>
-                <Text fw={600}>Кому доступ*</Text>
+                <Text fw={600}>Кому доступ *</Text>
               </Grid2>
               <Grid2 size="auto">
                 <FormControl fullWidth size="small">
@@ -689,7 +600,7 @@ export const RequestCreateZNDDialog = (props: {
             paddingBottom="10px"
           >
             <Grid2 size={2}>
-              <Text fw={600}>Уровень доступа *:</Text>
+              <Text fw={600}>Уровень доступа *</Text>
             </Grid2>
             <Radio.Group
               value={accessType}
@@ -697,9 +608,8 @@ export const RequestCreateZNDDialog = (props: {
               withAsterisk
             >
               <Group>
-                <Radio fw={200} label="Запись" value="Запись" />
-
                 <Radio fw={200} label="Чтение" value="Чтение" />
+                <Radio fw={200} label="Запись" value="Запись" />
               </Group>
             </Radio.Group>
           </Grid2>

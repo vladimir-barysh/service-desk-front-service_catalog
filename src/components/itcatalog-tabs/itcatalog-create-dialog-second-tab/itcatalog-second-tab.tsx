@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Grid2, IconButton,
 } from '@mui/material';

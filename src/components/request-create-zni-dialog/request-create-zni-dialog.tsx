@@ -1,10 +1,8 @@
-import React from 'react';
+import * as React from 'react';
 import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogContentText,
-  DialogTitle,
   DialogActions,
   Box,
   Button,
@@ -12,19 +10,18 @@ import {
   Chip,
   Paper,
   IconButton,
-  Typography,
 } from '@mui/material';
-import { Input, Textarea, Text, CloseButton } from '@mantine/core';
-import { DateTimePicker } from '@mantine/dates';
-
+import { Input, Text, CloseButton } from '@mantine/core';
 import { styled } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
-
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { Service } from '../../api/models';
-import { Grid } from '@mui/joy';
-
 import { TextInputField } from '../text-input-field';
+import { OrderCreateDTO } from '../../api/dtos';
+import { useCreateOrder } from '../../api';
+import { showNotification } from './../../context';
+import dayjs from 'dayjs';
+import { DateTimePicker, DateValue } from '@mantine/dates';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -54,16 +51,17 @@ export const RequestCreateZNIDialog = (props: {
   const [chosen, setChosen] = React.useState<Service | null>(null);
 
   const [problemDescription, setProblemDescription] = useState('');
-  const [expectedResult, setExpectedResult] = useState('');
+  const [resultText, setresultText] = useState('');
   const [comment, setComment] = useState('');
+  const [finishDate, setFinishDate] = useState('');
 
   const isFormValid = useMemo(() => {
     return (
       chosen !== null &&
       problemDescription.trim() !== '' &&
-      expectedResult.trim() !== ''
+      resultText.trim() !== ''
     );
-  }, [chosen, problemDescription, expectedResult]);
+  }, [chosen, problemDescription, resultText]);
 
   function CreateDialog() {
     setIsCreateDialogOpen(true);
@@ -75,29 +73,44 @@ export const RequestCreateZNIDialog = (props: {
   const handleClose = () => {
     setChosen(null);
     setProblemDescription('');
-    setExpectedResult('');
+    setresultText('');
     setComment('');
     setFiles([]);
     props.onClose();
   };
 
+  const { mutate: createOrderMutation, isPending } = useCreateOrder();
+
   const handleSave = () => {
     if (!isFormValid) {
-      alert('Пожалуйста, заполните все обязательные поля');
+      showNotification({
+        title: 'Ошибка',
+        message: 'Пожалуйста, заполните все обязательные поля',
+        color: 'orange',
+      });
       return;
     }
 
-    const formData = {
-      service: chosen,
-      problemDescription,
-      expectedResult,
-      comment,
-      files,
+    const dto: OrderCreateDTO = {
+      name: chosen?.fullname,
+      description: problemDescription,
+      resultText: resultText,
+      dateFinishPlan: finishDate,
+      idService: chosen?.idService,
+      idOrderType: 2,
+      comment: comment,
     };
 
-    console.log('Данные для сохранения:', formData);
+    const formData = new FormData();
+    formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
 
-    handleClose();
+    if (files.length > 0) {
+      files.forEach((file) => formData.append('files', file));
+    }
+
+    createOrderMutation(formData, {
+      onSuccess: () => handleClose(),
+    });
   };
 
   const [files, setFiles] = useState<File[]>([]);
@@ -109,6 +122,11 @@ export const RequestCreateZNIDialog = (props: {
       setFiles((prev) => [...prev, ...newFiles]);
     }
     event.target.value = '';
+  };
+
+  const handleDateChange = (date: DateValue) => {
+    const temp = date ? dayjs(date).toISOString() : '';
+    setFinishDate(temp);
   };
 
   const handleRemoveFile = (index: number) => {
@@ -158,14 +176,6 @@ export const RequestCreateZNIDialog = (props: {
               </IconButton>
             </Grid2>
           </Grid2>
-          <Box
-            fontSize="15px"
-            fontWeight="500"
-            marginBottom="10px"
-            sx={{ color: 'error.main' }}
-          >
-            Пункты с * обязательны к заполнению
-          </Box>
 
           <Grid2
             container
@@ -207,17 +217,17 @@ export const RequestCreateZNIDialog = (props: {
 
             <Grid2 container spacing={1} alignItems="center" size="auto">
               <Grid2 size="auto">
-                <Text fw={600}>Желаемый срок:</Text>
+                <Text fw={600}>Желаемый срок *</Text>
               </Grid2>
               <Grid2 size="auto">
                 <DateTimePicker
                   placeholder="ДД.MM.ГГ ЧЧ:ММ"
                   valueFormat="DD.MM.YYYY HH:mm"
-                  withSeconds={false}
-                  onPointerEnterCapture={undefined}
-                  onPointerLeaveCapture={undefined}
                   clearable
                   locale="ru"
+                  onChange={handleDateChange}
+                  onPointerEnterCapture={undefined}
+                  onPointerLeaveCapture={undefined}
                 />
               </Grid2>
             </Grid2>
@@ -252,8 +262,8 @@ export const RequestCreateZNIDialog = (props: {
             </Grid2>
             <Grid2 size="auto">
               <TextInputField
-                value={expectedResult}
-                onChange={(e) => setExpectedResult(e.target.value)}
+                value={resultText}
+                onChange={(e) => setresultText(e.target.value)}
                 rows={3}
               />
             </Grid2>
@@ -359,9 +369,10 @@ export const RequestCreateZNIDialog = (props: {
               color="success"
               size={'small'}
               fullWidth={true}
-              disabled={!isFormValid}
+              disabled={!isFormValid || isPending}
+              onClick={handleSave}
             >
-              Сохранить
+              {isPending ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </Grid2>
           <Grid2 size={3}>

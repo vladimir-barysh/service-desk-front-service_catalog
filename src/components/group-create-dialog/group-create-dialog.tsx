@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import type { SyntheticEvent } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -46,8 +47,8 @@ export const GroupCreateDialog = (props: {
     [],
   );
 
-  const [value, setValue] = React.useState('1');
-  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = useState('1');
+  const [open, setOpen] = useState(false);
 
   const TableServicesAll = new tableClass(servicesAll, getColumns("Выбрано"));
   const TableServicesChoose = new tableClass(servicesChoose, getColumns("Доступно"));
@@ -68,7 +69,7 @@ export const GroupCreateDialog = (props: {
     setOpen(false);
   };
 
-  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handleChange = (event: SyntheticEvent, newValue: string) => {
     setValue(newValue);
   }
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import './App.css';
 import {AuthProvider, useAuth} from "./context";
 import {Content} from "./content";
@@ -42,7 +41,7 @@ const Main = () => {
         <MaterialCssVarsProvider theme={{ [MATERIAL_THEME_ID]: materialTheme }}>
           <JoyCssVarsProvider>
             <CssBaseline enableColorScheme />
-            <Notifications position='top-right' limit={5} zIndex={10000}/>
+            <Notifications position='top-right' limit={5} zIndex={10000} containerWidth={300} />
             <App />
           </JoyCssVarsProvider>
         </MaterialCssVarsProvider>
