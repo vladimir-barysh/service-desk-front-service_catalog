@@ -2,13 +2,12 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Grid2, TextField,
   Box, Typography,
-  Button, InputLabel,
   MenuItem, FormControl,
   Select, InputAdornment, SelectChangeEvent
 } from '@mui/material';
 import { DateTimePicker, DateValue } from '@mantine/dates';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Order } from '../../../api/models';
 import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
@@ -30,7 +29,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   const [editedRequest, setEditedRequest] = useState<Order | null>(request);
 
   const isEditing = !editedRequest?.orderState?.name?.includes('Закрыта');              // флаг режима редактирования
-  //const hasChanges = JSON.stringify(editedRequest) !== JSON.stringify(request);                      // флаг наличия изменений
   const hasChanges = useMemo(() => {
     if (!editedRequest || !request) return false;
 
@@ -64,17 +62,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   if (!editedRequest) {
     return <Typography>Заявка не выбрана</Typography>;
   }
-
-  const handleSave = () => {
-    // Здесь будет логика сохранения изменений
-    //console.log('Сохранение данных:', editableRequest);
-    //setHasChanges(false);
-  };
-
-  const handleCancel = () => {
-    setEditedRequest(request); // Возвращаем оригинальные данные
-    //setHasChanges(false);
-  };
 
   const handleFieldChange = (field: string, value: string) => {
     setEditedRequest(prev => prev ? { ...prev, [field]: value } : null);

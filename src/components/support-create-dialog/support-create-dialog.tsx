@@ -6,14 +6,10 @@ import {
   Tab,
   Box,
   Button,
-  Grid2,
   IconButton, DialogActions, DialogContentText
 } from '@mui/material';
-
-import { Close } from '@mui/icons-material';
-
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined } from '@mui/icons-material'
+import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined, Close } from '@mui/icons-material'
 import { Order, OrderTask } from '../../api/models';
 import { uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
@@ -217,33 +213,50 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
       <Dialog
         open={isOpen}
         onClose={handleClose}
-        fullWidth={true}
         maxWidth='xl'
+        fullWidth
+        PaperProps={{
+          sx: {
+            height: '90vh',
+          }
+        }}
       >
-        <DialogContent sx={{ minHeight: '60vh', minWidth: '75vh' }}>
-          <Grid2 container spacing={0} direction={'row'} alignItems="left" justifyContent="space-between">
-            <Grid2 size='auto'>
-              <Box fontSize='20px' fontWeight='700'>
-                Заявка №{request?.nomer || ''}
-              </Box>
-            </Grid2>
-            {/* Крестик */}
-            <Grid2 size='auto'>
-              <IconButton onClick={handleClose}>
-                <Close />
-              </IconButton>
-            </Grid2>
-          </Grid2>
+        <DialogContent sx={{ minHeight: '60vh', minWidth: '75vh', display: 'flex', flexDirection: 'column'}}>
+          {/* Верхняя строка: номер заявки, вкладки, крестик */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box fontSize='18px' fontWeight='700'>
+              Заявка №{request?.nomer || ''}
+            </Box>
+
+            {/* TabList – вкладки */}
+            <TabContext value={value}>
+              <TabList 
+                onChange={handleChange} 
+                centered 
+                variant="scrollable" 
+                scrollButtons="auto" 
+                sx={{
+                  minHeight: '36px',
+                  '& .MuiTab-root': {
+                    minHeight: '36px',
+                  },
+                }}
+              >
+                <Tab label="Общие сведения" value="1" />
+                <Tab label="Файлы" icon={hasFiles ? <AttachFileOutlined /> : undefined} iconPosition='end' value="2" />
+                <Tab label="Согласование" icon={<PriorityHighOutlined />} iconPosition='end' value="3" />
+                <Tab label="Задачи" icon={hasTasks ? <LanOutlined /> : undefined} iconPosition='end' value="4" />
+                <Tab label="Обсуждение" icon={hasMessages ? <PeopleAltOutlined /> : undefined} iconPosition='end' value="5" />
+                <Tab label="История" value="6" />
+              </TabList>
+            </TabContext>
+            <IconButton onClick={handleClose}>
+              <Close />
+            </IconButton>
+          </Box>
+
           <TabContext value={value}>
-            <TabList onChange={handleChange} centered>
-              <Tab label="Общие сведения" value="1" />
-              <Tab label="Файлы" icon={hasFiles ? <AttachFileOutlined /> : undefined} iconPosition='end' value="2" />
-              <Tab label="Согласование" icon={<PriorityHighOutlined />} iconPosition='end' value="3" />
-              <Tab label="Задачи" icon={hasTasks ? <LanOutlined /> : undefined} iconPosition='end' value="4" />
-              <Tab label="Обсуждение" icon={hasMessages ? <PeopleAltOutlined /> : undefined} iconPosition='end' value="5" />
-              <Tab label="История" value="6" />
-            </TabList>
-            <TabPanel value="1" sx={{ padding: "0px" }}>
+            <TabPanel value="1" sx={{ padding: "0px", flexGrow: 1 }}>
               <SupportGeneralTab
                 isOpen={true}
                 request={request}
@@ -295,49 +308,50 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
             onClick={handleCancel}
             sx={{ minWidth: '100px' }}
           >
-            Отмена
+            Назад
           </Button>
         </DialogActions>
       </Dialog>
-
+      
       <Dialog
         open={openConfirmDialog}
         onClose={handleCancelClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title" color='red' alignContent='center'>
-          Внимание!
+        <DialogTitle id="confirm-dialog-title" sx={{ color: 'warning.main', textAlign: 'center' }}>
+          Внимание! У вас есть несохранённые изменения
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description" color='black'>
-            У вас есть несохраненные изменения, хотите сохранить их перед закрытием?
+          <DialogContentText id="confirm-dialog-description" align="center">
+            Что вы хотите сделать?
           </DialogContentText>
         </DialogContent>
-        <Grid2 size='auto' sx={{ margin: '0px 0px 20px 0px', display: 'flex', gap: 1, justifyContent: 'center' }}>
+        <DialogActions sx={{ justifyContent: 'center', gap: 1, pb: 2 }}>
           <Button
             variant="contained"
             color="success"
-            size="small"
             onClick={() => handleConfirmClose(true)}
-            sx={{ minWidth: '100px' }}
             autoFocus
           >
-            Да
+            Сохранить
           </Button>
           <Button
             variant="contained"
             color="inherit"
-            size="small"
-            onClick={() => handleConfirmClose(false)}
-            sx={{ minWidth: '100px' }}
+            onClick={handleCancelClose}
           >
-            Нет
+            Назад
           </Button>
-        </Grid2>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => handleConfirmClose(false)}
+          >
+            Не сохранять
+          </Button>
+        </DialogActions>
       </Dialog>
     </div>
-
-
   );
 }

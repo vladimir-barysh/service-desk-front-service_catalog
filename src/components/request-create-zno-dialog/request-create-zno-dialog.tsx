@@ -231,7 +231,7 @@ export const RequestCreateZNODialog = (props: {
 
             <Grid2 container spacing={1} alignItems="center" size="auto">
               <Grid2 size="auto">
-                <Text fw={600}>Желаемый срок *</Text>
+                <Text fw={600}>Желаемый срок</Text>
               </Grid2>
               <Grid2 size="auto">
                 <DateTimePicker
