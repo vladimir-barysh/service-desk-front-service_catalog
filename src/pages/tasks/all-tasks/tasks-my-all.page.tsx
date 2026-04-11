@@ -1,30 +1,23 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
-import { useEffect, useState} from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { formatFIO, SupportGeneralDialog } from '../../../components';
+import { formatFIO, SupportGeneralDialog, RequestCreateDialog, RequestCreateZNODialog, 
+  RequestCreateZNDDialog, 
+} from '../../../components';
 import SplitButton from '../../../components/split-button/split-button.component';
-import { RequestCreateDialog } from '../../../components';
-import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
-import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
-
-import { notifications } from '@mantine/notifications';
-
-import { Order, OrderTask } from '../../../api/models';
+import { showNotification } from '../../../context';
+import { Order, OrderTask, getOrders, getTasks, } from '../../../api';
 import * as XLSX from 'xlsx';
-
 import dayjs, { Dayjs } from 'dayjs';
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getOrders } from '../../../api/services/orderService';
-import { getTasks } from '../../../api/services/taskService';
+
 
 
 export function TasksMyAllPage() {
@@ -388,50 +381,10 @@ export function TasksMyAllPage() {
 
       XLSX.writeFile(wb, filename);
 
-      notifications.show({
-        title: 'Успешно',
-        message: `Файл ${filename} сохранен`,
-        color: 'green',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.green[6],
-            borderColor: theme.colors.green[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.green[6] },
-          },
-        }),
-      });
+      showNotification({ title: `Файл ${filename} сохранен`, message: '', color: 'green' });
     }
     catch (error) {
-      notifications.show({
-        title: 'Ошибка',
-        message: 'Не удалось сохранить файл',
-        color: 'red',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.red[6],
-            borderColor: theme.colors.red[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.red[8] },
-          },
-        }),
-      });
+      showNotification({ title: 'Ошибка', message: 'Не удалось сохранить файл', color: 'red' });
     }
   };
 

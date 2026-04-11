@@ -1,6 +1,3 @@
-import { useMutation, useQueryClient, UseMutationResult } from '@tanstack/react-query';
-import { showNotification } from './../../context';
-
 /*
  * Фабрика CRUD мутаций для React Query
  *
@@ -21,6 +18,8 @@ import { showNotification } from './../../context';
  * Если кэш сложный (объект, дерево и тд.) – нужно передать свои updateCache/deleteFromCache
  */
 
+import { useMutation, useQueryClient, UseMutationResult } from '@tanstack/react-query';
+import { showNotification } from './../../context';
 
 // Типы операций
 type MutationType = 'create' | 'update' | 'delete';

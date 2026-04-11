@@ -1,3 +1,15 @@
+/* 
+ *  showNotification - компонент для отображений единых уведомлений во всём приложении
+ *
+ *  title - основной текст уведомлений. По умолчанию - 'Ошибка'
+ *  message - дополнительный текст, который выводится под основным и вносит ясность в уведомление.
+ *            По умолчанию - 'Пустое уведомление'
+ *  color - цвет фона уведомления. По умолчанию - 'red'
+ *          red - ошибка
+ *          green - успех
+ *          orange -предупреждение     
+ */
+
 import { notifications } from '@mantine/notifications';
 
 interface NotificationProps {
@@ -22,7 +34,7 @@ export const showNotification = ({
       autoCloseDuration = 3000;
       break;
     default:
-      autoCloseDuration = 7000;
+      autoCloseDuration = 10000;
   }
 
   notifications.show({
