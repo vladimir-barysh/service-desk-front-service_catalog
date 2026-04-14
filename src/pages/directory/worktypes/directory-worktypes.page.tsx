@@ -5,7 +5,8 @@ import {
   type MRT_ColumnDef,
 } from 'mantine-react-table';
 import { data, type Service } from './makeData';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import * as React from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Delete, Edit, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';

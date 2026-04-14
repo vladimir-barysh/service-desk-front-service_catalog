@@ -126,7 +126,8 @@ export interface OrderTask {
   description: string | undefined;
   closeParentCheck: boolean | undefined;
   taskState: TaskState | undefined;
-  dateCrated: Dayjs | undefined;
+  dateCreated: Dayjs | undefined;
+  creator: User | undefined;
   resultText: string | undefined;
 }
 

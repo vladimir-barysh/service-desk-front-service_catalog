@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Menu, MenuItem, Sidebar, SubMenu } from 'react-pro-sidebar';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Badge, Box, Typography} from '@mui/material';
@@ -24,6 +24,9 @@ import { alignProperty } from "@mui/material/styles/cssUtils";
 
 import { useQuery } from '@tanstack/react-query';
 import { getOrders } from '../api/services/orderService';
+import { getTasks } from '../api/services/taskService';
+import { OrderTask } from "../api";
+import { Order } from "../pages/support/makeData";
 
 const activeColor = '#455980ff';
 const submenuColor = '#32415c';
@@ -32,7 +35,7 @@ const backgroundColor = '#3b4c6c';
 const color = '#909fbbff';
 const sectionTitleColor = "#c0d0f0";
 const currentUser = {
-  name: "Борисов Борис Борисович",
+  name: "Воронин Владимир Владимирович",
   role: "Старший специалист",
   avatarUrl: null, // или "https://..." если есть фото
   initials: "ВА"   // или генерировать автоматически
@@ -49,14 +52,25 @@ function useRequestCounts() {
       queryFn: getOrders,
   });
 
+  const {
+    data: tasks = [],
+  } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: getTasks,
+    enabled: true,
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  });
+
   return useMemo(() => {
 
-    const newCount = orders.filter((item: any) => item.orderStatus?.name === 'Новая').length;
-    const allCount = orders.filter((item: any) => item.orderStatus?.name !== 'Закрыта').length;
-    const nAgreedCount = orders.filter((item: any) => item.orderStatus?.name === 'Не согласовано').length;
-    const nConfirmedCount = orders.filter((item: any) => item.orderStatus?.name === 'Возобновлена').length;
-    const onControlCount = orders.filter((item: any) => item.orderStatus?.name === 'На контроле').length;
-    const exeCount = orders.filter((item: any) => item.orderStatus?.name !== 'Закрыта' && item.dispatcher?.name === currentUser.name).length;
+    const newCount = orders.filter((item: Order) => item.orderState?.name === 'Новая').length;
+    const allCount = orders.filter((item: Order) => item.orderState?.name !== 'Закрыта').length;
+    const nAgreedCount = orders.filter((item: Order) => item.orderState?.name === 'Не согласовано').length;
+    const nConfirmedCount = orders.filter((item: Order) => item.orderState?.name === 'Возобновлена').length;
+    const onControlCount = orders.filter((item: Order) => item.orderState?.name === 'На контроле').length;
+    const exeCount = tasks.filter((item: OrderTask) => item.taskState?.name !== 'Закрыта').length;
     return {
       newCount,
       allCount,
@@ -65,7 +79,7 @@ function useRequestCounts() {
       onControlCount,
       exeCount
     };
-  }, [orders]);
+  }, [orders, tasks]);
 }
 
 export function LeftSidebar() {
@@ -74,7 +88,7 @@ export function LeftSidebar() {
   const status = params.get('status');
   
   const isSupportAll = location.pathname === '/support/all';
-  const isTasksAll = location.pathname === '/tasks/my-all-tasks'
+  const isTasksAll = location.pathname === '/tasks/all'
   const isNewActive = isSupportAll && status === 'Новая';
   const isAllActive = isSupportAll && !status;
   const isNAgreedActive = isSupportAll && status === 'nAgreed';

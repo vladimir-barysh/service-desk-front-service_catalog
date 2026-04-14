@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { useState, useMemo, useEffect } from 'react';
 import { Button, Grid2, styled, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';

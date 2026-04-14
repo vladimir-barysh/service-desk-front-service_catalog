@@ -1,5 +1,5 @@
 // components/postpone-dialog/postpone-dialog.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Order } from '../../../pages/support/makeData';
 import {
   Dialog,

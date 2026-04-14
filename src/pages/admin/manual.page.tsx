@@ -1,3 +1,4 @@
+// DictionaryPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
@@ -471,54 +472,54 @@ export function ManualPage() {
     setSelectedDict(dict);
   };
 
-  return (
-    <Box sx={{ minHeight: '50vh', height: '96vh', padding: '0px 0px 10px 0px', display: 'flex', flexDirection: 'column' }}>
-      <Grid container component={Paper} sx={{ flex: 1, overflow: 'hidden' }}>
-        {/* Список справочников */}
-        <Grid item xs={12} md={2} sx={{ borderRight: '1px solid #e0e0e0', overflowY: 'auto' }}>
-          <Typography variant="h6" align='center' padding='8px 0px 8px 0px' sx={{ borderBottom: '1px solid #e0e0e0' }}>
-            Список справочников
-          </Typography>
-          <List disablePadding>
-            {DICTIONARIES.map((dict) => (
-              <React.Fragment key={dict.key}>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    selected={selectedDict?.key === dict.key}
-                    onClick={() => handleSelect(dict)}
-                  >
-                    <ListItemText primary={dict.title} />
-                  </ListItemButton>
-                </ListItem>
-                <Divider />
-              </React.Fragment>
-            ))}
-          </List>
-        </Grid>
+    return (
+        (<Box sx={{ minHeight: '50vh', height: '96vh', padding: '0px 0px 10px 0px', display: 'flex', flexDirection: 'column' }}>
+            <Grid container component={Paper} sx={{ flex: 1, overflow: 'hidden' }}>
+                {/* Список справочников */}
+                <Grid item xs={12} md={3} sx={{ borderRight: '1px solid #e0e0e0', overflowY: 'auto' }}>
+                    <Typography variant="h6" align='center' padding='8px 0px 8px 0px' sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                        Список справочников
+                    </Typography>
+                    <List disablePadding>
+                        {DICTIONARIES.map((dict) => (
+                            <Fragment key={dict.key}>
+                                <ListItem disablePadding>
+                                    <ListItemButton
+                                        selected={selectedDict?.key === dict.key}
+                                        onClick={() => handleSelect(dict)}
+                                    >
+                                        <ListItemText primary={dict.title} />
+                                    </ListItemButton>
+                                </ListItem>
+                                <Divider />
+                            </Fragment>
+                        ))}
+                    </List>
+                </Grid>
 
-        {/* Таблица */}
-        <Grid item xs={12} md={10} sx={{ p: 3 }}>
-          {!selectedDict ? (
-            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography color="text.secondary">Выберите справочник</Typography>
-            </Box>
-          ) : isLoading ? (
-            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Alert severity="error">{error instanceof Error ? error.message : 'Неизвестная ошибка'}</Alert>
-          ) : !dictData[selectedDict.key]?.length ? (
-            <Alert severity="info"> Данный справочник пока что пуст</Alert>
-          ) : (
-            <DictionaryTable
-              dictionary={selectedDict}
-              items={dictData[selectedDict.key] || []}
-              onRefresh={() => loadDictionary(selectedDict)}
-            />
-          )}
-        </Grid>
-      </Grid>
-    </Box>
-  );
+                {/* Таблица */}
+                <Grid item xs={12} md={9} sx={{ p: 3 }}>
+                    {!selectedDict ? (
+                        <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Typography color="text.secondary">Выберите справочник</Typography>
+                        </Box>
+                    ) : isLoading ? (
+                        <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : error ? (
+                        <Alert severity="error">{error instanceof Error ? error.message : 'Неизвестная ошибка'}</Alert>
+                    ) : !dictData[selectedDict.key]?.length ? (
+                        <Alert severity="info"> Данный справочник пока что пуст</Alert>
+                    ) : (
+                        <DictionaryTable
+                            dictionary={selectedDict}
+                            items={dictData[selectedDict.key] || []}
+                            onRefresh={() => loadDictionary(selectedDict)}
+                        />
+                    )}
+                </Grid>
+            </Grid>
+        </Box>
+    );
 }

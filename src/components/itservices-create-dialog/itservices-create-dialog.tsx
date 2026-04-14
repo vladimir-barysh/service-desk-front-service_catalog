@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import type { SyntheticEvent } from 'react';
+import { useMemo, useState } from 'react';
 import 'dayjs/locale/ru';
 import {
   Dialog,
@@ -370,7 +371,7 @@ export const ItservicesCreateDialog = (props: {
     setroleAlertOpen(false);
   };
 
-  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handleChange = (event: SyntheticEvent, newValue: string) => {
     setValue(newValue);
   }
 

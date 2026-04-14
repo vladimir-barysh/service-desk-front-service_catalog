@@ -1,40 +1,33 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
-import React, { useEffect, useState, useCallback } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog } from '../../../components';
+import { formatFIO, SupportGeneralDialog, RequestCreateDialog, RequestCreateZNODialog, 
+  RequestCreateZNDDialog, 
+} from '../../../components';
 import SplitButton from '../../../components/split-button/split-button.component';
-import { RequestCreateDialog } from '../../../components';
-import { RequestCreateZNODialog } from '../../../components/request-create-zno-dialog/request-create-zno-dialog';
-import { RequestCreateZNDDialog } from '../../../components/request-create-znd-dialog/request-create-znd-dialog';
-import { url } from 'inspector';
-
-import { notifications } from '@mantine/notifications';
-
-import { Order, OrderTask } from '../../../api/models';
+import { showNotification } from '../../../context';
+import { Order, OrderTask, getOrders, getTasks, } from '../../../api';
 import * as XLSX from 'xlsx';
-
-import dayjs from 'dayjs';
-
+import dayjs, { Dayjs } from 'dayjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getOrders } from '../../../api/services/orderService';
-import { getTasks } from '../../../api/services/taskService';
+
 
 
 export function TasksMyAllPage() {
-  const currUser = 'Христорождественская В.А.';
+  const currUser = 'Воронин Владимир Владимирович';
   const [requestTypeDialog, setRequestType] = useState(0);
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
+  const [rowSelection, setRowSelection] = useState({});
 
   // фильтр по статусу
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
@@ -52,6 +45,10 @@ export function TasksMyAllPage() {
   } = useQuery({
     queryKey: ['tasks'],
     queryFn: getTasks,
+    enabled: true,
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   const filteredData = useMemo(() => {
@@ -59,20 +56,21 @@ export function TasksMyAllPage() {
 
     // Фильтр по статусу из URL
     if (urlStatus === 'onAgree') {
-      result = result.filter((item: any) => (item.status === 'На согласовании' || item.status === 'Закрыта') && item.user === currUser);
+      result = result.filter((item: OrderTask) => (item.taskState?.name === 'На согласовании' || item.taskState?.name === 'Закрыта'));
     }
     else if (urlStatus === 'onExecution') {
-      result = result.filter((item: any) => item.user === currUser);
+      result = result.filter((item: OrderTask) => item.taskState?.name !== 'Закрыта');
     }
     else if (urlStatus) {
-      result = result.filter((item: any) => item.status === urlStatus);
+      result = result.filter((item: OrderTask) => item.taskState?.name === urlStatus);
     }
 
     if (hideClosed) {
-      result = result.filter((item: any) => item.status !== 'Закрыта');
+      result = result.filter((item: OrderTask) => item.taskState?.name !== 'Закрыта');
     }
+
     return result;
-  }, [urlStatus, hideClosed, currUser]);
+  }, [urlStatus, hideClosed, currUser, tasks]);
 
   const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
     const next = typeof updater === 'function' ? updater(columnFilters) : updater;
@@ -97,129 +95,172 @@ export function TasksMyAllPage() {
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
-  const columns = useMemo<MRT_ColumnDef<Order>[]>(
+  const columns = useMemo<MRT_ColumnDef<OrderTask>[]>(
     () => [
       {
         header: '№ заявки',
-        accessorKey: 'requestNumber',
-        maxSize: 90,
+        accessorKey: 'nomer',
+        maxSize: 80,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по №',
+          placeholder: 'Фильтр',
         },
         enableResizing: false,
+        Cell: ({ row }) => row.original.order?.nomer,
       },
       {
         header: 'Дата регистрации',
-        accessorKey: 'dateRegistration',
-        type: 'string',
-        maxSize: 175,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по дате регистрации',
-        },
-      },
-      {
-        header: 'Желаемый срок',
-        accessorKey: 'dateDesired',
-        type: 'string',
-        maxSize: 165,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по желаемому сроку',
-        },
-      },
-      {
-        header: 'Дата решения заявки',
-        accessorKey: 'dateSolution',
-        type: 'string',
-        maxSize: 160,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по дате решения',
-        },
-      },
-      {
-        header: 'Статус',
-        accessorKey: 'status',
-        type: 'string',
-        maxSize: 150,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по статусу',
-        },
-      },
-      {
-        header: 'Заголовок',
-        accessorKey: 'header',
-        type: 'string',
-        maxSize: 130,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по заголовку',
-        },
-      },
-      {
-        header: 'Тип запроса',
-        accessorKey: 'requestType',
+        accessorKey: 'dateCreated',
         type: 'string',
         maxSize: 100,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по запросу',
+          placeholder: 'Фильтр',
         },
+        Cell: ({ cell }) => {
+          const value = cell.getValue<Dayjs | null | undefined | string>();
+
+          if (!value) return '—';
+
+          if (dayjs.isDayjs(value)) {
+            return value.format('DD.MM.YYYY HH:mm');
+          }
+
+          return dayjs(value).format('DD.MM.YYYY HH:mm');
+        },
+      },
+      {
+        header: 'Желаемый срок',
+        accessorKey: 'dateFinishPlan',
+        type: 'Date',
+        maxSize: 100,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр',
+        },
+        Cell: ({ cell }) => {
+          const value = cell.getValue<Dayjs | null | undefined | string>();
+
+          if (!value) return '—';
+
+          if (dayjs.isDayjs(value)) {
+            return value.format('DD.MM.YYYY HH:mm');
+          }
+
+          return dayjs(value).format('DD.MM.YYYY HH:mm');
+        },
+      },
+      {
+        header: 'Дата решения',
+        accessorKey: 'dateFinishFact',
+        type: 'string',
+        maxSize: 100,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр',
+        },
+        Cell: ({ cell }) => {
+          const value = cell.getValue<Dayjs | null | undefined | string>();
+
+          if (!value) return '—';
+
+          if (dayjs.isDayjs(value)) {
+            return value.format('DD.MM.YYYY HH:mm');
+          }
+
+          return dayjs(value).format('DD.MM.YYYY HH:mm');
+        },
+      },
+      {
+        header: 'Статус',
+        accessorKey: 'orderState',
+        type: 'string',
+        maxSize: 120,
+        enableResizing: false,
+        enableColumnFilter: !urlStatus,
+        mantineFilterTextInputProps: {
+          disabled: !!urlStatus,
+          readOnly: !!urlStatus,
+          placeholder: urlStatus ? `Зафиксировано: ${urlStatus}` : 'Фильтр',
+        },
+        mantineFilterSelectProps: {
+          disabled: !!urlStatus || hideClosed,
+          readOnly: !!urlStatus || hideClosed,
+        },
+        Cell: ({ row }) => row.original.taskState?.name || 'Статуса нет'
+      },
+      {
+        header: 'Заголовок',
+        accessorKey: 'name',
+        type: 'string',
+        maxSize: 190,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр',
+        },
+        Cell: ({ row }) => row.original.order?.name,
+      },
+      {
+        header: 'Тип',
+        accessorKey: 'orderType',
+        type: 'string',
+        maxSize: 50,
+        enableResizing: false,
+        mantineFilterTextInputProps: {
+          placeholder: 'Фильтр',
+        },
+        mantineTableBodyCellProps: {
+          align: 'center',
+        },
+        Cell: ({ row }) => row.original.order?.orderType?.name || ''
       },
       {
         header: 'Инициатор',
         accessorKey: 'initiator',
         type: 'string',
-        maxSize: 150,
+        maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по инициатору',
+          placeholder: 'Фильтр',
         },
-      },
-      {
-        header: 'Пользователь',
-        accessorKey: 'user',
-        type: 'string',
-        maxSize: 150,
-        enableResizing: false,
-        mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по пользователю',
-        },
+        Cell: ({ row }) => {
+          const fullName = row.original.creator?.fio1c || '';
+          return formatFIO(fullName);
+        }
       },
       {
         header: 'IT-сервис (модуль)',
-        accessorKey: 'itModule',
+        accessorKey: 'service',
         type: 'string',
-        maxSize: 150,
+        maxSize: 200,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по IT-сервису',
+          placeholder: 'Фильтр',
         },
+        Cell: ({ row }) => row.original.order?.service?.fullname || ''
       },
       {
         header: 'Услуга',
-        accessorKey: 'service',
+        accessorKey: 'catitem',
         type: 'string',
-        maxSize: 130,
+        maxSize: 200,
         enableResizing: false,
         mantineFilterTextInputProps: {
-          placeholder: 'Фильтр по услуге',
+          placeholder: 'Фильтр',
         },
+        Cell: ({ row }) => row.original.order?.catalogItem?.name || ''
       },
     ],
     [urlStatus],
   );
 
   // Цвет заливки строки
-  const colorRow = (row: MRT_Row<Order>) => {
+  const colorRow = (row: MRT_Row<OrderTask>) => {
     if (row.getIsSelected()) {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
     // Получаем тип заявки из данных строки
-    const requestType = row.original.orderType?.name;
+    const requestType = row.original.order?.orderType?.name;
 
     // Цвета для разных типов заявок
     switch (requestType) {
@@ -283,15 +324,15 @@ export function TasksMyAllPage() {
   }
 
   // Функция для проверки просрочки заявки
-  const isRequestOverdue = (request: Order): boolean => {
-    if (!request.dateFinishPlan) return false;
+  const isTaskOverdue = (task: OrderTask): boolean => {
+    if (!task.dateFinishPlan) return false;
 
     // Если заявка уже завершена не считаем просроченной
     const completedStatuses = ['Закрыта', 'Отклонена'];
-    if (request.orderState) {
+    if (task.taskState) {
       return false;
     }
-    const temp = dayjs(request.dateFinishPlan).toString();
+    const temp = dayjs(task.dateFinishPlan).toString();
     const desiredDate = parseDate(temp.split(' ')[0]);
 
     // Если дата не распарсилась не считаем просроченной
@@ -305,31 +346,31 @@ export function TasksMyAllPage() {
   };
 
   // Обработчик двойного клика
-  const handleRowDoubleClick = (row: MRT_Row<Order>) => {
-    setSelectedRequest(row.original);
+  const handleRowDoubleClick = (row: MRT_Row<OrderTask>) => {
+    setSelectedtask(row.original);
     setIsDialogOpen(true);
   };
 
   // Обработчик закрытия диалога
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    setSelectedRequest(null);
+    setSelectedtask(null);
   };
 
   const exportToExcel = () => {
     try {
-      const exportData = filteredData.map((order: Order) => ({
-        '№ заявки': order.nomer || '',
-        'Дата регистрации': order.dateCreated ? dayjs(order.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
-        'Желаемый срок': order.dateFinishPlan ? dayjs(order.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
-        'Дата решения': order.dateFinishFact ? dayjs(order.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
-        'Статус': order.orderState?.name || '',
-        'Заголовок': order.name || '',
-        'Тип запроса': order.orderType?.name || '',
-        'Инициатор': order.initiator?.fio1c || '',
-        'Пользователь': order.dispatcher || '',
-        'IT-сервис/модуль': order.service?.fullname || '',
-        'Услуга': order.catalogItem?.name || '',
+      const exportData = filteredData.map((task: OrderTask) => ({
+        '№ заявки': task.order?.nomer || '',
+        'Дата регистрации': task.dateCreated ? dayjs(task.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
+        'Желаемый срок': task.dateFinishPlan ? dayjs(task.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
+        'Дата решения': task.dateFinishFact ? dayjs(task.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
+        'Статус': task.order?.orderState?.name || '',
+        'Заголовок': task.order?.name || '',
+        'Тип запроса': task.order?.orderType?.name || '',
+        'Инициатор': task.creator?.fio1c || '',
+        'Пользователь': task.executor?.fio1c || '',
+        'IT-сервис/модуль': task.order?.service?.fullname || '',
+        'Услуга': task.order?.catalogItem?.name || '',
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);
@@ -340,90 +381,54 @@ export function TasksMyAllPage() {
 
       XLSX.writeFile(wb, filename);
 
-      notifications.show({
-        title: 'Успешно',
-        message: `Файл ${filename} сохранен`,
-        color: 'green',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.green[6],
-            borderColor: theme.colors.green[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.green[6] },
-          },
-        }),
-      });
+      showNotification({ title: `Файл ${filename} сохранен`, message: '', color: 'green' });
     }
     catch (error) {
-      notifications.show({
-        title: 'Ошибка',
-        message: 'Не удалось сохранить файл',
-        color: 'red',
-        autoClose: 4000,
-        withCloseButton: true,
-        withBorder: false,
-        loading: false,
-        styles: (theme) => ({
-          root: {
-            backgroundColor: theme.colors.red[6],
-            borderColor: theme.colors.red[6],
-          },
-          title: { color: theme.white },
-          description: { color: theme.white },
-          closeButton: {
-            color: theme.white,
-            '&:hover': { backgroundColor: theme.colors.red[8] },
-          },
-        }),
-      });
+      showNotification({ title: 'Ошибка', message: 'Не удалось сохранить файл', color: 'red' });
     }
   };
 
-  const [selectedRequest, setSelectedRequest] = useState<Order | null>(null);
+  const [selectedtask, setSelectedtask] = useState<OrderTask | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [requestType] = useState(0);
+  const [taskType] = useState(0);
 
   // Создание таблицы
   const table = useMantineReactTable({
     columns: columns,
     data: filteredData,
+    enableBottomToolbar: false,
+    enableColumnActions: false,
+    enableColumnResizing: false,
     enableExpanding: false,
-    enableTopToolbar: false,
+    enableHiding: false,
+    enableMultiRowSelection: false,
+    enablePagination: false,
     enableRowSelection: true,
     enableRowNumbers: false,
-    enableMultiRowSelection: false,
+    enableRowVirtualization: true,
+    enableSorting: true,
     enableSelectAll: false,
-    enableHiding: false,
-    enableColumnResizing: false,
+    enableTopToolbar: false,
     layoutMode: 'grid',
     columnResizeMode: 'onChange',
     filterFromLeafRows: true,
-    enableColumnActions: false,
     localization: MRT_Localization_RU,
     initialState: {
       density: 'xs',
-      pagination: { pageIndex: 0, pageSize: 100 },
       columnVisibility: { 'mrt-row-select': false },
       showColumnFilters: true,
+      sorting: [{ id: 'nomer', desc: true }],
     },
-
-    state: { columnFilters },
-    onColumnFiltersChange: handleFiltersChange,
 
     mantineTableProps: {
       fontSize: '11px',
     },
-
-    mantineTableContainerProps: { sx: { minHeight: 150, maxHeight: 800 } },
-
+    mantineTableContainerProps: {
+      sx: {
+        minHeight: 150,
+        maxHeight: 850,
+      }
+    },
     mantineTableHeadCellProps: {
       style: {
         fontSize: '13px',
@@ -431,28 +436,34 @@ export function TasksMyAllPage() {
         padding: '10px 4px',
       },
     },
-
     mantineFilterTextInputProps: {
       size: 'xs',
     },
-
-    mantineTableBodyCellProps: ({ row }) => ({
-      onClick: row.getToggleSelectedHandler(),
+    mantineTableBodyCellProps: ({ row, cell }) => ({
+      onClick: (event) => {
+        // Если это не ячейка "nomer", то выделяем строку
+        if (cell.column.id === 'nomer') {
+          event.stopPropagation();
+          handleRowDoubleClick(row);
+        }
+        else {
+          row.getToggleSelectedHandler()(event);
+        }
+      },
       sx: {
         backgroundColor: colorRow(row),
+        borderLeft: '1px solid #dde7ee !important',
+        color: isTaskOverdue(row.original) ? '#d32f2f' : 'inherit',
         cursor: 'pointer',
-        border: '1px solid #dde7ee',
-        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
-        color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
+        fontWeight: row.original.taskState?.name === 'Новая' ? 'bold' : 'normal',
       }
     }),
-    // Добавляем обработчик двойного клика на строку
-    mantineTableBodyRowProps: ({ row }) => ({
-      onDoubleClick: () => handleRowDoubleClick(row),
-      sx: {
-        cursor: 'pointer',
-      },
-    }),
+    onColumnFiltersChange: handleFiltersChange,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      columnFilters,
+      rowSelection,
+    },
   });
 
   return (
@@ -460,7 +471,7 @@ export function TasksMyAllPage() {
       <Box height={50}>
         <RequestCreateDialog
           isOpen={isCreateDialogOpen}
-          requestName={requestType.toString()}
+          requestName={taskType.toString()}
           onClose={onCreateDialogClose}
         />
         <RequestCreateZNODialog
@@ -498,7 +509,7 @@ export function TasksMyAllPage() {
               startIcon={<Clear />}
               size={'small'}
             >
-              Отклонить заявку
+              Отклонить задачу
             </Button>
           </Grid2>
           <Grid2 size="auto">
@@ -508,7 +519,7 @@ export function TasksMyAllPage() {
               startIcon={<Note />}
               size={'small'}
             >
-              Отложить заявку
+              Отложить задачу
             </Button>
           </Grid2>
           <Grid2 size="auto">
@@ -518,7 +529,7 @@ export function TasksMyAllPage() {
               startIcon={<Check />}
               size={'small'}
             >
-              Закрыть заявку
+              Закрыть задачу
             </Button>
           </Grid2>
           <Grid2 size="auto">
@@ -530,15 +541,7 @@ export function TasksMyAllPage() {
               На контроль
             </Button>
           </Grid2>
-          <Grid2 size="auto">
-            <Button
-              variant="contained"
-              color="inherit"
-              size={'small'}
-            >
-              Подтвердить заявку
-            </Button>
-          </Grid2>
+          
           <Grid2 size="auto">
             <Button
               variant="contained"
@@ -546,6 +549,7 @@ export function TasksMyAllPage() {
               startIcon={<Save />}
               size={'small'}
               fullWidth={true}
+              onClick={exportToExcel}
             >
               В Excel
             </Button>
@@ -555,7 +559,7 @@ export function TasksMyAllPage() {
               <Checkbox
                 checked={hideClosed}
                 onChange={(event) => setHideClosed(event.currentTarget.checked)}
-                label="Скрыть закрытые заявки"
+                label="Скрыть закрытые задачи"
                 size="md"
               />
             </MantineProvider>
