@@ -1,5 +1,5 @@
 // DictionaryPage.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Paper,
@@ -20,15 +20,16 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { DataGrid, GridColDef, GridRowModel, GridRowModes, GridRowModesModel } from '@mui/x-data-grid';
 import { useQuery } from '@tanstack/react-query';
+import { getUsers } from '../../api/services/userService';
 import { getAuthorities } from '../../api/services/authorityService';
 import { getOrderTypes } from '../../api/services/orderTypeService';
-import { getOrderStates } from '../../api/services/orderStateService';
-import { getUsers } from '../../api/services/userService';
 import { getServices } from '../../api/services/ServiceService';
-import { Service, User } from '../../api/models';
+import { Service, User } from '../../api/models'; 
+import { getOrderStates } from '../../api/services/orderStateService';
 import { formatFIO } from '../../components';
 import dayjs from 'dayjs';
 
+// Типы
 interface DictionaryMeta {
   key: string;
   title: string;
@@ -49,13 +50,13 @@ const DICTIONARIES: DictionaryMeta[] = [
     columns: [
       { field: 'id', headerName: '№', width: 20, editable: false, resizable: false },
       { field: 'fio1c', headerName: 'ФИО', width: 150, type: 'string', editable: false, resizable: false },
-      { field: 'podr', headerName: 'Подразделение', minWidth: 170, type: 'string',  editable: false },
-      { field: 'dolzh1c', headerName: 'Должность', minWidth: 170, type: 'string',  editable: false },
-      { field: 'tabNum1c', headerName: 'Таб. номер', minWidth: 120, type: 'string',  editable: false },
-      { field: 'sost', headerName: 'Состояние', minWidth: 100, type: 'string',  editable: false },
-      { field: 'telAd', headerName: 'Вн. телефон', minWidth: 140, type: 'string',  editable: false },
-      { field: 'telSot', headerName: 'Сот. телефон', minWidth: 140, type: 'string',  editable: false },
-      { field: 'emailAd', headerName: 'E-Mail: Рабочий', minWidth: 150, type: 'string',  editable: false }
+      { field: 'podr', headerName: 'Подразделение', minWidth: 170, type: 'string', editable: false },
+      { field: 'dolzh1c', headerName: 'Должность', minWidth: 170, type: 'string', editable: false },
+      { field: 'tabNum1c', headerName: 'Таб. номер', minWidth: 120, type: 'string', editable: false },
+      { field: 'sost', headerName: 'Состояние', minWidth: 100, type: 'string', editable: false },
+      { field: 'telAd', headerName: 'Вн. телефон', minWidth: 140, type: 'string', editable: false },
+      { field: 'telSot', headerName: 'Сот. телефон', minWidth: 140, type: 'string', editable: false },
+      { field: 'emailAd', headerName: 'E-Mail: Рабочий', minWidth: 150, type: 'string', editable: false }
     ],
   },
   {
@@ -63,8 +64,8 @@ const DICTIONARIES: DictionaryMeta[] = [
     title: 'Права доступа',
     columns: [
       { field: 'id', headerName: '№', width: 20, editable: false, resizable: false },
-      { field: 'name', headerName: 'Права доступа', width: 200, type: 'string',  editable: false, resizable: false },
-      { field: 'description', headerName: 'Описание', width: 300, type: 'string',  editable: true, resizable: false }
+      { field: 'name', headerName: 'Права доступа', width: 200, type: 'string', editable: false, resizable: false },
+      { field: 'description', headerName: 'Описание', width: 300, type: 'string', editable: true, resizable: false }
     ],
   },
   {
@@ -72,9 +73,9 @@ const DICTIONARIES: DictionaryMeta[] = [
     title: 'Рабочие группы',
     columns: [
       { field: 'id', headerName: '№', width: 20, editable: false, resizable: false },
-      { field: 'name', headerName: 'Наименование', width: 200, type: 'string',  editable: false, resizable: false },
-      { field: 'date', headerName: 'Сотрудники рабочей группы на', width: 300, type: 'string',  editable: true, resizable: false },
-      { field: 'users', headerName: 'Сотрудники', width: 20, type: 'string',  editable: false}
+      { field: 'name', headerName: 'Наименование', width: 200, type: 'string', editable: false, resizable: false },
+      { field: 'date', headerName: 'Сотрудники рабочей группы на', width: 300, type: 'string', editable: true, resizable: false },
+      { field: 'users', headerName: 'Сотрудники', width: 20, type: 'string', editable: false }
     ],
   },
   {
@@ -131,7 +132,7 @@ const DICTIONARIES: DictionaryMeta[] = [
       { field: 'sortOrder', headerName: 'Порядок', width: 100, type: 'number', editable: true },
     ],
   },
-  
+
   {
     key: 'roles',
     title: 'Роли',
@@ -229,8 +230,7 @@ function DictionaryTable({
         field: 'actions',
         type: 'actions',
         headerName: 'Действия',
-        width: 100,
-        resizable: false,
+        width: 160,
         getActions: (params) => {
           const isInEdit = rowModesModel[params.id]?.mode === GridRowModes.Edit;
 
@@ -337,7 +337,7 @@ export function ManualPage() {
     }
   }, [selectedDict]);
 
-  const { 
+  const {
     data: users = [],
     isLoading: isLoadingUsers,
     error: errorUsers,
@@ -410,7 +410,7 @@ export function ManualPage() {
           available: item.description
         }));
         setDictData(prev => ({ ...prev, [dict.key]: formatted }));
-      } 
+      }
       else if (dict.key === 'ordertype') {
         const formatted = orderTypes.map((item: any) => ({
           id: item.idOrderType,
@@ -418,7 +418,7 @@ export function ManualPage() {
           available: item.available,
         }));
         setDictData(prev => ({ ...prev, [dict.key]: formatted }));
-      } 
+      }
       else if (dict.key === 'orderstate') {
         const formatted = orderStates.map((item: any) => ({
           id: item.idOrderState,
@@ -426,7 +426,7 @@ export function ManualPage() {
         }));
 
         setDictData(prev => ({ ...prev, [dict.key]: formatted }));
-      } 
+      }
       else if (dict.key === 'authority') {
         // ← вот здесь используем данные из useQuery
         const formatted = authorities.map((item: any) => ({
@@ -439,10 +439,10 @@ export function ManualPage() {
 
         setDictData(prev => ({ ...prev, [dict.key]: formatted }));
       } else if (dict.key == 'services') {
-        const formatted = services.map(( s: Service, index: number ) => ({
+        const formatted = services.map((s: Service, index: number) => ({
           id: index + 1,
           sname: s.sname,
-          fullname: s.fullname, 
+          fullname: s.fullname,
           serviceParent: s.serviceParent?.idService,
           description: s.description,
           basisS: s.basisS,
@@ -472,54 +472,54 @@ export function ManualPage() {
     setSelectedDict(dict);
   };
 
-    return (
-        (<Box sx={{ minHeight: '50vh', height: '96vh', padding: '0px 0px 10px 0px', display: 'flex', flexDirection: 'column' }}>
-            <Grid container component={Paper} sx={{ flex: 1, overflow: 'hidden' }}>
-                {/* Список справочников */}
-                <Grid item xs={12} md={3} sx={{ borderRight: '1px solid #e0e0e0', overflowY: 'auto' }}>
-                    <Typography variant="h6" align='center' padding='8px 0px 8px 0px' sx={{ borderBottom: '1px solid #e0e0e0' }}>
-                        Список справочников
-                    </Typography>
-                    <List disablePadding>
-                        {DICTIONARIES.map((dict) => (
-                            <Fragment key={dict.key}>
-                                <ListItem disablePadding>
-                                    <ListItemButton
-                                        selected={selectedDict?.key === dict.key}
-                                        onClick={() => handleSelect(dict)}
-                                    >
-                                        <ListItemText primary={dict.title} />
-                                    </ListItemButton>
-                                </ListItem>
-                                <Divider />
-                            </Fragment>
-                        ))}
-                    </List>
-                </Grid>
+  return (
+    (<Box sx={{ minHeight: '50vh', height: '96vh', padding: '0px 0px 10px 0px', display: 'flex', flexDirection: 'column' }}>
+      <Grid container component={Paper} sx={{ flex: 1, overflow: 'hidden' }}>
+        {/* Список справочников */}
+        <Grid item xs={12} md={3} sx={{ borderRight: '1px solid #e0e0e0', overflowY: 'auto' }}>
+          <Typography variant="h6" align='center' padding='8px 0px 8px 0px' sx={{ borderBottom: '1px solid #e0e0e0' }}>
+            Список справочников
+          </Typography>
+          <List disablePadding>
+            {DICTIONARIES.map((dict) => (
+              <Fragment key={dict.key}>
+                <ListItem disablePadding>
+                  <ListItemButton
+                    selected={selectedDict?.key === dict.key}
+                    onClick={() => handleSelect(dict)}
+                  >
+                    <ListItemText primary={dict.title} />
+                  </ListItemButton>
+                </ListItem>
+                <Divider />
+              </Fragment>
+            ))}
+          </List>
+        </Grid>
 
-                {/* Таблица */}
-                <Grid item xs={12} md={9} sx={{ p: 3 }}>
-                    {!selectedDict ? (
-                        <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Typography color="text.secondary">Выберите справочник</Typography>
-                        </Box>
-                    ) : isLoading ? (
-                        <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : error ? (
-                        <Alert severity="error">{error instanceof Error ? error.message : 'Неизвестная ошибка'}</Alert>
-                    ) : !dictData[selectedDict.key]?.length ? (
-                        <Alert severity="info"> Данный справочник пока что пуст</Alert>
-                    ) : (
-                        <DictionaryTable
-                            dictionary={selectedDict}
-                            items={dictData[selectedDict.key] || []}
-                            onRefresh={() => loadDictionary(selectedDict)}
-                        />
-                    )}
-                </Grid>
-            </Grid>
-        </Box>
-    );
+        {/* Таблица */}
+        <Grid item xs={12} md={9} sx={{ p: 3 }}>
+          {!selectedDict ? (
+            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography color="text.secondary">Выберите справочник</Typography>
+            </Box>
+          ) : isLoading ? (
+            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Alert severity="error">{error instanceof Error ? error.message : 'Неизвестная ошибка'}</Alert>
+          ) : !dictData[selectedDict.key]?.length ? (
+            <Alert severity="info"> Данный справочник пока что пуст</Alert>
+          ) : (
+            <DictionaryTable
+              dictionary={selectedDict}
+              items={dictData[selectedDict.key] || []}
+              onRefresh={() => loadDictionary(selectedDict)}
+            />
+          )}
+        </Grid>
+      </Grid>
+    </Box>)
+  );
 }
