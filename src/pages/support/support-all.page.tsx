@@ -7,13 +7,17 @@ import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog, RequestCreateDialog, formatFIO, ControlDialog, PostponeDialog,
-         RequestCreateZNODialog, RequestCreateZNDDialog, RequestCreateZNIDialog,
- } from '../../components';
+import {
+  SupportGeneralDialog, RequestCreateDialog,
+  formatFIO, ControlDialog,
+  PostponeDialog, RequestCreateZNODialog,
+  RequestCreateZNDDialog, RequestCreateZNIDialog,
+  RequestCreateZNTDialog
+} from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
-import { useQuery} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getOrders, updateOrder, useUpdateOrderStatus, getOrderStates, useUpdateOrder, type Order } from '../../api';
 import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
@@ -23,6 +27,7 @@ export function SupportAllPage() {
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
+  const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
@@ -319,6 +324,9 @@ export function SupportAllPage() {
     else if (selected === "Заявка на изменение") {
       createZNIDialog();
     }
+    else if (selected === "Заявка на технику") {
+      createZNTDialog();
+    }
     else {
       setIsCreateDialogOpen(true);
     }
@@ -333,11 +341,15 @@ export function SupportAllPage() {
   function createZNIDialog() {
     setIsCreateDialogZNIOpen(true);
   }
+  function createZNTDialog() {
+    setIsCreateDialogZNTOpen(true);
+  }
   const onCreateDialogClose = () => {
     setIsCreateDialogOpen(false);
     setIsCreateDialogZNOOpen(false);
     setIsCreateDialogZNDOpen(false);
     setIsCreateDialogZNIOpen(false);
+    setIsCreateDialogZNTOpen(false);
   }
 
   // Парсер даты
@@ -479,7 +491,7 @@ export function SupportAllPage() {
 
   const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
 
-  
+
 
   // Обработчики нажатия кнопок
   const handleAcceptClick = () => {
@@ -603,6 +615,10 @@ export function SupportAllPage() {
           isOpen={isCreateDialogZNIOpen}
           onClose={onCreateDialogClose}
         />
+        <RequestCreateZNTDialog
+          isOpen={isCreateDialogZNTOpen}
+          onClose={onCreateDialogClose}
+        />
         <PostponeDialog
           open={dialogs.postpone.open}
           onClose={() => closeDialog('postpone')}
@@ -620,7 +636,7 @@ export function SupportAllPage() {
           <Grid2 size="auto">
             <SplitButton
               buttonText={'Создать заявку'}
-              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение']}
+              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение', 'Заявка на технику']}
               startIcon={<Add />}
               size={'small'}
               onSelect={onRequestTypeSelect}

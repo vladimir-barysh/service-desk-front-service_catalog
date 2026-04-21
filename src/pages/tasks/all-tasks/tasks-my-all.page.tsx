@@ -8,8 +8,11 @@ import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { formatFIO, SupportGeneralDialog, RequestCreateDialog, RequestCreateZNODialog, 
-  RequestCreateZNDDialog, 
+import {
+  formatFIO, SupportGeneralDialog,
+  RequestCreateDialog, RequestCreateZNODialog,
+  RequestCreateZNDDialog, RequestCreateZNTDialog,
+  RequestCreateZNIDialog
 } from '../../../components';
 import SplitButton from '../../../components/split-button/split-button.component';
 import { showNotification } from '../../../context';
@@ -25,6 +28,8 @@ export function TasksMyAllPage() {
   const [requestTypeDialog, setRequestType] = useState(0);
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
+  const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
+  const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
@@ -279,11 +284,17 @@ export function TasksMyAllPage() {
 
   const onRequestTypeSelect = (selected: any) => {
     setRequestType(selected);
-    if (selected === "Заявка на обслуживание" || selected === "Инцидент") {
+    if (selected === "Заявка на обслуживание") {
       createZNODialog();
     }
     else if (selected === "Заявка на доступ") {
       createZNDDialog();
+    }
+    else if (selected === "Заявка на изменение") {
+      createZNIDialog();
+    }
+    else if (selected === "Заявка на технику") {
+      createZNTDialog();
     }
     else {
       setIsCreateDialogOpen(true);
@@ -295,10 +306,18 @@ export function TasksMyAllPage() {
   function createZNODialog() {
     setIsCreateDialogZNOOpen(true);
   }
+  function createZNIDialog() {
+    setIsCreateDialogZNIOpen(true);
+  }
+  function createZNTDialog() {
+    setIsCreateDialogZNTOpen(true);
+  }
   const onCreateDialogClose = () => {
     setIsCreateDialogOpen(false);
     setIsCreateDialogZNOOpen(false);
     setIsCreateDialogZNDOpen(false);
+    setIsCreateDialogZNIOpen(false);
+    setIsCreateDialogZNTOpen(false);
   }
 
   // Парсер даты
@@ -482,11 +501,19 @@ export function TasksMyAllPage() {
           isOpen={isCreateDialogZNDOpen}
           onClose={onCreateDialogClose}
         />
+        <RequestCreateZNIDialog
+          isOpen={isCreateDialogZNIOpen}
+          onClose={onCreateDialogClose}
+        />
+        <RequestCreateZNTDialog
+          isOpen={isCreateDialogZNTOpen}
+          onClose={onCreateDialogClose}
+        />
         <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
               buttonText={'Создать заявку'}
-              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение']}
+              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение', 'Заявка на технику']}
               startIcon={<Add />}
               size={'small'}
               onSelect={onRequestTypeSelect}
@@ -541,7 +568,7 @@ export function TasksMyAllPage() {
               На контроль
             </Button>
           </Grid2>
-          
+
           <Grid2 size="auto">
             <Button
               variant="contained"
