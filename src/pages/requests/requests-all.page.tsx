@@ -24,7 +24,7 @@ import { getOrderTypes } from '../../api/services/orderTypeService';
 import { getOrders } from '../../api/services/orderService';
 
 export function RequestsAllPage() {
-  const [requestTypeDialog, setRequestType] = useState(0);
+  const [requestTypeDialog, setRequestType] = useState('');
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
@@ -259,7 +259,7 @@ export function RequestsAllPage() {
     }
   };
 
-  const onRequestTypeSelect = (selected: any) => {
+  const onRequestTypeSelect = (selected: string) => {
     setRequestType(selected);
     if (selected === "Заявка на обслуживание") {
       createZNODialog();

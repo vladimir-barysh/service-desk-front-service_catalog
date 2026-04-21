@@ -69,7 +69,7 @@ function useRequestCounts() {
     const allCount = orders.filter((item: Order) => item.orderState?.name !== 'Закрыта').length;
     const nAgreedCount = orders.filter((item: Order) => item.orderState?.name === 'Не согласовано').length;
     const nConfirmedCount = orders.filter((item: Order) => item.orderState?.name === 'Возобновлена').length;
-    const onControlCount = orders.filter((item: Order) => item.orderState?.name === 'На контроле').length;
+    const onControlCount = orders.filter((item: Order) => item.orderType?.name === 'ЗНТ' && item.orderState?.name !== 'Закрыта').length;
     const exeCount = tasks.filter((item: OrderTask) => item.taskState?.name !== 'Закрыта').length;
     return {
       newCount,

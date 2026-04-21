@@ -271,6 +271,7 @@ export const RequestCreateZNTDialog = (props: {
                   clearable
                   locale="ru"
                   onChange={(returnDate) => handleReturnDateChange(returnDate)}
+                  minDate={new Date()}
                   excludeDate={(date) => {
                     return date.getDay() === 0 || date.getDay() === 6;
                   }}

@@ -18,12 +18,12 @@ import SplitButton from '../../components/split-button/split-button.component';
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
-import { getOrders, updateOrder, useUpdateOrderStatus, getOrderStates, useUpdateOrder, type Order } from '../../api';
+import { getOrders, useUpdateOrderStatus, getOrderStates, useUpdateOrder, type Order } from '../../api';
 import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
 
 export function SupportAllPage() {
-  const [requestTypeDialog, setRequestType] = useState(0);
+  const [requestTypeDialog, setRequestType] = useState('');
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
@@ -67,22 +67,22 @@ export function SupportAllPage() {
     let result = orders;
 
     if (urlStatus === 'Новая') {
-      result = result.filter((item: any) => item.orderState?.name === urlStatus);
+      result = result.filter((item: Order) => item.orderState?.name === urlStatus);
     }
     else if (urlStatus === 'nAgreed') {
-      result = result.filter((item: any) => item.orderState?.name === 'Не согласовано' || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.orderState?.name === 'Не согласовано' || item.orderState?.name === 'Закрыта');
     }
     else if (urlStatus === 'nConfirmed') {
-      result = result.filter((item: any) => item.orderState?.name === 'Возобновлена' || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.orderState?.name === 'Возобновлена' || item.orderState?.name === 'Закрыта');
     }
     else if (urlStatus === 'onControl') {
-      result = result.filter((item: any) => item.orderState?.name === 'На контроле' || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.dateTechReturn !== null || item.orderState?.name === 'Закрыта');
     }
     else if (urlStatus === 'mine') {
-      result = result.filter((item: any) => item.dispatcher?.name === currUser);
+      result = result.filter((item: Order) => item.dispatcher?.fio1c === currUser);
     }
     if (hideClosed) {
-      result = result.filter((item: any) => item.orderState?.name !== 'Закрыта');
+      result = result.filter((item: Order) => item.orderState?.name !== 'Закрыта');
     }
 
     return result;
@@ -122,6 +122,7 @@ export function SupportAllPage() {
     //table.setRowSelection({});
   }, [location.pathname, location.search]);
 
+  // TODO: Сделать так, чтобы можно было искать по статусу во всех вкладках или только в некоторых
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
@@ -157,8 +158,9 @@ export function SupportAllPage() {
         },
       },
       {
-        header: 'Желаемый срок',
-        accessorKey: 'dateFinishPlan',
+        // TODO: подумать, как сделать так, чтобы колонка не уходила в конец
+        header: urlStatus === 'onControl' ? 'Дата возврата' : 'Желаемый срок',
+        accessorKey: urlStatus === 'onControl' ? 'dateTechReturn' : 'dateFinishPlan',
         type: 'Date',
         maxSize: 120,
         enableResizing: false,
@@ -308,12 +310,14 @@ export function SupportAllPage() {
         return 'rgba(255, 152, 0, 0.1)';
       case 'ЗНИ':
         return 'rgba(244, 67, 54, 0.1)';
+      case 'ЗНТ':
+        return 'rgba(54, 82, 244, 0.1)';
       default:
         return 'hsla(0, 88%, 72%, 1.00)';
     }
   };
 
-  const onRequestTypeSelect = (selected: any) => {
+  const onRequestTypeSelect = (selected: string) => {
     setRequestType(selected);
     if (selected === "Заявка на обслуживание") {
       createZNODialog();

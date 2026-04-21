@@ -189,6 +189,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
           description: generalData?.description,
           dateFinishPlan: safeToIso(generalData?.dateFinishPlan),
           datePostpone: safeToIso(generalData?.datePostpone),
+          dateTechReturn: safeToIso(generalData?.dateTechReturn),
           idService: generalData?.service?.idService,
           idOrderType: generalData?.orderType?.idOrderType,
           idOrderState: generalData?.orderState?.idOrderState,
