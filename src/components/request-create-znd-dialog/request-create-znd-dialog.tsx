@@ -69,8 +69,8 @@ export const RequestCreateZNDDialog = (props: {
   }));
   const [checked, setChecked] = useState(false);
 
-  const [reqType, setReqType] = useState<string>('Предоставить/изменить доступ');
-  const [accessType, setAccessType] = useState<string>('Чтение');
+  const [reqType, setReqType] = useState<string>('');
+  const [accessType, setAccessType] = useState<string>('');
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
   const isFormValid = useMemo(() => {
     return (
@@ -148,7 +148,7 @@ export const RequestCreateZNDDialog = (props: {
     }
 
     /*
-      Запрещено менять строки, относящиеся к description, так как от них зависит конечное форматирование описания ЗНД
+      Менять строки, относящиеся к description, АККУРАТНО так как от них зависит конечное форматирование описания ЗНД
     */
     const name = `${reqType} к ${chosen?.fullname || ''}. ${selected?.fio1c || ''}`;
     const description = `Прошу ${reqType === 'Предоставить/изменить доступ' ? 'предоставить' : 'закрыть'} доступ к ${chosen?.fullname}.
@@ -156,7 +156,9 @@ export const RequestCreateZNDDialog = (props: {
 ( ${selected?.dolzh1c || 'не указан'}, ${selected?.podr?.name || 'не указан'}, Почта: ${selected?.emailAd || 'не указан'}, Телефон: ${selected?.telAd || 'не указан'} )
 Доступ: ${accessType}
 Роль: ${Object.keys(rowSelection).map((rowId) => data.find((role) => String(role.id) === rowId)?.roleName).join(', ') || 'не указана'}
-Фиксрованный срок доступа: ${checked ? `${sDate} - ${toDate}` : 'не ограничен'}`
+Фиксрованный срок доступа: ${checked ? `${sDate} - ${toDate}` : 'не ограничен'}
+Держатель сервиса: ${chosen?.developer}`
+    //Пока что указывается разработчик сервиса ^
 
     const dto: OrderCreateDTO = {
       name: name,
