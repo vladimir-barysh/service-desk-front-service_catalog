@@ -69,7 +69,7 @@ function useRequestCounts() {
     const allCount = orders.filter((item: Order) => item.orderState?.name !== 'Закрыта').length;
     const nAgreedCount = orders.filter((item: Order) => item.orderState?.name === 'Не согласовано').length;
     const nConfirmedCount = orders.filter((item: Order) => item.orderState?.name === 'Возобновлена').length;
-    const onControlCount = orders.filter((item: Order) => item.orderState?.name === 'На контроле').length;
+    const onControlCount = orders.filter((item: Order) => item.orderType?.name === 'ЗНТ' && item.orderState?.name !== 'Закрыта').length;
     const exeCount = tasks.filter((item: OrderTask) => item.taskState?.name !== 'Закрыта').length;
     return {
       newCount,
@@ -89,7 +89,7 @@ export function LeftSidebar() {
   
   const isSupportAll = location.pathname === '/support/all';
   const isTasksAll = location.pathname === '/tasks/all'
-  const isNewActive = isSupportAll && status === 'Новая';
+  const isNewActive = isSupportAll && status === 'new';
   const isAllActive = isSupportAll && !status;
   const isNAgreedActive = isSupportAll && status === 'nAgreed';
   const isNConfirmedActive = isSupportAll && status === 'nConfirmed';
@@ -231,7 +231,7 @@ export function LeftSidebar() {
           <MenuItem
             {...menuItemCommon}
             icon={<SupportAgentOutlined />}
-            component={<Link to={'/support/all?status=Новая'} />}
+            component={<Link to={'/support/all?status=new'} />}
             active={isNewActive}
             suffix={<Badge badgeContent={newCount} color="primary"></Badge>}
           >

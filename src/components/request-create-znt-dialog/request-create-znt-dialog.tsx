@@ -1,0 +1,424 @@
+import * as React from 'react';
+import { useState, useMemo } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  Box,
+  Button,
+  Grid2,
+  Chip,
+  Paper,
+  IconButton,
+  DialogActions,
+} from '@mui/material';
+import dayjs from 'dayjs';
+import { Input, Text, CloseButton } from '@mantine/core';
+import { DateTimePicker, DateValue } from '@mantine/dates';
+import { styled } from '@mui/material/styles';
+import { Close } from '@mui/icons-material';
+import { ChooseServiceCreateDialog } from '../itservice-choose';
+import { Service } from '../../api/models';
+import { TextInputField } from '../text-input-field';
+import { OrderCreateDTO } from '../../api/dtos';
+import { useCreateOrder } from '../../api/hooks';
+import { showNotification } from './../../context';
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
+
+const FileListContainer = styled(Paper)(({ theme }) => ({
+  height: '60px',
+  overflow: 'auto',
+  padding: theme.spacing(1),
+  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.background.default,
+}));
+
+export const RequestCreateZNTDialog = (props: {
+  isOpen: boolean;
+  onClose: any;
+}) => {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [chosen, setChosen] = React.useState<Service | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [problemDescription, setProblemDescription] = useState('');
+  const [comment, setComment] = useState('');
+  const [finishDate, setFinishDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
+
+  const { mutate: createOrderMutation, isPending } = useCreateOrder();
+
+  const isFormValid = useMemo(() => {
+    return (
+      chosen !== null &&
+      problemDescription.trim() !== '' &&
+      returnDate.trim() !== ''
+    );
+  }, [chosen, problemDescription, returnDate]);
+
+  function CreateDialog() {
+    setIsCreateDialogOpen(true);
+  }
+  const onCreateDialogClose = () => {
+    setIsCreateDialogOpen(false);
+  };
+
+  const handleClose = () => {
+    setChosen(null);
+    setProblemDescription('');
+    setComment('');
+    setFiles([]);
+    props.onClose();
+  };
+
+  const handleSave = () => {
+    if (!isFormValid) {
+      showNotification({
+        title: 'Заполните обязательные поля',
+        color: 'orange',
+      });
+      return;
+    }
+
+    const dto: OrderCreateDTO = {
+      name: chosen?.fullname,
+      description: problemDescription,
+      dateFinishPlan: finishDate,
+      dateTechReturn: returnDate,
+      idService: chosen?.idService,
+      idOrderType: 4,
+      comment: comment,
+    };
+
+    const formData = new FormData();
+    formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+
+    if (files.length > 0) {
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
+
+    createOrderMutation(formData, {
+      onSuccess: () => handleClose(),
+    });
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = event.target.files;
+    if (selectedFiles) {
+      const newFiles = Array.from(selectedFiles);
+      setFiles((prev) => [...prev, ...newFiles]);
+    }
+    event.target.value = '';
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleFinishDateChange = (date: DateValue) => {
+    const temp = date ? dayjs(date).toISOString() : '';
+    setFinishDate(temp);
+  };
+
+  const handleReturnDateChange = (date: DateValue) => {
+    const temp = date ? dayjs(date).toISOString() : '';
+    setReturnDate(temp);
+  };
+
+  const addWorkDays = (startDate: Date, daysToAdd: number): Date => {
+    const result = new Date(startDate);
+    let addedDays = 0;
+
+    while (addedDays < daysToAdd) {
+      result.setDate(result.getDate() + 1);
+      // Если это рабочий день (пн-пт), увеличиваем счетчик
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        addedDays++;
+      }
+    }
+
+    return result;
+  };
+
+  return (
+    <div>
+      <ChooseServiceCreateDialog
+        isOpen={isCreateDialogOpen}
+        onClose={onCreateDialogClose}
+        onSelect={(service: any) => {
+          setChosen(service);
+        }}
+      />
+      <Dialog
+        open={props.isOpen}
+        onClose={handleClose}
+        fullWidth={true}
+        maxWidth="md"
+      >
+        <DialogContent
+          sx={{ minHeight: '45vh', minWidth: '75vh', padding: '20x' }}
+        >
+          <Grid2
+            container
+            spacing={0}
+            direction={'row'}
+            alignItems="left"
+            justifyContent="space-between"
+          >
+            <Grid2 size="auto">
+              <Box fontSize="25px" fontWeight="700">
+                Регистрация ЗНТ
+              </Box>
+            </Grid2>
+
+            <Grid2 size="auto">
+              <IconButton onClick={handleClose}>
+                <Close />
+              </IconButton>
+            </Grid2>
+          </Grid2>
+
+          <Grid2
+            container
+            spacing={1}
+            direction={'row'}
+            padding="20px 0px 5px 0px"
+            justifyContent="space-between"
+          >
+            <Grid2 container spacing={1} alignItems="center" size="auto">
+              <Grid2 size="auto">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size={'small'}
+                  fullWidth={true}
+                  onClick={CreateDialog}
+                >
+                  Выберите ИТ-сервис *
+                </Button>
+              </Grid2>
+
+              <Grid2 size="auto">
+                <Input.Wrapper>
+                  <Input
+                    variant="filled"
+                    value={chosen?.fullname ?? ''}
+                    readOnly
+                    rightSection={
+                      <CloseButton
+                        aria-label="Clear input"
+                        onClick={() => setChosen(null)}
+                        style={{ display: chosen ? undefined : 'none' }}
+                      />
+                    }
+                  />
+                </Input.Wrapper>
+              </Grid2>
+            </Grid2>
+
+            <Grid2 container spacing={1} alignItems="center" size="auto">
+              <Grid2 size="auto">
+                <Text fw={600}>Желаемый срок</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <DateTimePicker
+                  placeholder="ДД.MM.ГГ ЧЧ:ММ"
+                  valueFormat="DD.MM.YYYY HH:mm"
+                  withSeconds={false}
+                  onPointerEnterCapture={undefined}
+                  onPointerLeaveCapture={undefined}
+                  clearable
+                  locale="ru"
+                  onChange={(finishDate) => handleFinishDateChange(finishDate)}
+                  minDate={addWorkDays(new Date(), 3)}
+                  excludeDate={(date) => {
+                    return date.getDay() === 0 || date.getDay() === 6;
+                  }}
+                />
+              </Grid2>
+            </Grid2>
+
+            <Grid2 container spacing={1} alignItems="center" size="auto">
+              <Grid2 size="auto">
+                <Text fw={600}>Дата возврата техники *</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <DateTimePicker
+                  placeholder="ДД.MM.ГГ ЧЧ:ММ"
+                  valueFormat="DD.MM.YYYY HH:mm"
+                  withSeconds={false}
+                  onPointerEnterCapture={undefined}
+                  onPointerLeaveCapture={undefined}
+                  clearable
+                  locale="ru"
+                  onChange={(returnDate) => handleReturnDateChange(returnDate)}
+                  minDate={new Date()}
+                  excludeDate={(date) => {
+                    return date.getDay() === 0 || date.getDay() === 6;
+                  }}
+                />
+              </Grid2>
+            </Grid2>
+          </Grid2>
+
+          <Grid2
+            container
+            spacing={1}
+            direction="column"
+            margin="0px 0px 10px 0px"
+          >
+            <Grid2 size="auto">
+              <Text fw={600}>Подробное описание проблемы *</Text>
+            </Grid2>
+            <Grid2 size="auto">
+              <TextInputField
+                value={problemDescription}
+                onChange={(e) => setProblemDescription(e.target.value)}
+                rows={3}
+              />
+            </Grid2>
+          </Grid2>
+
+          <Grid2
+            container
+            spacing={1}
+            direction="column"
+            margin="0px 0px 10px 0px"
+          >
+            <Grid2 size="auto">
+              <Text fw={600}>Комментарий</Text>
+            </Grid2>
+            <Grid2 size="auto">
+              <TextInputField
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={2}
+              />
+            </Grid2>
+          </Grid2>
+
+          <Grid2
+            container
+            spacing={3}
+            direction={'row'}
+            paddingTop="15px"
+            alignItems="left"
+            justifyContent="left"
+          >
+            <Grid2 size={3} paddingTop="15px">
+              <Button
+                component="label"
+                role={undefined}
+                variant="contained"
+                tabIndex={-1}
+                color="primary"
+                size={'small'}
+                fullWidth={true}
+              >
+                Прикрепить файлы
+                <VisuallyHiddenInput
+                  type="file"
+                  onChange={handleFileChange}
+                  multiple
+                />
+              </Button>
+            </Grid2>
+
+            <Grid2 size={9}>
+              <FileListContainer elevation={1}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    minHeight: '40px',
+                    maxHeight: '100px',
+                    alignItems: 'center',
+                  }}
+                >
+                  {files.map((file, index) => (
+                    <Chip
+                      key={index}
+                      label={`${file.name} (${formatFileSize(file.size)})`}
+                      onDelete={() => handleRemoveFile(index)}
+                      deleteIcon={<Close />}
+                      variant="outlined"
+                      color="primary"
+                      sx={{
+                        maxWidth: '200px',
+                        '& .MuiChip-label': {
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        },
+                      }}
+                    />
+                  ))}
+                  {files.length === 0 && (
+                    <Box sx={{ color: 'text.secondary' }}>
+                      Здесь будут отображаться прикрепленные файлы
+                    </Box>
+                  )}
+                </Box>
+              </FileListContainer>
+            </Grid2>
+          </Grid2>
+
+
+        </DialogContent>
+        <DialogActions
+          sx={{
+            margin: '0px 15px 10px 0px',
+            display: 'flex',
+            gap: 1,
+            justifyContent: 'flex-end',
+            alignItems: 'bottom'
+          }}
+        >
+          <Grid2 size={3}>
+            <Button
+              variant="contained"
+              color="success"
+              size={'small'}
+              fullWidth={true}
+              disabled={!isFormValid || isPending}
+              onClick={handleSave}
+            >
+              {isPending ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </Grid2>
+          <Grid2 size={3}>
+            <Button
+              variant="contained"
+              color="inherit"
+              size={'small'}
+              fullWidth={true}
+              onClick={handleClose}
+            >
+              Отмена
+            </Button>
+          </Grid2>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+};

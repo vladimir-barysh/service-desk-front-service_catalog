@@ -17,6 +17,7 @@ export interface ArticleUpdateDTO {
   name?: string;
   description?: string;
   dateFinishPlan?: string;
+  dateTechReturn?: string;
   idService?: number;
   idOrderType: number;
   resultText?: string;
@@ -29,6 +30,7 @@ export interface OrderUpdateDTO {
   dateFinishPlan?: string;
   dateFinishFact?: string;
   datePostpone?: string;
+  dateTechReturn?: string;
   idService?: number;
   idOrderType?: number;
   idOrderState?: number;

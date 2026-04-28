@@ -7,22 +7,27 @@ import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { SupportGeneralDialog, RequestCreateDialog, formatFIO, ControlDialog, PostponeDialog,
-         RequestCreateZNODialog, RequestCreateZNDDialog, RequestCreateZNIDialog,
- } from '../../components';
+import {
+  SupportGeneralDialog, RequestCreateDialog,
+  formatFIO, ControlDialog,
+  PostponeDialog, RequestCreateZNODialog,
+  RequestCreateZNDDialog, RequestCreateZNIDialog,
+  RequestCreateZNTDialog
+} from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
-import { useQuery} from '@tanstack/react-query';
-import { getOrders, updateOrder, useUpdateOrderStatus, getOrderStates, useUpdateOrder, type Order } from '../../api';
+import { useQuery } from '@tanstack/react-query';
+import { getOrders, useUpdateOrderStatus, getOrderStates, useUpdateOrder, type Order } from '../../api';
 import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
 
 export function SupportAllPage() {
-  const [requestTypeDialog, setRequestType] = useState(0);
+  const [requestTypeDialog, setRequestType] = useState('');
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
+  const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
@@ -61,36 +66,34 @@ export function SupportAllPage() {
   const filteredData = useMemo(() => {
     let result = orders;
 
-    if (urlStatus === 'Новая') {
-      result = result.filter((item: any) => item.orderState?.name === urlStatus);
+    if (urlStatus === 'new') {
+      result = result.filter((item: Order) => item.orderState?.name === 'Новая');
     }
     else if (urlStatus === 'nAgreed') {
-      result = result.filter((item: any) => item.orderState?.name === 'Не согласовано' || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.orderState?.name === 'Не согласовано' || item.orderState?.name === 'Закрыта');
     }
     else if (urlStatus === 'nConfirmed') {
-      result = result.filter((item: any) => item.orderState?.name === 'Возобновлена' || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.orderState?.name === 'Возобновлена' || item.orderState?.name === 'Закрыта');
     }
     else if (urlStatus === 'onControl') {
-      result = result.filter((item: any) => item.orderState?.name === 'На контроле' || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.dateTechReturn !== null || item.orderState?.name === 'Закрыта');
     }
     else if (urlStatus === 'mine') {
-      result = result.filter((item: any) => item.dispatcher?.name === currUser);
+      result = result.filter((item: Order) => item.dispatcher?.fio1c === currUser);
     }
     if (hideClosed) {
-      result = result.filter((item: any) => item.orderState?.name !== 'Закрыта');
+      result = result.filter((item: Order) => item.orderState?.name !== 'Закрыта');
     }
 
     return result;
   }, [urlStatus, hideClosed, orders]);
 
   useEffect(() => {
-    if (!urlStatus) {
       setColumnFilters([]);
-    }
   }, [urlStatus]);
 
   const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
-    if (urlStatus) {
+    if (urlStatus === 'new') {
       return;
     }
     const next = typeof updater === 'function' ? updater(columnFilters) : updater;
@@ -99,18 +102,18 @@ export function SupportAllPage() {
 
   useEffect(() => {
     setColumnFilters((prev) => {
-      let newFilters = prev.filter(f => f.id !== 'status');
+      const withoutStatus = prev.filter(f => f.id !== 'state');
 
-      if (urlStatus === 'nAgreed' || urlStatus === 'nConfirmed' || urlStatus === 'onControl' || urlStatus === 'mine') {
-        return newFilters;
-      }
-      else if (urlStatus) {
-        newFilters = [...newFilters, { id: 'status', value: urlStatus }];
+      if (!urlStatus || urlStatus === 'new') {
+        return withoutStatus;
       }
 
-      return newFilters;
+      return [
+        ...withoutStatus,
+        { id: 'state', value: urlStatus }
+      ];
     });
-  }, [urlStatus, hideClosed]);
+  }, [urlStatus]);
 
   useEffect(() => {
     setHideClosed(true);
@@ -122,8 +125,9 @@ export function SupportAllPage() {
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
       {
+        id: 'nomer',
         header: '№ заявки',
-        accessorKey: 'nomer',
+        accessorFn: (row) => row.nomer,
         maxSize: 80,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -131,8 +135,9 @@ export function SupportAllPage() {
         enableResizing: false
       },
       {
+        id: 'dateCreated',
         header: 'Дата регистрации',
-        accessorKey: 'dateCreated',
+        accessorFn: (row) => row.dateCreated,
         type: 'string',
         maxSize: 130,
         enableResizing: false,
@@ -152,8 +157,12 @@ export function SupportAllPage() {
         },
       },
       {
-        header: 'Желаемый срок',
-        accessorKey: 'dateFinishPlan',
+        id: 'desiredDate',
+        header: urlStatus === 'onControl' ? 'Дата возврата' : 'Желаемый срок',
+        accessorFn: (row) =>
+          urlStatus === 'onControl'
+            ? row.dateTechReturn
+            : row.dateFinishPlan,
         type: 'Date',
         maxSize: 120,
         enableResizing: false,
@@ -173,8 +182,9 @@ export function SupportAllPage() {
         },
       },
       {
+        id: 'dateFinishFact',
         header: 'Дата решения',
-        accessorKey: 'dateFinishFact',
+        accessorFn: (row) => row.dateFinishFact,
         type: 'string',
         maxSize: 100,
         enableResizing: false,
@@ -194,26 +204,28 @@ export function SupportAllPage() {
         },
       },
       {
+        id: 'orderState',
         header: 'Статус',
-        accessorKey: 'orderState',
+        accessorFn: (row) => row.orderState?.name,
         type: 'string',
         maxSize: 130,
         enableResizing: false,
-        enableColumnFilter: !urlStatus,
+        enableColumnFilter: urlStatus !== 'new',
         mantineFilterTextInputProps: {
-          disabled: !!urlStatus,
-          readOnly: !!urlStatus,
-          placeholder: urlStatus ? `Зафиксировано: ${urlStatus}` : 'Фильтр',
+          disabled: urlStatus === 'new',
+          readOnly: urlStatus === 'new',
+          placeholder: 'Фильтр',
         },
         mantineFilterSelectProps: {
-          disabled: !!urlStatus || hideClosed,
-          readOnly: !!urlStatus || hideClosed,
+          disabled: urlStatus === 'new',
+          readOnly: urlStatus === 'new',
         },
         Cell: ({ row }) => row.original.orderState?.name || 'Статуса нет'
       },
       {
+        id: 'name',
         header: 'Заголовок',
-        accessorKey: 'name',
+        accessorFn: (row) => row.name,
         type: 'string',
         maxSize: 190,
         enableResizing: false,
@@ -222,8 +234,9 @@ export function SupportAllPage() {
         },
       },
       {
+        id: 'orderType',
         header: 'Тип',
-        accessorKey: 'orderType',
+        accessorFn: (row) => row.orderType?.name,
         type: 'string',
         maxSize: 50,
         enableResizing: false,
@@ -236,8 +249,9 @@ export function SupportAllPage() {
         Cell: ({ row }) => row.original.orderType?.name || ''
       },
       {
+        id: 'initiator',
         header: 'Инициатор',
-        accessorKey: 'initiator',
+        accessorFn: (row) => row.initiator?.fio1c,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -250,8 +264,9 @@ export function SupportAllPage() {
         }
       },
       {
+        id: 'dispatcher',
         header: 'Пользователь',
-        accessorKey: 'dispatcher',
+        accessorFn: (row) => row.dispatcher?.fio1c,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -264,8 +279,9 @@ export function SupportAllPage() {
         }
       },
       {
+        id: 'service',
         header: 'IT-сервис (модуль)',
-        accessorKey: 'service',
+        accessorFn: (row) => row.service?.fullname,
         type: 'string',
         maxSize: 160,
         enableResizing: false,
@@ -275,8 +291,9 @@ export function SupportAllPage() {
         Cell: ({ row }) => row.original.service?.fullname || ''
       },
       {
+        id: 'catitem',
         header: 'Услуга',
-        accessorKey: 'catitem',
+        accessorFn: (row) => row.catalogItem?.name,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -303,12 +320,14 @@ export function SupportAllPage() {
         return 'rgba(255, 152, 0, 0.1)';
       case 'ЗНИ':
         return 'rgba(244, 67, 54, 0.1)';
+      case 'ЗНТ':
+        return 'rgba(54, 82, 244, 0.1)';
       default:
         return 'hsla(0, 88%, 72%, 1.00)';
     }
   };
 
-  const onRequestTypeSelect = (selected: any) => {
+  const onRequestTypeSelect = (selected: string) => {
     setRequestType(selected);
     if (selected === "Заявка на обслуживание") {
       createZNODialog();
@@ -318,6 +337,9 @@ export function SupportAllPage() {
     }
     else if (selected === "Заявка на изменение") {
       createZNIDialog();
+    }
+    else if (selected === "Заявка на технику") {
+      createZNTDialog();
     }
     else {
       setIsCreateDialogOpen(true);
@@ -333,11 +355,15 @@ export function SupportAllPage() {
   function createZNIDialog() {
     setIsCreateDialogZNIOpen(true);
   }
+  function createZNTDialog() {
+    setIsCreateDialogZNTOpen(true);
+  }
   const onCreateDialogClose = () => {
     setIsCreateDialogOpen(false);
     setIsCreateDialogZNOOpen(false);
     setIsCreateDialogZNDOpen(false);
     setIsCreateDialogZNIOpen(false);
+    setIsCreateDialogZNTOpen(false);
   }
 
   // Парсер даты
@@ -479,7 +505,7 @@ export function SupportAllPage() {
 
   const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
 
-  
+
 
   // Обработчики нажатия кнопок
   const handleAcceptClick = () => {
@@ -603,6 +629,10 @@ export function SupportAllPage() {
           isOpen={isCreateDialogZNIOpen}
           onClose={onCreateDialogClose}
         />
+        <RequestCreateZNTDialog
+          isOpen={isCreateDialogZNTOpen}
+          onClose={onCreateDialogClose}
+        />
         <PostponeDialog
           open={dialogs.postpone.open}
           onClose={() => closeDialog('postpone')}
@@ -620,7 +650,7 @@ export function SupportAllPage() {
           <Grid2 size="auto">
             <SplitButton
               buttonText={'Создать заявку'}
-              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение']}
+              menuItems={['Заявка на обслуживание', 'Заявка на доступ', 'Заявка на изменение', 'Заявка на технику']}
               startIcon={<Add />}
               size={'small'}
               onSelect={onRequestTypeSelect}
@@ -698,7 +728,7 @@ export function SupportAllPage() {
           <Grid2 size="auto" alignContent="center">
             <MantineProvider theme={{ cursorType: 'pointer' }}>
               <Checkbox
-                disabled={urlStatus === "Новая" ? true : false}
+                disabled={urlStatus === "new" ? true : false}
                 checked={hideClosed}
                 onChange={(event) => setHideClosed(event.currentTarget.checked)}
                 label="Скрыть закрытые заявки"

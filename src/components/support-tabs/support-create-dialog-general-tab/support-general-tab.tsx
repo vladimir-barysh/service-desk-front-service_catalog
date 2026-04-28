@@ -40,6 +40,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       editedRequest.dateCreated !== request.dateCreated ||
       editedRequest.dateFinishPlan !== request.dateFinishPlan ||
       editedRequest.dateFinishFact !== request.dateFinishFact ||
+      editedRequest.dateTechReturn !== request.dateTechReturn ||
       editedRequest.orderType?.idOrderType !== request.orderType?.idOrderType ||
       editedRequest.catalogItem?.idCatitem !== request.catalogItem?.idCatitem ||
       editedRequest.service?.idService !== request.service?.idService ||
@@ -347,7 +348,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
-              <Typography variant="subtitle2">Кому доступ (нужно ли?)</Typography>
+              <Typography variant="subtitle2">Кому доступ (ЗНД)</Typography>
             </Grid2>
             <Grid2 size={9}>
               <TextField
@@ -400,16 +401,9 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               />
             </Grid2>
           </Grid2>
-          
         </Grid2>
         
-        
-        {/* Правая колонка - заголовки и значения */}
         <Grid2 size={6}>
-          {/* Строка 1 */}
-
-
-          {/* Строка 3 */}
           <Grid2 container spacing={0}>
             <Grid2 size={3} sx={labelStyle}>
               <Typography variant="subtitle2">Отложено до</Typography>
@@ -452,8 +446,8 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 size="md"
                 styles={{ input: { minHeight: '40px' } }}
                 readOnly={!isEditing}
-                value={editedRequest?.dateFinishPlan ? dayjs(editedRequest?.dateFinishPlan).toDate() : null}
-                onChange={(newDateFinishPlan) => handleDateChange('dateFinishPlan', newDateFinishPlan)}
+                value={editedRequest?.dateTechReturn ? dayjs(editedRequest?.dateTechReturn).toDate() : null}
+                onChange={(newDateTechReturn) => handleDateChange('dateTechReturn', newDateTechReturn)}
               />
             </Grid2>
           </Grid2>
@@ -522,7 +516,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 fullWidth
                 size="small"
                 variant="outlined"
-                multiline
+                value={"WEB"}
                 rows={1}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('contactMethod')}

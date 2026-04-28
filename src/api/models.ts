@@ -23,6 +23,7 @@ export interface Order {
   dateFinishPlan: Dayjs | undefined;
   dateFinishFact: Dayjs | undefined;
   datePostpone: Dayjs | undefined;
+  dateTechReturn: Dayjs | undefined;
   orderParent: Order | undefined;
   orderType: OrderType | undefined;
   catalogItem: CatalogItem | undefined;
