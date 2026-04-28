@@ -89,7 +89,7 @@ export function LeftSidebar() {
   
   const isSupportAll = location.pathname === '/support/all';
   const isTasksAll = location.pathname === '/tasks/all'
-  const isNewActive = isSupportAll && status === 'Новая';
+  const isNewActive = isSupportAll && status === 'new';
   const isAllActive = isSupportAll && !status;
   const isNAgreedActive = isSupportAll && status === 'nAgreed';
   const isNConfirmedActive = isSupportAll && status === 'nConfirmed';
@@ -231,7 +231,7 @@ export function LeftSidebar() {
           <MenuItem
             {...menuItemCommon}
             icon={<SupportAgentOutlined />}
-            component={<Link to={'/support/all?status=Новая'} />}
+            component={<Link to={'/support/all?status=new'} />}
             active={isNewActive}
             suffix={<Badge badgeContent={newCount} color="primary"></Badge>}
           >

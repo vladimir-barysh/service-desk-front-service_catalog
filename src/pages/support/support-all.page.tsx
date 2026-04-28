@@ -66,8 +66,8 @@ export function SupportAllPage() {
   const filteredData = useMemo(() => {
     let result = orders;
 
-    if (urlStatus === 'Новая') {
-      result = result.filter((item: Order) => item.orderState?.name === urlStatus);
+    if (urlStatus === 'new') {
+      result = result.filter((item: Order) => item.orderState?.name === 'Новая');
     }
     else if (urlStatus === 'nAgreed') {
       result = result.filter((item: Order) => item.orderState?.name === 'Не согласовано' || item.orderState?.name === 'Закрыта');
@@ -89,13 +89,11 @@ export function SupportAllPage() {
   }, [urlStatus, hideClosed, orders]);
 
   useEffect(() => {
-    if (!urlStatus) {
       setColumnFilters([]);
-    }
   }, [urlStatus]);
 
   const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
-    if (urlStatus) {
+    if (urlStatus === 'new') {
       return;
     }
     const next = typeof updater === 'function' ? updater(columnFilters) : updater;
@@ -104,32 +102,32 @@ export function SupportAllPage() {
 
   useEffect(() => {
     setColumnFilters((prev) => {
-      let newFilters = prev.filter(f => f.id !== 'status');
+      const withoutStatus = prev.filter(f => f.id !== 'state');
 
-      if (urlStatus === 'nAgreed' || urlStatus === 'nConfirmed' || urlStatus === 'onControl' || urlStatus === 'mine') {
-        return newFilters;
-      }
-      else if (urlStatus) {
-        newFilters = [...newFilters, { id: 'status', value: urlStatus }];
+      if (!urlStatus || urlStatus === 'new') {
+        return withoutStatus;
       }
 
-      return newFilters;
+      return [
+        ...withoutStatus,
+        { id: 'state', value: urlStatus }
+      ];
     });
-  }, [urlStatus, hideClosed]);
+  }, [urlStatus]);
 
   useEffect(() => {
     setHideClosed(true);
     //table.setRowSelection({});
   }, [location.pathname, location.search]);
 
-  // TODO: Сделать так, чтобы можно было искать по статусу во всех вкладках или только в некоторых
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
       {
+        id: 'nomer',
         header: '№ заявки',
-        accessorKey: 'nomer',
+        accessorFn: (row) => row.nomer,
         maxSize: 80,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -137,8 +135,9 @@ export function SupportAllPage() {
         enableResizing: false
       },
       {
+        id: 'dateCreated',
         header: 'Дата регистрации',
-        accessorKey: 'dateCreated',
+        accessorFn: (row) => row.dateCreated,
         type: 'string',
         maxSize: 130,
         enableResizing: false,
@@ -158,9 +157,12 @@ export function SupportAllPage() {
         },
       },
       {
-        // TODO: подумать, как сделать так, чтобы колонка не уходила в конец
+        id: 'desiredDate',
         header: urlStatus === 'onControl' ? 'Дата возврата' : 'Желаемый срок',
-        accessorKey: urlStatus === 'onControl' ? 'dateTechReturn' : 'dateFinishPlan',
+        accessorFn: (row) =>
+          urlStatus === 'onControl'
+            ? row.dateTechReturn
+            : row.dateFinishPlan,
         type: 'Date',
         maxSize: 120,
         enableResizing: false,
@@ -180,8 +182,9 @@ export function SupportAllPage() {
         },
       },
       {
+        id: 'dateFinishFact',
         header: 'Дата решения',
-        accessorKey: 'dateFinishFact',
+        accessorFn: (row) => row.dateFinishFact,
         type: 'string',
         maxSize: 100,
         enableResizing: false,
@@ -201,26 +204,28 @@ export function SupportAllPage() {
         },
       },
       {
+        id: 'orderState',
         header: 'Статус',
-        accessorKey: 'orderState',
+        accessorFn: (row) => row.orderState?.name,
         type: 'string',
         maxSize: 130,
         enableResizing: false,
-        enableColumnFilter: !urlStatus,
+        enableColumnFilter: urlStatus !== 'new',
         mantineFilterTextInputProps: {
-          disabled: !!urlStatus,
-          readOnly: !!urlStatus,
-          placeholder: urlStatus ? `Зафиксировано: ${urlStatus}` : 'Фильтр',
+          disabled: urlStatus === 'new',
+          readOnly: urlStatus === 'new',
+          placeholder: 'Фильтр',
         },
         mantineFilterSelectProps: {
-          disabled: !!urlStatus || hideClosed,
-          readOnly: !!urlStatus || hideClosed,
+          disabled: urlStatus === 'new',
+          readOnly: urlStatus === 'new',
         },
         Cell: ({ row }) => row.original.orderState?.name || 'Статуса нет'
       },
       {
+        id: 'name',
         header: 'Заголовок',
-        accessorKey: 'name',
+        accessorFn: (row) => row.name,
         type: 'string',
         maxSize: 190,
         enableResizing: false,
@@ -229,8 +234,9 @@ export function SupportAllPage() {
         },
       },
       {
+        id: 'orderType',
         header: 'Тип',
-        accessorKey: 'orderType',
+        accessorFn: (row) => row.orderType?.name,
         type: 'string',
         maxSize: 50,
         enableResizing: false,
@@ -243,8 +249,9 @@ export function SupportAllPage() {
         Cell: ({ row }) => row.original.orderType?.name || ''
       },
       {
+        id: 'initiator',
         header: 'Инициатор',
-        accessorKey: 'initiator',
+        accessorFn: (row) => row.initiator?.fio1c,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -257,8 +264,9 @@ export function SupportAllPage() {
         }
       },
       {
+        id: 'dispatcher',
         header: 'Пользователь',
-        accessorKey: 'dispatcher',
+        accessorFn: (row) => row.dispatcher?.fio1c,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -271,8 +279,9 @@ export function SupportAllPage() {
         }
       },
       {
+        id: 'service',
         header: 'IT-сервис (модуль)',
-        accessorKey: 'service',
+        accessorFn: (row) => row.service?.fullname,
         type: 'string',
         maxSize: 160,
         enableResizing: false,
@@ -282,8 +291,9 @@ export function SupportAllPage() {
         Cell: ({ row }) => row.original.service?.fullname || ''
       },
       {
+        id: 'catitem',
         header: 'Услуга',
-        accessorKey: 'catitem',
+        accessorFn: (row) => row.catalogItem?.name,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -718,7 +728,7 @@ export function SupportAllPage() {
           <Grid2 size="auto" alignContent="center">
             <MantineProvider theme={{ cursorType: 'pointer' }}>
               <Checkbox
-                disabled={urlStatus === "Новая" ? true : false}
+                disabled={urlStatus === "new" ? true : false}
                 checked={hideClosed}
                 onChange={(event) => setHideClosed(event.currentTarget.checked)}
                 label="Скрыть закрытые заявки"
