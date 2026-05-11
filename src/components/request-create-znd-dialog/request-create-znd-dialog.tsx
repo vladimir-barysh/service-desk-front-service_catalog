@@ -19,8 +19,8 @@ import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
 import { Service, User } from '../../api/models';
 
-import { 
-  employees, roles, rolesDataClass 
+import {
+  roles, rolesDataClass
 } from './makeData';
 
 import {
@@ -44,17 +44,18 @@ export const RequestCreateZNDDialog = (props: {
   const labelStyle = {
     margin: '0px 0px -15px 0px',
   };
-  const [value, setValue] = useState('');
+
+  const [error, setError] = useState<string | undefined>('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [chosen, setChosen] = React.useState<Service | null>(null);
 
   const [comment, setComment] = useState('');
-  const [sDate, setSDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [sDate, setSDate] = useState<Date | null>(null);
+  const [toDate, setToDate] = useState<Date | null>(null);
 
   const [selected, setSelected] = useState<User | null>(null);
-  const [selectedName, setSelectedName] = useState<string | ''>('');
-  const [search, setSearch] = useState('');
+
+  /*const [search, setSearch] = useState('');
   const shouldFilterOptions = !employees.some(
     (item) => item.mainName?.toLowerCase() === search.toLowerCase().trim(),
   );
@@ -66,26 +67,38 @@ export const RequestCreateZNDDialog = (props: {
   const employeeOptions = employees.map((emp) => ({
     value: emp.mainName || '',
     label: emp.mainName || '',
-  }));
+  }));*/
+
   const [checked, setChecked] = useState(false);
 
   const [reqType, setReqType] = useState<string>('');
   const [accessType, setAccessType] = useState<string>('');
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
+
   const isFormValid = useMemo(() => {
+    let dateChoose = true;
+    if (checked) {
+      sDate !== null && toDate !== null ? dateChoose = true : dateChoose = false;
+    }
     return (
       reqType !== '' &&
       chosen !== null &&
       selected !== null &&
       accessType !== '' &&
-      Object.keys(rowSelection).length > 0
+      Object.keys(rowSelection).length > 0 &&
+      dateChoose
     );
-  }, [reqType, chosen, selected, accessType, rowSelection]);
+  }, [reqType, chosen, selected, accessType, rowSelection, checked, sDate, toDate]);
+
+  const isDataValid = useMemo(() => {
+    return (checked && sDate && toDate && sDate > toDate)
+      ? (setError('Некорректно указан срок доступа'), false)
+      : true;
+
+  }, [checked, sDate, toDate]);
 
   const {
     data: users = [],
-    isLoading: userLoad,
-    error: userError,
   } = useQuery({
     queryKey: ['users'],
     queryFn: getUsers,
@@ -132,16 +145,18 @@ export const RequestCreateZNDDialog = (props: {
     setAccessType('');
     setChosen(null);
     setSelected(null);
-    setSelectedName('');
     setRowSelection({});
     setComment('');
+    setSDate(null);
+    setToDate(null);
     props.onClose();
   };
 
   const handleSave = () => {
-    if (!isFormValid) {
+    if (!isDataValid) {
       showNotification({
-        title: 'Заполните обязательные поля',
+        title: 'Проверьте введенные данные',
+        message: error,
         color: 'orange',
       });
       return;
@@ -156,7 +171,7 @@ export const RequestCreateZNDDialog = (props: {
 ( ${selected?.dolzh1c || 'не указан'}, ${selected?.podr?.name || 'не указан'}, Почта: ${selected?.emailAd || 'не указан'}, Телефон: ${selected?.telAd || 'не указан'} )
 Доступ: ${accessType}
 Роль: ${Object.keys(rowSelection).map((rowId) => data.find((role) => String(role.id) === rowId)?.roleName).join(', ') || 'не указана'}
-Фиксрованный срок доступа: ${checked ? `${sDate} - ${toDate}` : 'не ограничен'}
+Фиксрованный срок доступа: ${checked ? `${sDate?.toLocaleString()} - ${toDate?.toLocaleString()}` : 'не ограничен'}
 Держатель сервиса: ${chosen?.developer}`
     //Пока что указывается разработчик сервиса ^
 
@@ -187,18 +202,17 @@ export const RequestCreateZNDDialog = (props: {
     const selectedId = Number(event.target.value);
 
     const selectedObject = users.find(
-      (item: any) => item.idItUser === selectedId
+      (item: User) => item.idItUser === selectedId
     ) ?? null;
     setSelected(selectedObject);
-    setSelectedName(selectedObject.fio1c);
   };
 
-  const handleSChange = (date: Date | null) => {
-    setSDate(date ? date.toLocaleDateString() : '');
+  const handleSChange = (date: Date) => {
+    setSDate(date);
   };
 
-  const handleToChange = (date: Date | null) => {
-    setToDate(date ? date.toLocaleDateString() : '');
+  const handleToChange = (date: Date) => {
+    setToDate(date);
   };
 
   const table = useMantineReactTable<rolesDataClass>({
@@ -243,7 +257,7 @@ export const RequestCreateZNDDialog = (props: {
       <ChooseServiceCreateDialog
         isOpen={isCreateDialogOpen}
         onClose={onCreateDialogClose}
-        onSelect={(service: any) => {
+        onSelect={(service: Service | null) => {
           setChosen(service);
         }}
       />
@@ -365,11 +379,11 @@ export const RequestCreateZNDDialog = (props: {
                     onChange={handleDispatcherChange}
                     renderValue={(selected) => {
                       if (!selected) return <em>Не выбрано</em>;
-                      const p = users.find((x: any) => x.idItUser === selected);
+                      const p = users.find((x: User) => x.idItUser === selected);
                       return p?.fio1c;
                     }}
                   >
-                    {users.map((item: any) => (
+                    {users.map((item: User) => (
                       <MenuItem key={item.idItUser} value={item.idItUser}>
                         {item.fio1c}
                       </MenuItem>
@@ -575,6 +589,7 @@ export const RequestCreateZNDDialog = (props: {
                 locale="ru"
                 disabled={!checked}
                 onChange={handleSChange}
+                minDate={new Date()}
               />
             </Grid2>
             <Text fw={600}>по:</Text>
@@ -589,6 +604,7 @@ export const RequestCreateZNDDialog = (props: {
                 locale="ru"
                 disabled={!checked}
                 onChange={handleToChange}
+                minDate={new Date()}
               />
             </Grid2>
           </Grid2>
