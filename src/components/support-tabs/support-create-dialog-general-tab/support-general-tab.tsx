@@ -628,7 +628,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={podrInit.name || ''}
+                value={podrInit?.name || ''}
                 fullWidth
                 size="small"
                 variant="outlined"

@@ -268,7 +268,7 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const user = users.find((item: User) => item.idItUser === row.original.initiatorId) || '';
+          const user = users?.find((item: User) => item.idItUser === row.original.initiatorId) || '';
           return formatFIO(user.fio1c);
         }
       },
@@ -283,7 +283,7 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const user = users.find((item: User) => item.idItUser === row.original.dispatcherId) || '';
+          const user = users?.find((item: User) => item.idItUser === row.original.dispatcherId) || '';
           return formatFIO(user.fio1c);
         }
       },
