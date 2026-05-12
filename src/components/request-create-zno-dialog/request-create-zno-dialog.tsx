@@ -49,7 +49,7 @@ export const RequestCreateZNODialog = (props: {
 }) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
-  const [chosen, setChosen] = React.useState<Service>();
+  const [chosen, setChosen] = React.useState<Service | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [problemDescription, setProblemDescription] = useState('');
   const [comment, setComment] = useState('');
@@ -72,7 +72,7 @@ export const RequestCreateZNODialog = (props: {
   };
 
   const handleClose = () => {
-    setChosen(undefined);
+    setChosen(null);
     setProblemDescription('');
     setComment('');
     setFiles([]);
@@ -233,7 +233,7 @@ export const RequestCreateZNODialog = (props: {
                     rightSection={
                       <CloseButton
                         aria-label="Clear input"
-                        onClick={() => setChosen(undefined)}
+                        onClick={() => setChosen(null)}
                         style={{ display: chosen ? undefined : 'none' }}
                       />
                     }
