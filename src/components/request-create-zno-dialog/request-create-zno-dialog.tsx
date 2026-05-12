@@ -87,6 +87,7 @@ export const RequestCreateZNODialog = (props: {
       });
       return;
     }
+
     if (!chosen) {
       showNotification({
         title: 'Выберите сервис',
@@ -94,6 +95,7 @@ export const RequestCreateZNODialog = (props: {
       });
       return;
     }
+    
     const dto: OrderCreateDTO = {
       name: chosen.fullname,
       idService: chosen.idService,
@@ -145,7 +147,7 @@ export const RequestCreateZNODialog = (props: {
   };
 
   const handleDateChange = (date: DateValue) => {
-    const temp = date ? dayjs(date).toISOString() : '';
+    const temp = date ? dayjs(date).toISOString().split('.')[0] + 'Z' : '';
     setFinishDate(temp);
   };
 
