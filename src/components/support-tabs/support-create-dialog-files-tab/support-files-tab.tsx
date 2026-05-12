@@ -255,7 +255,7 @@ export function SupportFilesTab({ order }: SupportGeneralFirstTabProps) {
             variant="contained"
             tabIndex={-1}
             startIcon={<CloudUploadIcon />}
-            disabled={order?.orderState?.name === 'Закрыта'}
+            disabled={order?.orderStateName === 'Закрыта'}
             sx={{ whiteSpace: 'nowrap' }}
           >
             Добавить файлы
@@ -274,7 +274,7 @@ export function SupportFilesTab({ order }: SupportGeneralFirstTabProps) {
           color="error"
           tabIndex={-1}
           startIcon={<Delete />}
-          disabled={order?.orderState?.name === 'Закрыта' || !selectedRowId}
+          disabled={order?.orderStateName === 'Закрыта' || !selectedRowId}
           //onClick={handleDeleteFile}
           >
             Удалить файл

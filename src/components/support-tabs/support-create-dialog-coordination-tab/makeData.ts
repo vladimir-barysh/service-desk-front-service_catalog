@@ -26,7 +26,7 @@ export const generateCoordinationData = (request: Order | null): Coordination[] 
     status: 'Согласовано'
   };
 
-  switch (request.orderType?.name) {
+  switch (request.orderTypeName) {
     case 'ЗНД':
       return [{
         ...baseData,

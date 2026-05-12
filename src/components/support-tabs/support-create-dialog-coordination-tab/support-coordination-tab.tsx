@@ -54,7 +54,7 @@ export function SupportCoordinationTab({ order }: SupportCoordinationTabProps) {
       {/* Информация о типе заявки */}
       <Box padding='0px 0px 10px 0px'>
         <Typography variant="subtitle2" color="text.secondary" fontSize='1.0rem'>
-          Тип заявки: <strong>{order?.orderType?.name || 'не определен'}</strong>
+          Тип заявки: <strong>{order?.orderTypeName || 'не определен'}</strong>
         </Typography>
       </Box>
 

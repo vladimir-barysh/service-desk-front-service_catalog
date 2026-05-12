@@ -2,15 +2,14 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Grid2, TextField,
   Box, Typography,
-  Button, InputLabel,
   MenuItem, FormControl,
   Select, InputAdornment, SelectChangeEvent
 } from '@mui/material';
 import { DateTimePicker, DateValue } from '@mantine/dates';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Order } from '../../../api/models';
+import { Order, OrderPriority, OrderType, Podr, User } from '../../../api/models';
 import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
 import { TextInputField } from '../../text-input-field';
 
@@ -19,6 +18,7 @@ import { getOrderTypes } from '../../../api/services/orderTypeService';
 import { getOrderStates } from '../../../api/services/orderStateService';
 import { getOrderPriorities } from '../../../api/services/orderPriorityService';
 import { getUsers } from '../../../api/services/userService';
+import { getPodrs } from '../../../api/services/podrService';
 
 interface SupportGeneralTabProps {
   isOpen: boolean;
@@ -27,9 +27,10 @@ interface SupportGeneralTabProps {
 }
 
 export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps) {
+  
   const [editedRequest, setEditedRequest] = useState<Order | null>(request);
 
-  const isEditing = !editedRequest?.orderState?.name?.includes('Закрыта');              // флаг режима редактирования
+  const isEditing = !editedRequest?.orderStateName?.includes('Закрыта');              // флаг режима редактирования
   //const hasChanges = JSON.stringify(editedRequest) !== JSON.stringify(request);                      // флаг наличия изменений
   const hasChanges = useMemo(() => {
     if (!editedRequest || !request) return false;
@@ -41,14 +42,14 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       editedRequest.dateFinishPlan !== request.dateFinishPlan ||
       editedRequest.dateFinishFact !== request.dateFinishFact ||
       editedRequest.dateTechReturn !== request.dateTechReturn ||
-      editedRequest.orderType?.idOrderType !== request.orderType?.idOrderType ||
-      editedRequest.catalogItem?.idCatitem !== request.catalogItem?.idCatitem ||
-      editedRequest.service?.idService !== request.service?.idService ||
-      editedRequest.orderState?.idOrderState !== request.orderState?.idOrderState ||
-      editedRequest.orderPriority?.idOrderPriority !== request.orderPriority?.idOrderPriority ||
-      editedRequest.creator?.idItUser !== request.creator?.idItUser ||
-      editedRequest.initiator?.idItUser !== request.initiator?.idItUser ||
-      editedRequest.dispatcher?.idItUser !== request.dispatcher?.idItUser ||
+      editedRequest.orderTypeId !== request.orderTypeId ||
+      editedRequest.catalogItemId !== request.catalogItemId ||
+      editedRequest.serviceId !== request.serviceId ||
+      editedRequest.orderStateId !== request.orderStateId ||
+      editedRequest.orderPriorityId !== request.orderPriorityId ||
+      editedRequest.creatorId !== request.creatorId ||
+      editedRequest.initiatorId !== request.initiatorId ||
+      editedRequest.dispatcherId !== request.dispatcherId ||
       editedRequest.resultText !== request.resultText
     );
   }, [editedRequest, request]);
@@ -65,17 +66,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   if (!editedRequest) {
     return <Typography>Заявка не выбрана</Typography>;
   }
-
-  const handleSave = () => {
-    // Здесь будет логика сохранения изменений
-    //console.log('Сохранение данных:', editableRequest);
-    //setHasChanges(false);
-  };
-
-  const handleCancel = () => {
-    setEditedRequest(request); // Возвращаем оригинальные данные
-    //setHasChanges(false);
-  };
 
   const handleFieldChange = (field: string, value: string) => {
     setEditedRequest(prev => prev ? { ...prev, [field]: value } : null);
@@ -108,7 +98,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     const selectedId = Number(event.target.value);
 
     const selectedObject = orderTypes.find(
-      (item: any) => item.idOrderType === selectedId
+      (item: OrderType) => item.idOrderType === selectedId
     ) ?? null;
 
     setEditedRequest(prev => prev ? { ...prev, orderType: selectedObject } : null);
@@ -119,7 +109,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     const selectedId = Number(event.target.value);
 
     const selectedObject = orderPriorities.find(
-      (item: any) => item.idOrderPriority === selectedId
+      (item: OrderPriority) => item.idOrderPriority === selectedId
     ) ?? null;
 
     setEditedRequest(prev =>
@@ -131,7 +121,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     const selectedId = Number(event.target.value);
 
     const selectedObject = users.find(
-      (item: any) => item.idItUser === selectedId
+      (item: User) => item.idItUser === selectedId
     ) ?? null;
 
     setEditedRequest(prev => prev ? { ...prev, dispatcher: selectedObject } : null);
@@ -140,8 +130,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
   const {
     data: users = [],
-    isLoading: userLoad,
-    error: userError,
   } = useQuery({
     queryKey: ['users'],
     queryFn: getUsers,
@@ -150,8 +138,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
   const {
     data: orderTypes = [],
-    isLoading: orderLoad,
-    error: orderError,
   } = useQuery({
     queryKey: ['ordertypes'],
     queryFn: getOrderTypes,
@@ -160,8 +146,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
   const {
     data: orderStates = [],
-    isLoading,
-    error,
   } = useQuery({
     queryKey: ['orderstates'],
     queryFn: getOrderStates,
@@ -169,12 +153,27 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
   const {
     data: orderPriorities = [],
-    isLoading: orderPriorityLoad,
-    error: orderPriorityError,
   } = useQuery({
     queryKey: ['orderpriorities'],
     queryFn: getOrderPriorities,
   });
+
+  const {
+    data: podrs = [],
+  } = useQuery({
+    queryKey: ['podrs'],
+    queryFn: getPodrs,
+  });
+
+  const initiator = useMemo(() => {
+    if (!editedRequest?.initiatorId) return null;
+    return users.find((u: User) => u.idItUser === editedRequest.initiatorId);
+  }, [users, editedRequest]);
+
+  const podrInit = useMemo(() => {
+    if (!initiator?.podrId) return null;
+    return podrs.find((p: Podr) => p.idPodr === initiator.podrId);
+  }, [podrs, initiator]);
 
   const addWorkDays = (startDate: Date, daysToAdd: number): Date => {
     const result = new Date(startDate);
@@ -195,7 +194,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (editedRequest?.orderType?.name === 'ЗНО') {
+    if (editedRequest?.orderTypeName === 'ЗНО') {
       return addWorkDays(today, 3);
     } else {
       return addWorkDays(today, 5);
@@ -213,7 +212,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
           </Grid2>
           <Grid2 size="auto">
             <TextField
-              value={editedRequest.orderState?.name || ''}
+              value={editedRequest.orderStateName || ''}
               fullWidth
               size="small"
               variant="outlined"
@@ -304,7 +303,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.service?.fullname || ''}
+                value={editedRequest.serviceFullname || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -320,7 +319,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.catalogItem?.name || ''}
+                value={editedRequest.catalogItemName || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -357,8 +356,8 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('accessTo')}
-                disabled={editedRequest.orderType?.name === 'ЗНД' ? false : true}
-                value={editedRequest.orderType?.name === 'ЗНД' ? editedRequest.initiator?.fio1c : 'Не тот тип заявки'}
+                disabled={editedRequest.orderTypeName === 'ЗНД' ? false : true}
+                value={editedRequest.orderTypeName === 'ЗНД' ? initiator.fio1c : 'Не тот тип заявки'}
               />
             </Grid2>
           </Grid2>
@@ -370,16 +369,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Grid2 size={9}>
               <FormControl fullWidth size="small">
                 <Select
-                  value={editedRequest.dispatcher?.idItUser || ''}
+                  value={editedRequest.dispatcherId || ''}
                   onChange={handleDispatcherChange}
 
                   renderValue={(selected) => {
                     if (!selected) return <em>Не выбрано</em>;
-                    const p = users.find((x: any) => x.idItUser === selected);
+                    const p = users.find((x: User) => x.idItUser === selected);
                     return p?.fio1c;
                   }}
                 >
-                  {users.map((item: any) => (
+                  {users.map((item: User) => (
                     <MenuItem key={item.idItUser} value={item.idItUser}>
                       {item.fio1c}
                     </MenuItem>
@@ -460,16 +459,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Grid2 size={9}>
               <FormControl fullWidth size="small">
                 <Select
-                  value={editedRequest.orderType?.idOrderType || ''}
+                  value={editedRequest.orderTypeId || ''}
                   onChange={handleOrderTypeChange}
 
                   renderValue={(selected) => {
                     if (!selected) return <em>Не выбрано</em>;
-                    const p = orderTypes.find((x: any) => x.idOrderType === selected);
+                    const p = orderTypes.find((x: OrderType) => x.idOrderType === selected);
                     return p?.name;
                   }}
                 >
-                  {orderTypes.map((item: any) => (
+                  {orderTypes.map((item: OrderType) => (
                     <MenuItem key={item.idOrderType} value={item.idOrderType}>
                       {item.name}
                     </MenuItem>
@@ -487,16 +486,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             <Grid2 size={9}>
               <FormControl fullWidth size="small">
                 <Select
-                  value={editedRequest.orderPriority?.idOrderPriority || ''}
+                  value={editedRequest.orderPriorityId || ''}
                   onChange={handleOrderPriorityChange}
 
                   renderValue={(selected) => {
                     if (!selected) return <em>Не выбрано</em>;
-                    const p = orderPriorities.find((x: any) => x.idOrderPriority === selected);
+                    const p = orderPriorities.find((x: OrderPriority) => x.idOrderPriority === selected);
                     return p?.name;
                   }}
                 >
-                  {orderPriorities.map((item: any) => (
+                  {orderPriorities.map((item: OrderPriority) => (
                     <MenuItem key={item.idOrderPriority} value={item.idOrderPriority}>
                       {item.name}
                     </MenuItem>
@@ -590,7 +589,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.initiator?.fio1c || ''}
+                value={initiator.fio1c }
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -610,7 +609,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.initiator?.dolzh1c || ''}
+                value={initiator.dolzh1c || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -629,7 +628,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.initiator?.podr?.name || ''}
+                value={podrInit.name || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -651,7 +650,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.initiator?.telAd || ''}
+                value={initiator.telAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -676,7 +675,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.initiator?.telAd || ''}
+                value={initiator.telAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -702,7 +701,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={editedRequest.initiator?.emailAd || ''}
+                value={initiator.emailAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"

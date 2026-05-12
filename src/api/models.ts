@@ -1,6 +1,4 @@
-import { NumberInputStylesNames } from "@mantine/core";
 import { Dayjs } from "dayjs";
-import { NumberFormat } from "xlsx";
 
 export interface Article {
   idArticle: number | undefined;

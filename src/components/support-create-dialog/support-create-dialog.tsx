@@ -57,14 +57,12 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   }, [generalChanged, filesChanged, discussionChanged]);
 
   const [editableRequest, setEditableRequest] = useState<Order | null>(request);
-  const isEditing = !editableRequest?.orderState?.name?.includes('Закрыта');              // флаг режима редактирования
+  const isEditing = !editableRequest?.orderStateName?.includes('Закрыта');              // флаг режима редактирования
 
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
   const {
       data: tasks = [],
-      isLoading,
-      error,
     } = useQuery({
       queryKey: ['tasks'],
       queryFn: getTasks,
@@ -190,10 +188,10 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
           dateFinishPlan: safeToIso(generalData?.dateFinishPlan),
           datePostpone: safeToIso(generalData?.datePostpone),
           dateTechReturn: safeToIso(generalData?.dateTechReturn),
-          idService: generalData?.service?.idService,
-          idOrderType: generalData?.orderType?.idOrderType,
-          idOrderState: generalData?.orderState?.idOrderState,
-          idOrderPriority: generalData?.orderPriority?.idOrderPriority,
+          idService: generalData?.serviceId,
+          idOrderType: generalData?.orderTypeId,
+          idOrderState: generalData?.orderStateId,
+          idOrderPriority: generalData?.orderPriorityId,
           resultText: generalData?.resultText,
           comment: generalData?.comment,
         },
