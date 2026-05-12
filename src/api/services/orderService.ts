@@ -6,12 +6,8 @@ export const getOrders = async () => {
   return data;
 }
 
-export const createOrder = async (data: FormData) => {
-  const response = await api.post('/api/order', data, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+export const createOrder = async (data: OrderCreateDTO) => {
+  const response = await api.post('/api/order', data);
   return response.data;
 }
 

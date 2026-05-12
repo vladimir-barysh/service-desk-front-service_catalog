@@ -63,8 +63,8 @@ export interface CatalogItem {
   name: string | undefined;
 }
 export interface Service {
-  idService: number | undefined;
-  fullname: string | undefined;
+  idService: number;
+  fullname: string;
   sname: string | undefined;
   description: string | undefined;
   developer: string | undefined;
