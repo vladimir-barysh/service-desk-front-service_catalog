@@ -110,7 +110,7 @@ export interface User {
   emailAd: string | undefined;
   telAd: string | undefined;
   fio1c: string | undefined;
-  podr: Podr | undefined;
+  podrId: number | undefined;
   dolzh1c: string | undefined;
   tabNum1c: string | undefined;
 }

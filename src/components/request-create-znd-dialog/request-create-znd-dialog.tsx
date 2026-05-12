@@ -17,7 +17,7 @@ import {
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { Service, User } from '../../api/models';
+import { Podr, Service, User } from '../../api/models';
 
 import {
   roles, rolesDataClass
@@ -36,6 +36,7 @@ import { OrderCreateDTO } from '../../api/dtos';
 import { getUsers } from '../../api/services/userService';
 import { useCreateOrder } from '../../api';
 import { showNotification } from './../../context';
+import { getPodrs } from '../../api/services/podrService';
 
 export const RequestCreateZNDDialog = (props: {
   isOpen: boolean;
@@ -105,6 +106,18 @@ export const RequestCreateZNDDialog = (props: {
     staleTime: Infinity
   });
 
+  const {
+    data: podrs = [],
+  } = useQuery({
+    queryKey: ['podrs'],
+    queryFn: getPodrs
+  })
+
+  const podrSelected = useMemo(() => {
+    if (!selected?.podrId) return null;
+    return podrs.find((p: Podr) => p.idPodr === selected?.podrId);
+  }, [podrs, selected]);
+
   const { mutate: createOrderMutation } = useCreateOrder();
 
   const columns = React.useMemo<MRT_ColumnDef<rolesDataClass>[]>(
@@ -168,25 +181,36 @@ export const RequestCreateZNDDialog = (props: {
     const name = `${reqType} к ${chosen?.fullname || ''}. ${selected?.fio1c || ''}`;
     const description = `Прошу ${reqType === 'Предоставить/изменить доступ' ? 'предоставить' : 'закрыть'} доступ к ${chosen?.fullname}.
 Пользователю: ${selected?.fio1c}
-( ${selected?.dolzh1c || 'не указан'}, ${selected?.podr?.name || 'не указан'}, Почта: ${selected?.emailAd || 'не указан'}, Телефон: ${selected?.telAd || 'не указан'} )
+( ${selected?.dolzh1c || 'не указан'}, ${selected?.podrId || 'не указан'}, Почта: ${selected?.emailAd || 'не указан'}, Телефон: ${selected?.telAd || 'не указан'} )
 Доступ: ${accessType}
 Роль: ${Object.keys(rowSelection).map((rowId) => data.find((role) => String(role.id) === rowId)?.roleName).join(', ') || 'не указана'}
 Фиксрованный срок доступа: ${checked ? `${sDate?.toLocaleString()} - ${toDate?.toLocaleString()}` : 'не ограничен'}
 Держатель сервиса: ${chosen?.developer}`
     //Пока что указывается разработчик сервиса ^
 
+    if (!chosen) {
+      showNotification({
+        title: 'Выберите сервис',
+        color: 'orange',
+      });
+      return;
+    }
+
     const dto: OrderCreateDTO = {
       name: name,
-      description: description,
-      idService: chosen?.idService,
+      idService: chosen.idService,
+      idCatItem: 1,
+      idInitiator: 1,
       idOrderType: 1,
-      comment: comment,
+      description: description,
+      
+      comment: comment
     };
 
-    const formData = new FormData();
-    formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+    //const formData = new FormData();
+    //formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
 
-    createOrderMutation(formData, {
+    createOrderMutation(dto, {
       onSuccess: () => handleClose(),
     });
   };
@@ -514,7 +538,7 @@ export const RequestCreateZNDDialog = (props: {
               </Grid2>
               <Grid2 size="auto">
                 <TextField
-                  value={selected?.podr?.name || ''}
+                  value={podrSelected?.name || ''}
                   fullWidth
                   size="small"
                   variant="outlined"
