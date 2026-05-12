@@ -1,4 +1,6 @@
+import { NumberInputStylesNames } from "@mantine/core";
 import { Dayjs } from "dayjs";
+import { NumberFormat } from "xlsx";
 
 export interface Article {
   idArticle: number | undefined;
@@ -24,17 +26,25 @@ export interface Order {
   dateFinishFact: Dayjs | undefined;
   datePostpone: Dayjs | undefined;
   dateTechReturn: Dayjs | undefined;
-  orderParent: Order | undefined;
-  orderType: OrderType | undefined;
-  catalogItem: CatalogItem | undefined;
-  service: Service | undefined;
-  orderState: OrderState | undefined;
-  orderPriority: OrderPriority | undefined;
-  creator: User | undefined;
-  initiator: User | undefined;
-  dispatcher: User | undefined;
-  executor: User | undefined;
-  orderSource: OrderSource | undefined;
+  orderParentId: number | undefined;
+  orderTypeId: number | undefined;
+  orderTypeName: string | undefined;
+  catalogItemId: number | undefined;
+  catalogItemName: string | undefined;
+  serviceId: number | undefined;
+  serviceFullname: string | undefined;
+  orderStateId: number | undefined;
+  orderStateName: string | undefined;
+  orderPriorityId: number | undefined;
+  orderPriorityName: string | undefined; 
+  creatorId: number | undefined;
+  initiatorId: number | undefined;
+  dispatcherId: number | undefined;
+  dispatcherFio: string | undefined;
+  executorId: number | undefined;
+  executorFio: string | undefined;
+  orderSourceId: number | undefined;
+  orderSourceName: string | undefined;
   resultText: string | undefined;
   comment: string | undefined;
 }
