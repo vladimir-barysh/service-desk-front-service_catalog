@@ -216,7 +216,7 @@ export function TasksMyAllPage() {
         mantineTableBodyCellProps: {
           align: 'center',
         },
-        Cell: ({ row }) => row.original.order?.orderType?.name || ''
+        Cell: ({ row }) => row.original.order?.orderTypeName || ''
       },
       {
         header: 'Инициатор',
@@ -241,7 +241,7 @@ export function TasksMyAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.order?.service?.fullname || ''
+        Cell: ({ row }) => row.original.order?.serviceFullname || ''
       },
       {
         header: 'Услуга',
@@ -252,7 +252,7 @@ export function TasksMyAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.order?.catalogItem?.name || ''
+        Cell: ({ row }) => row.original.order?.catalogItemName || ''
       },
     ],
     [urlStatus],
@@ -265,7 +265,7 @@ export function TasksMyAllPage() {
     }
 
     // Получаем тип заявки из данных строки
-    const requestType = row.original.order?.orderType?.name;
+    const requestType = row.original.order?.orderTypeName;
 
     // Цвета для разных типов заявок
     switch (requestType) {
@@ -383,13 +383,13 @@ export function TasksMyAllPage() {
         'Дата регистрации': task.dateCreated ? dayjs(task.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
         'Желаемый срок': task.dateFinishPlan ? dayjs(task.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
         'Дата решения': task.dateFinishFact ? dayjs(task.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
-        'Статус': task.order?.orderState?.name || '',
+        'Статус': task.order?.orderStateName || '',
         'Заголовок': task.order?.name || '',
-        'Тип запроса': task.order?.orderType?.name || '',
+        'Тип запроса': task.order?.orderTypeName || '',
         'Инициатор': task.creator?.fio1c || '',
         'Пользователь': task.executor?.fio1c || '',
-        'IT-сервис/модуль': task.order?.service?.fullname || '',
-        'Услуга': task.order?.catalogItem?.name || '',
+        'IT-сервис/модуль': task.order?.serviceFullname || '',
+        'Услуга': task.order?.catalogItemName || '',
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);
