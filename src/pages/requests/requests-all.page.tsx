@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { Order } from '../../api/models';
+import { Order, User } from '../../api/models';
 import { useEffect, useState } from 'react';
 import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
@@ -9,12 +9,12 @@ import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
-import { 
-  SupportGeneralDialog, RequestCreateDialog, 
-  formatFIO, RequestCreateZNODialog, 
-  RequestCreateZNDDialog, RequestCreateZNIDialog, 
+import {
+  SupportGeneralDialog, RequestCreateDialog,
+  formatFIO, RequestCreateZNODialog,
+  RequestCreateZNDDialog, RequestCreateZNIDialog,
   RequestCreateZNTDialog
- } from '../../components';
+} from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import { IconPencil } from '@tabler/icons-react';
 import dayjs, { Dayjs } from 'dayjs';
@@ -22,6 +22,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getOrderTypes } from '../../api/services/orderTypeService';
 
 import { getOrders } from '../../api/services/orderService';
+import { getUsers } from '../../api';
 
 export function RequestsAllPage() {
   const [requestTypeDialog, setRequestType] = useState('');
@@ -54,6 +55,15 @@ export function RequestsAllPage() {
     queryFn: getOrderTypes,
     staleTime: Infinity
   });
+
+  const { data: users } = useQuery({
+      queryKey: ['users'],
+      queryFn: getUsers,
+      enabled: true,
+      staleTime: 5 * 60 * 1000,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    })
 
   const filteredData = useMemo(() => {
     let result = orders;
@@ -154,7 +164,7 @@ export function RequestsAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.orderState?.name || 'Статуса нет'
+        Cell: ({ row }) => row.original.orderStateName || 'Статуса нет'
       },
       {
         header: 'Заголовок',
@@ -178,7 +188,7 @@ export function RequestsAllPage() {
         mantineTableBodyCellProps: {
           align: 'center',
         },
-        Cell: ({ row }) => row.original.orderType?.name || ''
+        Cell: ({ row }) => row.original.orderTypeName || ''
       },
       {
         header: 'Инициатор',
@@ -190,8 +200,8 @@ export function RequestsAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const fullName = row.original.initiator?.fio1c || '';
-          return formatFIO(fullName);
+          const user = users.find((item: User) => item.idItUser === row.original.initiatorId) || '';
+          return formatFIO(user.fio1c);
         }
       },
       {
@@ -204,8 +214,8 @@ export function RequestsAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const fullName = row.original.dispatcher?.fio1c || '';
-          return formatFIO(fullName);
+          const user = users.find((item: User) => item.idItUser === row.original.dispatcherId) || '';
+          return formatFIO(user.fio1c);
         }
       },
       {
@@ -217,7 +227,7 @@ export function RequestsAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.service?.fullname || ''
+        Cell: ({ row }) => row.original.serviceFullname || ''
       },
       {
         header: 'Услуга',
@@ -228,7 +238,7 @@ export function RequestsAllPage() {
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.catalogItem?.name || ''
+        Cell: ({ row }) => row.original.catalogItemName || ''
       },
     ],
     [],
@@ -241,7 +251,7 @@ export function RequestsAllPage() {
     }
 
     // Получаем тип заявки из данных строки
-    const requestType = row.original.orderType?.name;
+    const requestType = row.original.orderTypeName;
 
 
     // Цвета для разных типов заявок
@@ -329,7 +339,7 @@ export function RequestsAllPage() {
 
     // Если заявка уже завершена не считаем просроченной
     const completedStatuses = ['Закрыта', 'Отклонена'];
-    if (request.orderState) {
+    if (request.orderStateId) {
       return false;
     }
     const temp = dayjs(request.dateFinishPlan).toString();
@@ -430,7 +440,7 @@ export function RequestsAllPage() {
         borderLeft: '1px solid #dde7ee !important',
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
         cursor: 'pointer',
-        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
+        fontWeight: row.original.orderStateName === 'Новая' ? 'bold' : 'normal',
       }
     }),
   });
