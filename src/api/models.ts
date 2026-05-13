@@ -14,6 +14,19 @@ export interface ArticleCategory {
   name: string | undefined;
 }
 
+export interface Approve {
+  idApprove: number;
+  idOrder: number;
+  name: string;
+  idUserCreator: number;
+  flagApproved: boolean;
+  dateCreated: Dayjs;
+  datePlan: Dayjs | null;
+  idApproveState: number;
+  dateFact: Dayjs | null;
+  taskText: string | null;
+}
+
 export interface Order {
   idOrder: number | undefined;
   nomer: string | undefined;
