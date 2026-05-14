@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Order } from '../../pages/support/makeData';
+import { components } from '../../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 
 type DialogState = {
   postpone: { open: boolean; order: Order | null };

@@ -394,7 +394,7 @@ export interface components {
       /** Format: date-time */
       dateCreated: string;
       /** Format: date-time */
-      dateFinishPlan: string;
+      dateFinishPlan: string | null;
       /** Format: date-time */
       dateFinishFact: string | null;
       /** Format: date-time */
@@ -500,34 +500,26 @@ export interface components {
       dateFact?: string;
       taskText?: string;
     };
-    JsonNullableBoolean: {
-      undefined?: boolean;
-      present?: boolean;
-    };
-    JsonNullableInstant: {
-      undefined?: boolean;
-      present?: boolean;
-    };
-    JsonNullableInteger: {
-      undefined?: boolean;
-      present?: boolean;
-    };
-    JsonNullableString: {
-      undefined?: boolean;
-      present?: boolean;
-    };
     TaskUpdateDTO: {
-      idOrder?: components["schemas"]["JsonNullableInteger"];
-      idOrderTaskParent?: components["schemas"]["JsonNullableInteger"];
-      idWork?: components["schemas"]["JsonNullableInteger"];
-      idExecutor?: components["schemas"]["JsonNullableInteger"];
-      dateFinishPlan?: components["schemas"]["JsonNullableInstant"];
-      dateFinishFact?: components["schemas"]["JsonNullableInstant"];
-      description?: components["schemas"]["JsonNullableString"];
-      closeParentCheck?: components["schemas"]["JsonNullableBoolean"];
-      idTaskState?: components["schemas"]["JsonNullableInteger"];
-      idCreator?: components["schemas"]["JsonNullableInteger"];
-      resultText?: components["schemas"]["JsonNullableString"];
+      /** Format: int32 */
+      idOrder?: number | null;
+      /** Format: int32 */
+      idOrderTaskParent?: number | null;
+      /** Format: int32 */
+      idWork?: number | null;
+      /** Format: int32 */
+      idExecutor?: number | null;
+      /** Format: date-time */
+      dateFinishPlan?: string | null;
+      /** Format: date-time */
+      dateFinishFact?: string | null;
+      description?: string | null;
+      closeParentCheck?: boolean | null;
+      /** Format: int32 */
+      idTaskState?: number | null;
+      /** Format: int32 */
+      idCreator?: number | null;
+      resultText?: string | null;
     };
     CatalogItem: {
       /** Format: int32 */
@@ -700,25 +692,40 @@ export interface components {
       description?: string;
     };
     OrderUpdateDTO: {
-      name?: components["schemas"]["JsonNullableString"];
-      description?: components["schemas"]["JsonNullableString"];
-      dateFinishPlan?: components["schemas"]["JsonNullableInstant"];
-      dateFinishFact?: components["schemas"]["JsonNullableInstant"];
-      dateTechReturn?: components["schemas"]["JsonNullableInstant"];
-      idOrderParent?: components["schemas"]["JsonNullableInteger"];
-      idOrderType?: components["schemas"]["JsonNullableInteger"];
-      idCatItem?: components["schemas"]["JsonNullableInteger"];
-      idService?: components["schemas"]["JsonNullableInteger"];
-      idOrderPriority?: components["schemas"]["JsonNullableInteger"];
-      idOrderState?: components["schemas"]["JsonNullableInteger"];
-      idCreator?: components["schemas"]["JsonNullableInteger"];
-      idInitiator?: components["schemas"]["JsonNullableInteger"];
-      idDispatcher?: components["schemas"]["JsonNullableInteger"];
-      idExecutor?: components["schemas"]["JsonNullableInteger"];
-      idOrderSource?: components["schemas"]["JsonNullableInteger"];
-      resultText?: components["schemas"]["JsonNullableString"];
-      datePostpone?: components["schemas"]["JsonNullableInstant"];
-      comment?: components["schemas"]["JsonNullableString"];
+      name?: string | null;
+      description?: string | null;
+      /** Format: date-time */
+      dateFinishPlan?: string | null;
+      /** Format: date-time */
+      dateFinishFact?: string | null;
+      /** Format: date-time */
+      dateTechReturn?: string | null;
+      /** Format: int32 */
+      idOrderParent?: number | null;
+      /** Format: int32 */
+      idOrderType?: number | null;
+      /** Format: int32 */
+      idCatItem?: number | null;
+      /** Format: int32 */
+      idService?: number | null;
+      /** Format: int32 */
+      idOrderPriority?: number | null;
+      /** Format: int32 */
+      idOrderState?: number | null;
+      /** Format: int32 */
+      idCreator?: number | null;
+      /** Format: int32 */
+      idInitiator?: number | null;
+      /** Format: int32 */
+      idDispatcher?: number | null;
+      /** Format: int32 */
+      idExecutor?: number | null;
+      /** Format: int32 */
+      idOrderSource?: number | null;
+      resultText?: string | null;
+      /** Format: date-time */
+      datePostpone?: string | null;
+      comment?: string | null;
     };
     OrderStatusUpdateDTO: {
       /** Format: int32 */

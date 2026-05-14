@@ -10,7 +10,8 @@ import {
   Box
 } from '@mui/material';
 import { DateTimePicker } from '@mantine/dates';
-import { Order } from '../../../pages/support/makeData';
+import { components } from '../../../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 
 interface ControlDialogProps {
   open: boolean;

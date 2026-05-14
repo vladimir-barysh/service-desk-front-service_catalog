@@ -1,38 +1,3 @@
-import { Dayjs } from "dayjs";
-
-export class Order {
-  idOrder: number | undefined;
-  nomer: string | undefined;
-  name: string | undefined;
-  description: string | undefined;
-  dateCreated: Dayjs | undefined;
-  dateFinishPlan: Dayjs | undefined;
-  dateFinishFact: Dayjs | undefined;
-  datePostpone: Dayjs | undefined;
-  dateTechReturn: Dayjs | undefined;
-  orderParentId: number | undefined;
-  orderTypeId: number | undefined;
-  orderTypeName: string | undefined;
-  catalogItemId: number | undefined;
-  catalogItemName: string | undefined;
-  serviceId: number | undefined;
-  serviceFullname: string | undefined;
-  orderStateId: number | undefined;
-  orderStateName: string | undefined;
-  orderPriorityId: number | undefined;
-  orderPriorityName: string | undefined;
-  creatorId: number | undefined;
-  initiatorId: number | undefined;
-  dispatcherId: number | undefined;
-  dispatcherFio: string | undefined;
-  executorId: number | undefined;
-  executorFio: string | undefined;
-  orderSourceId: number | undefined;
-  orderSourceName: string | undefined;
-  resultText: string | undefined;
-  comment: string | undefined;
-}
-
 export class OrderType {
   idOrderType: number | undefined;
   name: string | undefined;

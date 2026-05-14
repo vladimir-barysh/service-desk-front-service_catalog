@@ -18,7 +18,9 @@ import SplitButton from '../../components/split-button/split-button.component';
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
-import { getOrders, useUpdateOrderStatus, getOrderStates, useUpdateOrder, type Order, getUsers, User } from '../../api';
+import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrderMutations';
+import { getOrderStates, getUsers } from '../../api'; // пока оставляем старые, но можно заменить позже
+import { components } from '../../types/api';
 import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
 
@@ -31,26 +33,17 @@ export function SupportAllPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
+  
+  type Order = components['schemas']['OrderResponseDTO'];
+  type User = components['schemas']['UserResponseDTO'];
 
   const currUser = "Воронин Владимир Владимирович";
-  const currUser1 = "Борисов Борис Борисович";
 
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
   const [searchParams] = useSearchParams();
   const urlStatus = searchParams.get('status') || null;
 
-  const {
-    data: orders = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['orders'],
-    queryFn: getOrders,
-    enabled: true,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
+  const { data: orders = [], isLoading, error } = useOrders();
 
   // Получение всех статусов заявок
   const { data: orderStates } = useQuery({
@@ -66,6 +59,9 @@ export function SupportAllPage() {
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
   })
+
+  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
+  const updateStatus = useUpdateOrderStatus();
 
   const inWork = orderStates?.find(state => state.name === 'В работе');
   const declined = orderStates?.find(state => state.name === 'Отклонена');
@@ -510,11 +506,6 @@ export function SupportAllPage() {
 
   // Хуки для управления диалогами
   const { dialogs, openDialog, closeDialog } = useDialogs();
-  const updateStatus = useUpdateOrderStatus();
-
-  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
-
-
 
   // Обработчики нажатия кнопок
   const handleAcceptClick = () => {
@@ -557,7 +548,7 @@ export function SupportAllPage() {
         data: {
           idOrderState: onWait.idOrderState,
           comment: comment
-        },
+        } as any,
       },
     );
   };

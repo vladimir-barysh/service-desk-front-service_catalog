@@ -19,8 +19,8 @@ export const useCreateOrder = createCRUDMutation<OrderCreateRequest, OrderRespon
   mutationFn: orderApi.create,
   queryKey: ['orders'],
   addToCache: (old, newOrder) => old ? [newOrder, ...old] : [newOrder],
-  successMessage: 'Заказ успешно создан',
-  errorMessage: 'Не удалось создать заказ',
+  successMessage: 'Заявка успешно создана',
+  errorMessage: 'Не удалось создать заявку',
 });
 
 // Обновление заявки
@@ -33,8 +33,8 @@ export const useUpdateOrder = createCRUDMutation<
   queryKey: ['orders'],
   getEntityId: (vars) => vars.id,
   idField: 'idOrder',
-  successMessage: 'Заказ обновлён',
-  errorMessage: 'Не удалось обновить заказ',
+  successMessage: 'Заявка обновлёна',
+  errorMessage: 'Не удалось обновить заявку',
 });
 
 // Обновление статуса (отдельный эндпоинт)
@@ -57,6 +57,6 @@ export const useDeleteOrder = createCRUDMutation<number, void>({
   queryKey: ['orders'],
   getEntityId: (id) => id,
   idField: 'idOrder',
-  successMessage: 'Заказ удалён',
-  errorMessage: 'Не удалось удалить заказ',
+  successMessage: 'Заявка удалёна',
+  errorMessage: 'Не удалось удалить заявку',
 });

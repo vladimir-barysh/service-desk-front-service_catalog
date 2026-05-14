@@ -10,7 +10,8 @@ import {
   Paper,
   Typography
 } from '@mui/material';
-import { Order } from '../../../pages/support/makeData';
+import { components } from '../../../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 import { generateCoordinationData} from './makeData';
 
 interface SupportCoordinationTabProps {
