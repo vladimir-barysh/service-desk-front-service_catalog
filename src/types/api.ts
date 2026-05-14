@@ -386,53 +386,53 @@ export interface components {
     };
     OrderResponseDTO: {
       /** Format: int32 */
-      idOrder?: number;
+      idOrder: number;
       /** Format: int32 */
-      nomer?: number;
-      name?: string;
-      description?: string;
+      nomer: number;
+      name: string;
+      description: string;
       /** Format: date-time */
-      dateCreated?: string;
+      dateCreated: string;
       /** Format: date-time */
-      dateFinishPlan?: string;
+      dateFinishPlan: string;
       /** Format: date-time */
-      dateFinishFact?: string;
+      dateFinishFact: string | null;
       /** Format: date-time */
-      datePostpone?: string;
+      datePostpone: string | null;
       /** Format: date-time */
-      dateTechReturn?: string;
-      comment?: string;
-      resultText?: string;
+      dateTechReturn: string | null;
+      comment: string | null;
+      resultText: string | null;
       /** Format: int32 */
-      orderParentId?: number;
+      orderParentId: number | null;
       /** Format: int32 */
-      initiatorId?: number;
+      initiatorId: number;
       /** Format: int32 */
-      creatorId?: number;
+      creatorId: number;
       /** Format: int32 */
-      dispatcherId?: number;
-      dispatcherFio?: string;
+      dispatcherId: number | null;
+      dispatcherFio: string | null;
       /** Format: int32 */
-      executorId?: number;
-      executorFio?: string;
+      executorId: number | null;
+      executorFio: string | null;
       /** Format: int32 */
-      orderTypeId?: number;
-      orderTypeName?: string;
+      orderTypeId: number;
+      orderTypeName: string;
       /** Format: int32 */
-      catalogItemId?: number;
-      catalogItemName?: string;
+      catalogItemId: number;
+      catalogItemName: string;
       /** Format: int32 */
-      serviceId?: number;
-      serviceFullname?: string;
+      serviceId: number;
+      serviceFullname: string;
       /** Format: int32 */
-      orderStateId?: number;
-      orderStateName?: string;
+      orderStateId: number;
+      orderStateName: string;
       /** Format: int32 */
-      orderPriorityId?: number;
-      orderPriorityName?: string;
+      orderPriorityId: number;
+      orderPriorityName: string;
       /** Format: int32 */
-      orderSourceId?: number;
-      orderSourceName?: string;
+      orderSourceId: number;
+      orderSourceName: string;
     };
     ApproveUserCreateRequestDTO: {
       /** Format: int32 */
