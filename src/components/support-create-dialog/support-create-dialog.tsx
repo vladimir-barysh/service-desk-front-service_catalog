@@ -18,7 +18,7 @@ import { OrderTask } from '../../api/models';
 import { uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
 import {
-  SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab,
+  SupportGeneralTab, SupportApproveTab, SupportDiscussionTab,
   SupportFilesTab, SupportHistoryTab, SupportTasksTab
 } from '../support-tabs';
 import { useQuery} from '@tanstack/react-query';
@@ -223,7 +223,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
               <SupportFilesTab order={request} />
             </TabPanel>
             <TabPanel value="3" sx={{ padding: "0px" }}>
-              <SupportCoordinationTab order={request} />
+              <SupportApproveTab order={request} />
             </TabPanel>
             <TabPanel value="4" sx={{ padding: "0px" }}>
               <SupportTasksTab order={request} />

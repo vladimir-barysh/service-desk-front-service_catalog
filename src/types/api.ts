@@ -475,30 +475,28 @@ export interface components {
       name: string;
       /** Format: int32 */
       idUserCreator: number;
-      /** Format: int32 */
-      idApproveState: number;
       /** Format: date-time */
       datePlan?: string;
       taskText?: string;
     };
     ApproveResponseDTO: {
       /** Format: int32 */
-      idApprove?: number;
+      idApprove: number;
       /** Format: int32 */
-      idOrder?: number;
-      name?: string;
+      idOrder: number;
+      name: string;
       /** Format: int32 */
-      idUserCreator?: number;
-      flagApproved?: boolean;
-      /** Format: date-time */
-      dateCreated?: string;
-      /** Format: date-time */
-      datePlan?: string;
+      idUserCreator: number;
+      flagApproved: boolean;
       /** Format: int32 */
-      idApproveState?: number;
+      idApproveState: number;
       /** Format: date-time */
-      dateFact?: string;
-      taskText?: string;
+      dateCreated: string;
+      /** Format: date-time */
+      datePlan: string | null;
+      /** Format: date-time */
+      dateFact: string | null;
+      taskText: string | null;
     };
     TaskUpdateDTO: {
       /** Format: int32 */
