@@ -39,10 +39,12 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
     return (
       editedRequest.name !== request.name ||
+      editedRequest.comment !== request.comment ||
       editedRequest.description !== request.description ||
       editedRequest.dateCreated !== request.dateCreated ||
       editedRequest.dateFinishPlan !== request.dateFinishPlan ||
       editedRequest.dateFinishFact !== request.dateFinishFact ||
+      editedRequest.datePostpone !== request.datePostpone ||
       editedRequest.dateTechReturn !== request.dateTechReturn ||
       editedRequest.orderTypeId !== request.orderTypeId ||
       editedRequest.catalogItemId !== request.catalogItemId ||
@@ -59,10 +61,61 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   const isInitialMount = useRef(true);
 
   const labelStyle = {
-    border: '1px solid #e0e0e0',
-    borderRadius: '5px',
+    backgroundColor: '#f5f5f5',
+    border: 'solid #c7c7c7',
+    borderWidth: '1px',
+    borderRadius: '0px',
     p: 1,
-    backgroundColor: '#f5f5f5'
+  };
+
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+        borderWidth: '1px 1px 0 1px',
+      },
+      '&:hover fieldset': {
+        borderWidth: '1px',
+      },
+      borderRadius: 0,
+      height: 41
+    },
+    '& .MuiOutlinedInput-root.Mui-disabled': {
+      backgroundColor: '#f5f5f5',
+      '&:hover fieldset': {
+        borderWidth: '1px 1px 0px 1px'
+      }
+    }
+  };
+
+  const dateInputStyle = {
+    input: {
+      borderColor: '#c7c7c7',
+      borderRadius: '0px',
+      minHeight: '41px',
+      '&:hover': {
+        borderColor: 'black',
+        borderWidth: '1px'
+      },
+      '&:focus': {
+        borderWidth: '1px'
+      },
+      '&[data-disabled]': {
+        backgroundColor: '#ececec',
+        borderColor: '#979797',
+        cursor: 'not-allowed',
+      },
+    }
+  };
+
+  const selectInputStyle = {
+    '& fieldset': {
+      borderWidth: '1px 1px 0px 1px',
+    },
+    '&:hover fieldset': {
+      borderWidth: '1px',
+    },
+    borderRadius: 0,
+    height: 41,
   };
 
   if (!editedRequest) {
@@ -92,7 +145,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   };
 
   const handleDateChange = (field: string, newDate: DateValue) => {
-    const temp = dayjs(newDate);
+    const temp = newDate ? dayjs(newDate) : '';
     setEditedRequest(prev => prev ? { ...prev, [field]: temp } : null);
   };
 
@@ -103,7 +156,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       (item: OrderType) => item.idOrderType === selectedId
     ) ?? null;
 
-    setEditedRequest(prev => prev ? { ...prev, orderType: selectedObject } : null);
+    setEditedRequest(prev => prev ? { ...prev, orderTypeId: selectedObject.idOrderType, orderTypeName: selectedObject.name } : null);
 
   };
 
@@ -115,7 +168,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     ) ?? null;
 
     setEditedRequest(prev =>
-      prev ? { ...prev, orderPriority: selectedObject } : null
+      prev ? { ...prev, orderPriorityId: selectedObject.idOrderPriority } : null
     );
   };
 
@@ -126,7 +179,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       (item: User) => item.idItUser === selectedId
     ) ?? null;
 
-    setEditedRequest(prev => prev ? { ...prev, dispatcher: selectedObject } : null);
+    setEditedRequest(prev => prev ? { ...prev, dispatcherId: selectedObject.idItUser } : null);
 
   };
 
@@ -209,7 +262,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       <Grid2 container spacing={0} paddingBottom="5px" justifyContent="center">
 
         <Grid2 container spacing={0} size={3}>
-          <Grid2 size="auto" sx={labelStyle}>
+          <Grid2
+            size="auto"
+            sx={[
+              labelStyle,
+              {
+                borderRadius: '5px 0px 0px 5px',
+                borderWidth: '1px 0px 1px 1px',
+              }
+            ]}
+          >
             <Typography variant="subtitle2">Статус</Typography>
           </Grid2>
           <Grid2 size="auto">
@@ -219,12 +281,32 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               size="small"
               variant="outlined"
               InputProps={{ readOnly: true }}
+              sx={[
+                textFieldStyle,
+                {
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderWidth: '1px',
+                    },
+                    borderRadius: '0px 5px 5px 0px'
+                  },
+                }
+              ]}
             />
           </Grid2>
         </Grid2>
 
         <Grid2 container spacing={0} size={3}>
-          <Grid2 size="auto" sx={labelStyle}>
+          <Grid2
+            size="auto"
+            sx={[
+              labelStyle,
+              {
+                borderRadius: '5px 0px 0px 5px',
+                borderWidth: '1px 0px 1px 1px',
+              }
+            ]}
+          >
             <Typography variant="subtitle2">Дата регистрации</Typography>
           </Grid2>
           <Grid2 size="auto">
@@ -238,18 +320,33 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 onPointerLeaveCapture={undefined}
                 clearable
                 locale='ru'
-                size="md"
-                styles={{ input: { minHeight: '40px' } }}
+                styles={{
+                  ...dateInputStyle,
+                  input: {
+                    ...dateInputStyle.input,
+                    borderRadius: '0px 5px 5px 0px'
+                  }
+                }}
                 readOnly={!isEditing}
                 value={editedRequest?.dateCreated ? dayjs(editedRequest?.dateCreated).toDate() : null}
                 onChange={(newDateCreated) => handleDateChange('dateCreated', newDateCreated)}
+
               />
             </LocalizationProvider>
           </Grid2>
         </Grid2>
 
         <Grid2 container spacing={0} size={3}>
-          <Grid2 size="auto" sx={labelStyle}>
+          <Grid2
+            size="auto"
+            sx={[
+              labelStyle,
+              {
+                borderRadius: '5px 0px 0px 5px',
+                borderWidth: '1px 0px 1px 1px',
+              }
+            ]}
+          >
             <Typography variant="subtitle2">Желаемый срок</Typography>
           </Grid2>
           <Grid2 size="auto">
@@ -261,8 +358,13 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               onPointerLeaveCapture={undefined}
               clearable
               locale='ru'
-              size="md"
-              styles={{ input: { minHeight: '40px' } }}
+              styles={{
+                ...dateInputStyle,
+                input: {
+                  ...dateInputStyle.input,
+                  borderRadius: '0px 5px 5px 0px'
+                }
+              }}
               readOnly={!isEditing}
               value={editedRequest?.dateFinishPlan ? dayjs(editedRequest?.dateFinishPlan).toDate() : null}
               onChange={(newDateFinishPlan) => handleDateChange('dateFinishPlan', newDateFinishPlan)}
@@ -275,7 +377,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         </Grid2>
 
         <Grid2 container spacing={0} size={3}>
-          <Grid2 size="auto" sx={labelStyle}>
+          <Grid2
+            size="auto"
+            sx={[
+              labelStyle,
+              {
+                borderRadius: '5px 0px 0px 5px',
+                borderWidth: '1px 0px 1px 1px',
+              }
+            ]}
+          >
             <Typography variant="subtitle2">Дата решения</Typography>
           </Grid2>
           <Grid2 size="auto">
@@ -285,11 +396,22 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               withSeconds={false}
               onPointerEnterCapture={undefined}
               onPointerLeaveCapture={undefined}
-              clearable
               locale='ru'
-              size="md"
-              styles={{ input: { minHeight: '40px' } }}
-              readOnly={!isEditing}
+              styles={{
+                ...dateInputStyle,
+                input: {
+                  ...dateInputStyle.input,
+                  borderRadius: '0px 5px 5px 0px',
+                  '&:hover': {
+                    borderColor: '#c7c7c7',
+                  },
+
+                  '&:focus': {
+                    borderColor: '#c7c7c7',
+                  },
+                }
+              }}
+              readOnly={true}
               value={editedRequest?.dateFinishFact ? dayjs(editedRequest?.dateFinishFact).toDate() : null}
               onChange={(newDateFinishFact) => handleDateChange('dateFinishFact', newDateFinishFact)}
             />
@@ -300,7 +422,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       <Grid2 container spacing={0}>
         <Grid2 size={6}>
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderRadius: '5px 0px 0px 0px',
+                  borderWidth: '1px 0px 0px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Сервис / Модуль</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -311,12 +442,28 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('itModule')}
+                sx={[
+                  textFieldStyle,
+                  {
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '0px 5px 0px 0px',
+                    },
+                  }
+                ]}
               />
             </Grid2>
           </Grid2>
 
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Услуга</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -327,12 +474,21 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('service')}
+                sx={textFieldStyle}
               />
             </Grid2>
           </Grid2>
 
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Заголовок</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -343,12 +499,21 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('name')}
+                sx={textFieldStyle}
               />
             </Grid2>
           </Grid2>
 
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Кому доступ (ЗНД)</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -360,25 +525,47 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 onChange={handleChange('accessTo')}
                 disabled={editedRequest.orderTypeName === 'ЗНД' ? false : true}
                 value={editedRequest.orderTypeName === 'ЗНД' ? initiator.fio1c : 'Не тот тип заявки'}
+                sx={[
+                  textFieldStyle,
+                  {
+                    '& .MuiOutlinedInput-root.Mui-disabled': {
+                      backgroundColor: '#f5f5f5',
+                      '&:hover fieldset': {
+                        borderWidth: '1px 1px 0px 1px'
+                      }
+                    }
+                  }
+                ]}
               />
             </Grid2>
           </Grid2>
 
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Диспетчер</Typography>
             </Grid2>
             <Grid2 size={9}>
               <FormControl fullWidth size="small">
                 <Select
+                  displayEmpty
                   value={editedRequest.dispatcherId || ''}
                   onChange={handleDispatcherChange}
 
                   renderValue={(selected) => {
-                    if (!selected) return <em>Не выбрано</em>;
-                    const p = users.find((x: User) => x.idItUser === selected);
+                    if (!selected) return <em>Не выбран</em>;
+                    const p = users.find((x: User) => x.idItUser === Number(selected));
                     return p?.fio1c;
                   }}
+
+                  sx={selectInputStyle}
                 >
                   {users.map((item: User) => (
                     <MenuItem key={item.idItUser} value={item.idItUser}>
@@ -389,9 +576,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               </FormControl>
             </Grid2>
           </Grid2>
-          
+
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Комментарий</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -399,14 +594,24 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 value={editedRequest.comment || ''}
                 onChange={handleChange('comment')}
                 readonly={!isEditing}
+                sx={textFieldStyle}
               />
             </Grid2>
           </Grid2>
         </Grid2>
-        
+
         <Grid2 size={6}>
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderRadius: '5px 0px 0px 0px',
+                  borderWidth: '1px 0px 0px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Отложено до</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -420,9 +625,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 clearable
                 locale='ru'
                 size="md"
-                styles={{ input: { minHeight: '40px' } }}
+                styles={{
+                  ...dateInputStyle,
+                  input: {
+                    ...dateInputStyle.input,
+                    borderRadius: '0px 5px 0px 0px',
+                    borderWidth: '1px 1px 0px 1px',
+
+                  }
+                }}
                 readOnly={!isEditing}
-              //onChange={(newDateFinishFact) => handleDateChange('dateFinishFact', newDateFinishFact)}
+                onChange={(newDatePostpone) => handleDateChange('datePostpone', newDatePostpone)}
               />
             </Grid2>
           </Grid2>
@@ -432,7 +645,15 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 5 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Дата возврата техники</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -445,7 +666,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 clearable
                 locale='ru'
                 size="md"
-                styles={{ input: { minHeight: '40px' } }}
+                styles={{
+                  ...dateInputStyle,
+                  input: {
+                    ...dateInputStyle.input,
+                    borderWidth: '1px 1px 0px 1px',
+                    '&:disabled': {
+                      borderColor: ''
+                    }
+                  }
+                }}
+                disabled={editedRequest.orderTypeName === 'ЗНТ' ? false : true}
                 readOnly={!isEditing}
                 value={editedRequest?.dateTechReturn ? dayjs(editedRequest?.dateTechReturn).toDate() : null}
                 onChange={(newDateTechReturn) => handleDateChange('dateTechReturn', newDateTechReturn)}
@@ -455,7 +686,15 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 6 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Тип заявки</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -469,6 +708,8 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     const p = orderTypes.find((x: OrderType) => x.idOrderType === selected);
                     return p?.name;
                   }}
+
+                  sx={selectInputStyle}
                 >
                   {orderTypes.map((item: OrderType) => (
                     <MenuItem key={item.idOrderType} value={item.idOrderType}>
@@ -482,7 +723,15 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 7 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Приоритет</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -496,6 +745,8 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     const p = orderPriorities.find((x: OrderPriority) => x.idOrderPriority === selected);
                     return p?.name;
                   }}
+
+                  sx={selectInputStyle}
                 >
                   {orderPriorities.map((item: OrderPriority) => (
                     <MenuItem key={item.idOrderPriority} value={item.idOrderPriority}>
@@ -509,7 +760,15 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
           {/* Строка 8 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Способ обращения</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -517,17 +776,27 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 fullWidth
                 size="small"
                 variant="outlined"
-                value={"WEB"}
+                value={editedRequest.orderSourceName || ''}
                 rows={1}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('contactMethod')}
+
+                sx={textFieldStyle}
               />
             </Grid2>
           </Grid2>
 
           {/* Строка 9 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">База знаний по системе</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -539,6 +808,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 rows={1}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={(e) => handleFieldChange('knowledgeBase', e.target.value)}
+                sx={textFieldStyle}
               />
             </Grid2>
           </Grid2>
@@ -547,7 +817,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         <Grid2 size={6}>
 
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderRadius: '0px 0px 0px 5px',
+                  borderWidth: '1px 0px 1px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Описание</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -556,6 +835,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 onChange={handleChange('description')}
                 readonly={!isEditing}
                 rows={3}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderWidth: '1px',
+                    },
+                    '&:hover fieldset': {
+                      borderWidth: '1px',
+                    },
+                    borderRadius: '0px 0px 5px 0px',
+                  },
+                }}
               />
             </Grid2>
           </Grid2>
@@ -564,7 +854,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
         <Grid2 size={6}>
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderRadius: '0px 0px 0px 5px',
+                  borderWidth: '1px 0px 1px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Решение</Typography>
             </Grid2>
             <Grid2 size={9}>
@@ -573,6 +872,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 onChange={handleChange('resultText')}
                 readonly={!isEditing}
                 rows={3}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderWidth: '1px',
+                    },
+                    '&:hover fieldset': {
+                      borderWidth: '1px',
+                    },
+                    borderRadius: '0px 0px 5px 0px',
+                  },
+                }}
               />
             </Grid2>
           </Grid2>
@@ -586,12 +896,22 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       <Grid2 container spacing={0}>
         <Grid2 size={6}>
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderRadius: '5px 0px 0px 0px',
+                  borderWidth: '1px 0px 0px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Инициатор</Typography>
             </Grid2>
             <Grid2 size={9}>
               <TextField
-                value={initiator.fio1c }
+                disabled={true}
+                value={initiator.fio1c}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -600,17 +920,34 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     readOnly: true,
                   },
                 }}
+                sx={[
+                  textFieldStyle,
+                  {
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '0px 5px 0px 0px'
+                    },
+                  }
+                ]}
               />
             </Grid2>
           </Grid2>
 
           {/* Строка 2 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Должность</Typography>
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                disabled={true}
                 value={initiator.dolzh1c || ''}
                 fullWidth
                 size="small"
@@ -620,16 +957,27 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     readOnly: true,
                   },
                 }}
+                sx={textFieldStyle}
               />
             </Grid2>
           </Grid2>
           {/* Строка 3 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderRadius: '0px 0px 0px 5px',
+                  borderWidth: '1px 0px 1px 1px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Подразделение</Typography>
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                disabled={true}
                 value={podrInit?.name || ''}
                 fullWidth
                 size="small"
@@ -639,6 +987,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     readOnly: true,
                   },
                 }}
+                sx={[
+                  textFieldStyle,
+                  {
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '0px 0px 5px 0px',
+                      '& fieldset': {
+                        borderWidth: '1px',
+                      },
+                    },
+                  }
+                ]}
               />
             </Grid2>
           </Grid2>
@@ -647,11 +1006,21 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
         <Grid2 size={6}>
           {/* Строка 1 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderRadius: '5px 0px 0px 0px',
+                  borderWidth: '1px 0px 0px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Вн. номер</Typography>
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                disabled={true}
                 value={initiator.telAd || ''}
                 fullWidth
                 size="small"
@@ -666,17 +1035,34 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     ),
                   },
                 }}
+                sx={[
+                  textFieldStyle,
+                  {
+                    '& .MuiOutlinedInput-root': {
+                      borderTopRightRadius: 5
+                    },
+                  }
+                ]}
               />
             </Grid2>
           </Grid2>
 
           {/* Строка 2 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderWidth: '1px 0px 0px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Сот. номер</Typography>
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                disabled={true}
                 value={initiator.telAd || ''}
                 fullWidth
                 size="small"
@@ -692,17 +1078,28 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     ),
                   },
                 }}
+                sx={textFieldStyle}
               />
             </Grid2>
           </Grid2>
 
           {/* Строка 3 */}
           <Grid2 container spacing={0}>
-            <Grid2 size={3} sx={labelStyle}>
+            <Grid2
+              size={3}
+              sx={[
+                labelStyle,
+                {
+                  borderRadius: '0px 0px 0px 5px',
+                  borderWidth: '1px 0px 1px 0px',
+                }
+              ]}
+            >
               <Typography variant="subtitle2">Почта</Typography>
             </Grid2>
             <Grid2 size={9}>
               <TextField
+                disabled={true}
                 value={initiator.emailAd || ''}
                 fullWidth
                 size="small"
@@ -718,6 +1115,17 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     ),
                   },
                 }}
+                sx={[
+                  textFieldStyle,
+                  {
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '0px 0px 5px 0px',
+                      '& fieldset': {
+                        borderWidth: '1px',
+                      },
+                    },
+                  }
+                ]}
               />
             </Grid2>
           </Grid2>
