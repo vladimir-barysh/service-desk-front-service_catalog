@@ -110,7 +110,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   const checkFiles = () => {
     if (!request?.nomer) return;
     const filesForThisRequest = uploadedFiles.filter(
-     file => file.idRequest === String(request.nomer)
+     file => file.idRequest === request.nomer
     );
     setHasFiles(filesForThisRequest.length > 0);
   };
