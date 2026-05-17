@@ -18,7 +18,9 @@ import SplitButton from '../../components/split-button/split-button.component';
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
-import { getOrders, useUpdateOrderStatus, getOrderStates, useUpdateOrder, type Order } from '../../api';
+import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrderMutations';
+import { getOrderStates, getUsers } from '../../api'; // пока оставляем старые, но можно заменить позже
+import { components } from '../../types/api';
 import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
 
@@ -31,32 +33,35 @@ export function SupportAllPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
+  
+  type Order = components['schemas']['OrderResponseDTO'];
+  type User = components['schemas']['UserResponseDTO'];
 
   const currUser = "Воронин Владимир Владимирович";
-  const currUser1 = "Борисов Борис Борисович";
 
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
   const [searchParams] = useSearchParams();
   const urlStatus = searchParams.get('status') || null;
 
-  const {
-    data: orders = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['orders'],
-    queryFn: getOrders,
-    enabled: true,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
+  const { data: orders = [], isLoading, error } = useOrders();
 
   // Получение всех статусов заявок
   const { data: orderStates } = useQuery({
     queryKey: ['orderStates'],
     queryFn: getOrderStates,
   });
+
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+    enabled: true,
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  })
+
+  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
+  const updateStatus = useUpdateOrderStatus();
 
   const inWork = orderStates?.find(state => state.name === 'В работе');
   const declined = orderStates?.find(state => state.name === 'Отклонена');
@@ -67,22 +72,22 @@ export function SupportAllPage() {
     let result = orders;
 
     if (urlStatus === 'new') {
-      result = result.filter((item: Order) => item.orderState?.name === 'Новая');
+      result = result.filter((item: Order) => item.orderStateName === 'Новая');
     }
     else if (urlStatus === 'nAgreed') {
-      result = result.filter((item: Order) => item.orderState?.name === 'Не согласовано' || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.orderStateName === 'Не согласовано' || item.orderStateName === 'Закрыта');
     }
     else if (urlStatus === 'nConfirmed') {
-      result = result.filter((item: Order) => item.orderState?.name === 'Возобновлена' || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.orderStateName === 'Возобновлена' || item.orderStateName === 'Закрыта');
     }
     else if (urlStatus === 'onControl') {
-      result = result.filter((item: Order) => item.dateTechReturn !== null || item.orderState?.name === 'Закрыта');
+      result = result.filter((item: Order) => item.dateTechReturn !== null || item.orderStateName === 'Закрыта');
     }
     else if (urlStatus === 'mine') {
-      result = result.filter((item: Order) => item.dispatcher?.fio1c === currUser);
+      result = result.filter((item: Order) => item.dispatcherFio === currUser);
     }
     if (hideClosed) {
-      result = result.filter((item: Order) => item.orderState?.name !== 'Закрыта');
+      result = result.filter((item: Order) => item.orderStateName !== 'Закрыта');
     }
 
     return result;
@@ -206,7 +211,7 @@ export function SupportAllPage() {
       {
         id: 'orderState',
         header: 'Статус',
-        accessorFn: (row) => row.orderState?.name,
+        accessorFn: (row) => row.orderStateName,
         type: 'string',
         maxSize: 130,
         enableResizing: false,
@@ -220,7 +225,7 @@ export function SupportAllPage() {
           disabled: urlStatus === 'new',
           readOnly: urlStatus === 'new',
         },
-        Cell: ({ row }) => row.original.orderState?.name || 'Статуса нет'
+        Cell: ({ row }) => row.original.orderStateName || 'Статуса нет'
       },
       {
         id: 'name',
@@ -236,7 +241,7 @@ export function SupportAllPage() {
       {
         id: 'orderType',
         header: 'Тип',
-        accessorFn: (row) => row.orderType?.name,
+        accessorFn: (row) => row.orderTypeName,
         type: 'string',
         maxSize: 50,
         enableResizing: false,
@@ -246,12 +251,12 @@ export function SupportAllPage() {
         mantineTableBodyCellProps: {
           align: 'center',
         },
-        Cell: ({ row }) => row.original.orderType?.name || ''
+        Cell: ({ row }) => row.original.orderTypeName || ''
       },
       {
         id: 'initiator',
         header: 'Инициатор',
-        accessorFn: (row) => row.initiator?.fio1c,
+        accessorFn: (row) => row.initiatorId,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -259,14 +264,14 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const fullName = row.original.initiator?.fio1c || '';
-          return formatFIO(fullName);
+          const user = users?.find((item: User) => item.idItUser === row.original.initiatorId) || '';
+          return formatFIO(user.fio1c);
         }
       },
       {
         id: 'dispatcher',
         header: 'Пользователь',
-        accessorFn: (row) => row.dispatcher?.fio1c,
+        accessorFn: (row) => row.dispatcherId,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -274,33 +279,33 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const fullName = row.original.dispatcher?.fio1c || '';
-          return formatFIO(fullName);
+          const user = users?.find((item: User) => item.idItUser === row.original.dispatcherId) || '';
+          return formatFIO(user.fio1c);
         }
       },
       {
         id: 'service',
         header: 'IT-сервис (модуль)',
-        accessorFn: (row) => row.service?.fullname,
+        accessorFn: (row) => row.serviceFullname,
         type: 'string',
         maxSize: 160,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.service?.fullname || ''
+        Cell: ({ row }) => row.original.serviceFullname || ''
       },
       {
         id: 'catitem',
         header: 'Услуга',
-        accessorFn: (row) => row.catalogItem?.name,
+        accessorFn: (row) => row.catalogItemName,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.catalogItem?.name || ''
+        Cell: ({ row }) => row.original.catalogItemName || ''
       },
     ],
     [urlStatus],
@@ -311,7 +316,7 @@ export function SupportAllPage() {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
-    const requestType = row.original.orderType?.name;
+    const requestType = row.original.orderTypeName;
 
     switch (requestType) {
       case 'ЗНО':
@@ -392,7 +397,7 @@ export function SupportAllPage() {
     if (!request.dateFinishPlan) return false;
 
     const completedStatuses = ['Закрыта', 'Отклонена'];
-    if (request.orderState) {
+    if (request.orderStateId) {
       return false;
     }
     const temp = dayjs(request.dateFinishPlan).toString();
@@ -485,7 +490,7 @@ export function SupportAllPage() {
         borderLeft: '1px solid #dde7ee !important',
         color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
         cursor: 'pointer',
-        fontWeight: row.original.orderState?.name === 'Новая' ? 'bold' : 'normal',
+        fontWeight: row.original.orderStateName === 'Новая' ? 'bold' : 'normal',
       }
     }),
     onColumnFiltersChange: handleFiltersChange,
@@ -501,11 +506,6 @@ export function SupportAllPage() {
 
   // Хуки для управления диалогами
   const { dialogs, openDialog, closeDialog } = useDialogs();
-  const updateStatus = useUpdateOrderStatus();
-
-  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
-
-
 
   // Обработчики нажатия кнопок
   const handleAcceptClick = () => {
@@ -548,7 +548,7 @@ export function SupportAllPage() {
         data: {
           idOrderState: onWait.idOrderState,
           comment: comment
-        },
+        } as any,
       },
     );
   };
@@ -560,13 +560,13 @@ export function SupportAllPage() {
         'Дата регистрации': order.dateCreated ? dayjs(order.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
         'Желаемый срок': order.dateFinishPlan ? dayjs(order.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
         'Дата решения': order.dateFinishFact ? dayjs(order.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
-        'Статус': order.orderState?.name || '',
+        'Статус': order.orderStateName || '',
         'Заголовок': order.name || '',
-        'Тип запроса': order.orderType?.name || '',
-        'Инициатор': order.initiator?.fio1c || '',
-        'Пользователь': order.dispatcher || '',
-        'IT-сервис/модуль': order.service?.fullname || '',
-        'Услуга': order.catalogItem?.name || '',
+        'Тип запроса': order.orderTypeName || '',
+        'Инициатор': order.initiatorId || '',
+        'Пользователь': order.dispatcherFio || '',
+        'IT-сервис/модуль': order.serviceFullname || '',
+        'Услуга': order.catalogItemName || '',
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);

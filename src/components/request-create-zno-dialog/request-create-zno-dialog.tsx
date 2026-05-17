@@ -48,6 +48,7 @@ export const RequestCreateZNODialog = (props: {
   onClose: any;
 }) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
   const [chosen, setChosen] = React.useState<Service | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [problemDescription, setProblemDescription] = useState('');
@@ -87,30 +88,42 @@ export const RequestCreateZNODialog = (props: {
       return;
     }
 
+    if (!chosen) {
+      showNotification({
+        title: 'Выберите сервис',
+        color: 'orange',
+      });
+      return;
+    }
+    
     const dto: OrderCreateDTO = {
-      name: chosen?.fullname,
-      description: problemDescription,
-      dateFinishPlan: finishDate,
-      idService: chosen?.idService,
+      name: chosen.fullname,
+      idService: chosen.idService,
+      // TODO: исправить ХАРД КОД - услуга н1 и инициатор
+      idCatItem: 1,
+      idInitiator: 1,
       idOrderType: 3,
+      description: problemDescription,
+
+      dateFinishPlan: finishDate,
       comment: comment,
     };
 
-    const formData = new FormData();
+    /*const formData = new FormData();
     formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
 
-    if(files.length > 0) {
+    if (files.length > 0) {
       files.forEach((file) => {
         formData.append('files', file);
       });
-    }
-    
-    createOrderMutation(formData, {
+    }*/
+
+    createOrderMutation(dto, {
       onSuccess: () => handleClose(),
     });
   };
 
-  
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
@@ -134,7 +147,7 @@ export const RequestCreateZNODialog = (props: {
   };
 
   const handleDateChange = (date: DateValue) => {
-    const temp = date ? dayjs(date).toISOString() : '';
+    const temp = date ? dayjs(date).toISOString().split('.')[0] + 'Z' : '';
     setFinishDate(temp);
   };
 
@@ -231,7 +244,7 @@ export const RequestCreateZNODialog = (props: {
 
             <Grid2 container spacing={1} alignItems="center" size="auto">
               <Grid2 size="auto">
-                <Text fw={600}>Желаемый срок *</Text>
+                <Text fw={600}>Желаемый срок</Text>
               </Grid2>
               <Grid2 size="auto">
                 <DateTimePicker

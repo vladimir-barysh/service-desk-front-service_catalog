@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
 import { RedirectTaskDialog, RedirectData, PostponeTaskDialog, PostponeData, formatFIO } from '../../../components';
-import { Order } from '../../../pages/support/makeData';
+import { components } from '../../../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createTask, getTasks } from '../../../api/services/taskService';
 import { OrderTask } from '../../../api';

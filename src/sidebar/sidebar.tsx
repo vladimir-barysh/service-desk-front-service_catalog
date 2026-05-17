@@ -26,7 +26,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getOrders } from '../api/services/orderService';
 import { getTasks } from '../api/services/taskService';
 import { OrderTask } from "../api";
-import { Order } from "../pages/support/makeData";
+import { components } from '../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 
 const activeColor = '#455980ff';
 const submenuColor = '#32415c';
@@ -65,11 +66,11 @@ function useRequestCounts() {
 
   return useMemo(() => {
 
-    const newCount = orders.filter((item: Order) => item.orderState?.name === 'Новая').length;
-    const allCount = orders.filter((item: Order) => item.orderState?.name !== 'Закрыта').length;
-    const nAgreedCount = orders.filter((item: Order) => item.orderState?.name === 'Не согласовано').length;
-    const nConfirmedCount = orders.filter((item: Order) => item.orderState?.name === 'Возобновлена').length;
-    const onControlCount = orders.filter((item: Order) => item.orderType?.name === 'ЗНТ' && item.orderState?.name !== 'Закрыта').length;
+    const newCount = orders.filter((item: Order) => item.orderStateName === 'Новая').length;
+    const allCount = orders.filter((item: Order) => item.orderStateName !== 'Закрыта').length;
+    const nAgreedCount = orders.filter((item: Order) => item.orderStateName === 'Не согласовано').length;
+    const nConfirmedCount = orders.filter((item: Order) => item.orderStateName === 'Возобновлена').length;
+    const onControlCount = orders.filter((item: Order) => item.orderTypeName === 'ЗНТ' && item.orderStateName !== 'Закрыта').length;
     const exeCount = tasks.filter((item: OrderTask) => item.taskState?.name !== 'Закрыта').length;
     return {
       newCount,

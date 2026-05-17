@@ -1,6 +1,6 @@
 import { createCRUDMutation } from './createCRUDMutation';
 import { updateOrder, updateOrderStatus, createOrder } from '../services/orderService';
-import { OrderUpdateDTO } from '../dtos';
+import { OrderCreateDTO, OrderUpdateDTO } from '../dtos';
 
 export const useUpdateOrder = createCRUDMutation({
   type: 'update',
@@ -26,7 +26,7 @@ export const useUpdateOrderStatus = createCRUDMutation({
 
 export const useCreateOrder = createCRUDMutation({
   type: 'create',
-  mutationFn: (data: FormData) => createOrder(data),
+  mutationFn: (data: OrderCreateDTO) => createOrder(data),
   queryKey: ['orders'],
   addToCache: (old, newOrder) => (old ? [newOrder, ...old] : [newOrder]),
   successMessage: 'Заявка создана',

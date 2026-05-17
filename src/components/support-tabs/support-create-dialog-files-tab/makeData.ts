@@ -3,7 +3,7 @@ export class fileDataClass {
   fileName?: string;
   dateOfCreation?: string;
   author?: string;
-  idRequest?: string;
+  idRequest?: number;
   fileSize?: number;
   fileType?: string;
 }
@@ -56,7 +56,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '1.pdf',
     'dateOfCreation': '2.19.2025',
     'author': 'Иванов И.И.',
-    'idRequest':'000011',
+    'idRequest':1,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   },
@@ -65,7 +65,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '2.pdf',
     'dateOfCreation': '2.10.2025',
     'author': 'Иванов А.Й.',
-    'idRequest': '000011',
+    'idRequest': 1,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   },
@@ -74,7 +74,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '3.pdf',
     'dateOfCreation': '1.1.2025',
     'author': 'Иванова.й.п.',
-    'idRequest': '000002',
+    'idRequest': 2,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   },
@@ -83,7 +83,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '235.pdf',
     'dateOfCreation': '21.10.2025',
     'author': 'Иванов И.И.',
-    'idRequest': '000002',
+    'idRequest': 2,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   },
@@ -92,7 +92,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '2511.pdf',
     'dateOfCreation': '2.10.2025',
     'author': 'Иванов А.Й.',
-    'idRequest': '000003',
+    'idRequest': 3,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   },
@@ -101,7 +101,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '346.pdf',
     'dateOfCreation': '1.1.2025',
     'author': 'Иванова.й.п.',
-    'idRequest': '000003',
+    'idRequest': 3,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   },
@@ -110,7 +110,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '12546.pdf',
     'dateOfCreation': '21.10.2025',
     'author': 'Иванов И.И.',
-    'idRequest': '000004',
+    'idRequest': 4,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   },
@@ -119,7 +119,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '23576.pdf',
     'dateOfCreation': '2.10.2025',
     'author': 'Иванов А.Й.',
-    'idRequest': '000004',
+    'idRequest': 4,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   },
@@ -128,7 +128,7 @@ export let uploadedFiles: fileDataClass[] = [
     'fileName': '3471.pdf',
     'dateOfCreation': '1.1.2025',
     'author': 'Иванова.й.п.',
-    'idRequest': '000004',
+    'idRequest': 4,
     'fileSize': 1024 * 1024,
     'fileType': 'application/pdf'
   }

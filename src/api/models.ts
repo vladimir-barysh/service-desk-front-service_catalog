@@ -14,6 +14,19 @@ export interface ArticleCategory {
   name: string | undefined;
 }
 
+export interface Approve {
+  idApprove: number;
+  idOrder: number;
+  name: string;
+  idUserCreator: number;
+  flagApproved: boolean;
+  dateCreated: Dayjs;
+  datePlan: Dayjs | null;
+  idApproveState: number;
+  dateFact: Dayjs | null;
+  taskText: string | null;
+}
+
 export interface Order {
   idOrder: number | undefined;
   nomer: string | undefined;
@@ -24,17 +37,25 @@ export interface Order {
   dateFinishFact: Dayjs | undefined;
   datePostpone: Dayjs | undefined;
   dateTechReturn: Dayjs | undefined;
-  orderParent: Order | undefined;
-  orderType: OrderType | undefined;
-  catalogItem: CatalogItem | undefined;
-  service: Service | undefined;
-  orderState: OrderState | undefined;
-  orderPriority: OrderPriority | undefined;
-  creator: User | undefined;
-  initiator: User | undefined;
-  dispatcher: User | undefined;
-  executor: User | undefined;
-  orderSource: OrderSource | undefined;
+  orderParentId: number | undefined;
+  orderTypeId: number | undefined;
+  orderTypeName: string | undefined;
+  catalogItemId: number | undefined;
+  catalogItemName: string | undefined;
+  serviceId: number | undefined;
+  serviceFullname: string | undefined;
+  orderStateId: number | undefined;
+  orderStateName: string | undefined;
+  orderPriorityId: number | undefined;
+  orderPriorityName: string | undefined; 
+  creatorId: number | undefined;
+  initiatorId: number | undefined;
+  dispatcherId: number | undefined;
+  dispatcherFio: string | undefined;
+  executorId: number | undefined;
+  executorFio: string | undefined;
+  orderSourceId: number | undefined;
+  orderSourceName: string | undefined;
   resultText: string | undefined;
   comment: string | undefined;
 }
@@ -55,8 +76,8 @@ export interface CatalogItem {
   name: string | undefined;
 }
 export interface Service {
-  idService: number | undefined;
-  fullname: string | undefined;
+  idService: number;
+  fullname: string;
   sname: string | undefined;
   description: string | undefined;
   developer: string | undefined;
@@ -102,7 +123,7 @@ export interface User {
   emailAd: string | undefined;
   telAd: string | undefined;
   fio1c: string | undefined;
-  podr: Podr | undefined;
+  podrId: number | undefined;
   dolzh1c: string | undefined;
   tabNum1c: string | undefined;
 }

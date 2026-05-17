@@ -91,24 +91,37 @@ export const RequestCreateZNIDialog = (props: {
       return;
     }
 
+    if (!chosen) {
+      showNotification({
+        title: 'Выберите сервис',
+        color: 'orange',
+      });
+      return;
+    }
+    
     const dto: OrderCreateDTO = {
-      name: chosen?.fullname,
-      description: problemDescription,
-      resultText: resultText,
-      dateFinishPlan: finishDate,
-      idService: chosen?.idService,
+      name: chosen.fullname,
+      idService: chosen.idService,
+      // TODO: исправить ХАРД КОД - услуга н1 и инициатор
+      idCatItem: 1,
+      idInitiator: 1,
       idOrderType: 2,
+      description: problemDescription,
+
+      dateFinishPlan: finishDate,
       comment: comment,
     };
 
-    const formData = new FormData();
+    /*const formData = new FormData();
     formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
-
+ 
     if (files.length > 0) {
-      files.forEach((file) => formData.append('files', file));
-    }
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }*/
 
-    createOrderMutation(formData, {
+    createOrderMutation(dto, {
       onSuccess: () => handleClose(),
     });
   };

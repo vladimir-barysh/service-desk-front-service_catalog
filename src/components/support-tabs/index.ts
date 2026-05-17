@@ -1,4 +1,4 @@
-export * from './support-create-dialog-coordination-tab';
+export * from './support-create-dialog-approve-tab';
 export * from './support-create-dialog-discussion-tab';
 export * from './support-create-dialog-files-tab';
 export * from './support-create-dialog-general-tab';

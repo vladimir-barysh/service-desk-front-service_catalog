@@ -3,7 +3,8 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { Box, Button as MUIButton, Grid2 } from "@mui/material";
 import { Card, Group, Text, Textarea, ScrollArea, Divider, Anchor, Badge } from "@mantine/core";
 import { IconEdit, IconCheck, IconX } from "@tabler/icons-react";
-import { Order } from '../../../pages/support/makeData';
+import { components } from '../../../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 import { Message, seed } from './makeData';
 
 function formatDT(iso: string) {
@@ -35,7 +36,8 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
   useEffect(() => {
     if(request?.nomer) {
       const requestMsgs = seed.filter(
-        msg => msg.idRequest === request.nomer);
+        msg => msg.idRequest === String(request.nomer)
+      );
       setItems(requestMsgs);
     }
     else{
@@ -53,7 +55,7 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
       author: "Христорождественская В.А.", // текущий пользователь
       createdAt: new Date().toISOString(),
       text,
-      idRequest: request?.nomer,
+      idRequest: String(request?.nomer),
     };
     setItems(prev => [...prev, next]);
     setDraft("");

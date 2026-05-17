@@ -89,16 +89,28 @@ export const RequestCreateZNTDialog = (props: {
       return;
     }
 
+    if (!chosen) {
+      showNotification({
+        title: 'Выберите сервис',
+        color: 'orange',
+      });
+      return;
+    }
+
     const dto: OrderCreateDTO = {
-      name: chosen?.fullname,
+      name: chosen.fullname,
+      idService: chosen.idService,
+      // TODO: исправить ХАРД КОД - услуга н1 и инициатор
+      idCatItem: 1,
+      idInitiator: 1,
+      idOrderType: 4,
       description: problemDescription,
+
       dateFinishPlan: finishDate,
       dateTechReturn: returnDate,
-      idService: chosen?.idService,
-      idOrderType: 4,
       comment: comment,
     };
-
+    /*
     const formData = new FormData();
     formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
 
@@ -107,8 +119,8 @@ export const RequestCreateZNTDialog = (props: {
         formData.append('files', file);
       });
     }
-
-    createOrderMutation(formData, {
+    */
+    createOrderMutation(dto, {
       onSuccess: () => handleClose(),
     });
   };
@@ -135,12 +147,12 @@ export const RequestCreateZNTDialog = (props: {
   };
 
   const handleFinishDateChange = (date: DateValue) => {
-    const temp = date ? dayjs(date).toISOString() : '';
+    const temp = date ? dayjs(date).toISOString().split('.')[0] + 'Z' : '';
     setFinishDate(temp);
   };
 
   const handleReturnDateChange = (date: DateValue) => {
-    const temp = date ? dayjs(date).toISOString() : '';
+    const temp = date ? dayjs(date).toISOString().split('.')[0] + 'Z' : '';
     setReturnDate(temp);
   };
 

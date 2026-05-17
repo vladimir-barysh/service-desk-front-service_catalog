@@ -12,16 +12,19 @@ export interface ArticleUpdateDTO {
   content?: string;
   idArticleCategory?: number;
 }
-  
-  export interface OrderCreateDTO {
-  name?: string;
-  description?: string;
+
+export interface OrderCreateDTO {
+  name: string;
+  idService: number;
+  idCatItem: number;
+  idInitiator: number;
+  idOrderType: number;
+  description: string;
+
+  comment?: string;
+  idOrderSource?: number;
   dateFinishPlan?: string;
   dateTechReturn?: string;
-  idService?: number;
-  idOrderType: number;
-  resultText?: string;
-  comment?: string;
 }
 
 export interface OrderUpdateDTO {
@@ -59,7 +62,7 @@ export interface TaskCreateDTO {
   idCreator?: number;
 }
 
-export interface TaskUpdateDTO { 
+export interface TaskUpdateDTO {
   idOrder?: number;
   idOrderTaskParent?: number;
   idWork?: number;

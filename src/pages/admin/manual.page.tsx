@@ -394,7 +394,7 @@ export function ManualPage() {
         const formatted = users.map((u: User, index: number) => ({
           id: index + 1,
           fio1c: formatFIO(u.fio1c || ''),
-          podr: u.podr?.name,
+          podr: u.podrId,
           dolzh1c: u.dolzh1c,
           tabNum1c: u.tabNum1c,
           sost: 0,
