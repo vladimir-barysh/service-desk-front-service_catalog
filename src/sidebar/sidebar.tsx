@@ -26,7 +26,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getOrders } from '../api/services/orderService';
 import { getTasks } from '../api/services/taskService';
 import { OrderTask } from "../api";
-import { Order } from "../pages/support/makeData";
+import { components } from '../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 
 const activeColor = '#455980ff';
 const submenuColor = '#32415c';

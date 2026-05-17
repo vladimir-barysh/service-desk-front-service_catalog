@@ -9,16 +9,18 @@ import { DateTimePicker, DateValue } from '@mantine/dates';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Order, OrderPriority, OrderType, Podr, User } from '../../../api/models';
+import { OrderPriority, OrderType, Podr, User } from '../../../api/models';
 import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
 import { TextInputField } from '../../text-input-field';
-
 import { useQuery } from '@tanstack/react-query';
 import { getOrderTypes } from '../../../api/services/orderTypeService';
 import { getOrderStates } from '../../../api/services/orderStateService';
 import { getOrderPriorities } from '../../../api/services/orderPriorityService';
 import { getUsers } from '../../../api/services/userService';
 import { getPodrs } from '../../../api/services/podrService';
+
+import { components } from '../../../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 
 interface SupportGeneralTabProps {
   isOpen: boolean;

@@ -17,7 +17,8 @@ import { fileDataClass,
   deleteFileFromMakeData,
   getAllFiles 
 } from './makeData';
-import { Order } from '../../../pages/support/makeData';
+import { components } from '../../../types/api';
+type Order = components['schemas']['OrderResponseDTO'];
 import { getOrderBindings, downloadBinding } from '../../../api/services/orderBindingService';
 import { OrderBindingDTO } from '../../../api/dtos';
 

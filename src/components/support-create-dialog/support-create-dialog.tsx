@@ -14,17 +14,20 @@ import { Close } from '@mui/icons-material';
 
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined } from '@mui/icons-material'
-import { Order, OrderTask } from '../../api/models';
+import { OrderTask } from '../../api/models';
 import { uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
 import {
-  SupportGeneralTab, SupportCoordinationTab, SupportDiscussionTab,
+  SupportGeneralTab, SupportApproveTab, SupportDiscussionTab,
   SupportFilesTab, SupportHistoryTab, SupportTasksTab
 } from '../support-tabs';
 import { useQuery} from '@tanstack/react-query';
-import { useUpdateOrder } from '../../api/hooks/useOrder';
 import dayjs from 'dayjs';
 import { getTasks } from '../../api/services/taskService';
+import { components } from '../../types/api';
+import { useUpdateOrder } from '../../hooks/useOrderMutations';
+
+type Order = components['schemas']['OrderResponseDTO'];
 
 interface SupportGeneralDialogProps {
   isOpen: boolean;
@@ -105,62 +108,27 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
 
   // Функция для проверки файлов по ID заявки
   const checkFiles = () => {
-    if (!request?.nomer) {
-      setHasFiles(false);
-      return;
-    }
-
-    // Ищем файлы, у которых idRequest совпадает с id заявки
+    if (!request?.nomer) return;
     const filesForThisRequest = uploadedFiles.filter(
-      file => file.idRequest === request.nomer
+     file => file.idRequest === String(request.nomer)
     );
-
-    if (filesForThisRequest.length > 0) {
-      setHasFiles(true);
-    }
-    else {
-      setHasFiles(false);
-    }
-
+    setHasFiles(filesForThisRequest.length > 0);
   };
 
   const checkMessages = () => {
-    if (!request?.nomer) {
-      setHasMessages(false);
-      return;
-    }
-
-    // Ищем файлы, у которых idRequest совпадает с id заявки
+    if (!request?.nomer) return;
     const messagesForThisRequest = seed.filter(
-      message => message.idRequest === request.nomer
+      message => message.idRequest === String(request.nomer)
     );
-
-    if (messagesForThisRequest.length > 0) {
-      setHasMessages(true);
-    }
-    else {
-      setHasMessages(false);
-    }
-
+    setHasMessages(messagesForThisRequest.length > 0);
   };
 
   const checkTasks = () => {
-    if (!request?.nomer) {
-      setHasTasks(false);
-      return;
-    }
-
+    if (!request?.nomer) return;
     const tasksForThisOrder = tasks.filter(
-      (task: OrderTask) => task.order?.nomer === request.nomer
+      (task: OrderTask) => task.order?.nomer === String(request.nomer)
     );
-
-    if (tasksForThisOrder.length > 0) {
-      setHasTasks(true);
-    }
-    else {
-      setHasTasks(false);
-    }
-
+    setHasTasks(tasksForThisOrder.length > 0);
   };
 
   useEffect(() => {
@@ -172,16 +140,15 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
 
   const handleSave = async () => {
-    console.log('Сохранение данных:', generalData);
+    if (!generalData?.idOrder) return;
     const safeToIso = (value: any): string => {
       if (!value) return '';
-
       const d = dayjs(value);
       return d.isValid() ? d.toISOString() : '';
     };
     updateOrderMutate(
       {
-        id: generalData?.idOrder,
+        id: generalData.idOrder,
         data: {
           name: generalData?.name,
           description: generalData?.description,
@@ -256,7 +223,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
               <SupportFilesTab order={request} />
             </TabPanel>
             <TabPanel value="3" sx={{ padding: "0px" }}>
-              <SupportCoordinationTab order={request} />
+              <SupportApproveTab order={request} />
             </TabPanel>
             <TabPanel value="4" sx={{ padding: "0px" }}>
               <SupportTasksTab order={request} />
