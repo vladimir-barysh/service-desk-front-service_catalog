@@ -144,7 +144,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
     const safeToIso = (value: any): string => {
       if (!value) return '';
       const d = dayjs(value);
-      return d.isValid() ? d.toISOString() : '';
+      return d.isValid() ? d.toISOString().split('.')[0] + 'Z' : '';
     };
     updateOrderMutate(
       {
@@ -155,10 +155,12 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
           dateFinishPlan: safeToIso(generalData?.dateFinishPlan),
           datePostpone: safeToIso(generalData?.datePostpone),
           dateTechReturn: safeToIso(generalData?.dateTechReturn),
-          idService: generalData?.serviceId,
           idOrderType: generalData?.orderTypeId,
-          idOrderState: generalData?.orderStateId,
+          idService: generalData?.serviceId,
           idOrderPriority: generalData?.orderPriorityId,
+          idOrderState: generalData?.orderStateId,
+          idDispatcher: generalData?.dispatcherId,
+          idOrderSource: generalData?.orderSourceId,
           resultText: generalData?.resultText,
           comment: generalData?.comment,
         },

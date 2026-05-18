@@ -8,10 +8,12 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Box, Grid2
+  Box, Grid2,
+  SxProps
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Close } from '@mui/icons-material';
+import { Theme } from '@emotion/react';
 
 interface TextInputFieldProps {
   value: string;
@@ -22,6 +24,7 @@ interface TextInputFieldProps {
   readonly?: boolean;
   variant?: 'outlined' | 'filled' | 'standard';
   rows?: number;
+  sx?: SxProps<Theme>;
 }
 
 export const TextInputField = ({
@@ -32,7 +35,8 @@ export const TextInputField = ({
   disabled = false,
   readonly = false,
   variant = 'outlined',
-  rows = 1
+  rows = 1,
+  sx,
 }: TextInputFieldProps) => {
   const [open, setOpen] = useState(false);
   const [tempValue, setTempValue] = useState(value);
@@ -82,21 +86,24 @@ export const TextInputField = ({
         }}
         onChange={onChange}
         //onClick={handleOpen} // ← клик по всему полю тоже открывает
-        sx={{
-          pointerEvents: disabled ? 'none' : 'auto',
-          '& .MuiInputBase-root': {
-            height: `${20 + 20 * rows}px`,
-            padding: '0px 14px 0px 14px',
-          },
+        sx={[
+          {
+            pointerEvents: disabled ? 'none' : 'auto',
+            '& .MuiInputBase-root': {
+              height: `${21 + 20 * rows}px`,
+              padding: '0px 14px 0px 14px',
+            },
 
-          '& .MuiInputBase-input': {
-            minHeight: `${20}px`,
-            maxHeight: `${9 + 20 * rows}px`
+            '& .MuiInputBase-input': {
+              minHeight: `${20}px`,
+              maxHeight: `${9 + 20 * rows}px`
+            },
+            '& .MuiInputAdornment-root': {
+              height: '100%',
+            },
           },
-          '& .MuiInputAdornment-root': {
-            height: '100%',
-          },
-        }}
+          ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ]}
       />
 
       {/* Диалог для полноценного редактирования */}
