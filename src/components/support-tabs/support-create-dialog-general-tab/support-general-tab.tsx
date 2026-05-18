@@ -288,6 +288,9 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     '& fieldset': {
                       borderWidth: '1px',
                     },
+                    '&:hover fieldset': {
+                      borderColor: '#c7c7c7',
+                    },
                     borderRadius: '0px 5px 5px 0px'
                   },
                 }
@@ -318,16 +321,22 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 withSeconds={false}
                 onPointerEnterCapture={undefined}
                 onPointerLeaveCapture={undefined}
-                clearable
                 locale='ru'
                 styles={{
                   ...dateInputStyle,
                   input: {
                     ...dateInputStyle.input,
-                    borderRadius: '0px 5px 5px 0px'
+                    borderRadius: '0px 5px 5px 0px',
+                    '&:hover': {
+                      borderColor: '#c7c7c7',
+                    },
+
+                    '&:focus': {
+                      borderColor: '#c7c7c7',
+                    },
                   }
                 }}
-                readOnly={!isEditing}
+                readOnly={true}
                 value={editedRequest?.dateCreated ? dayjs(editedRequest?.dateCreated).toDate() : null}
                 onChange={(newDateCreated) => handleDateChange('dateCreated', newDateCreated)}
 
@@ -636,14 +645,15 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 }}
                 readOnly={!isEditing}
                 onChange={(newDatePostpone) => handleDateChange('datePostpone', newDatePostpone)}
+
+                minDate={new Date()}
+                excludeDate={(date) => {
+                  return date.getDay() === 0 || date.getDay() === 6;
+                }}
               />
             </Grid2>
           </Grid2>
 
-          {/* Строка 4 */}
-
-
-          {/* Строка 5 */}
           <Grid2 container spacing={0}>
             <Grid2
               size={3}
@@ -680,6 +690,11 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 readOnly={!isEditing}
                 value={editedRequest?.dateTechReturn ? dayjs(editedRequest?.dateTechReturn).toDate() : null}
                 onChange={(newDateTechReturn) => handleDateChange('dateTechReturn', newDateTechReturn)}
+
+                minDate={new Date()}
+                excludeDate={(date) => {
+                  return date.getDay() === 0 || date.getDay() === 6;
+                }}
               />
             </Grid2>
           </Grid2>
