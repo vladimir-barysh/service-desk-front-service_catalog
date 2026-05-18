@@ -185,33 +185,44 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
       <Dialog
         open={isOpen}
         onClose={handleClose}
-        fullWidth={true}
         maxWidth='xl'
+        fullWidth
       >
-        <DialogContent sx={{ minHeight: '60vh', minWidth: '75vh' }}>
-          <Grid2 container spacing={0} direction={'row'} alignItems="left" justifyContent="space-between">
-            <Grid2 size='auto'>
-              <Box fontSize='20px' fontWeight='700'>
-                Заявка №{request?.nomer || ''}
-              </Box>
-            </Grid2>
-            {/* Крестик */}
-            <Grid2 size='auto'>
-              <IconButton onClick={handleClose}>
-                <Close />
-              </IconButton>
-            </Grid2>
-          </Grid2>
+        <DialogContent sx={{ minHeight: '60vh', minWidth: '75vh', display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+
+            <Box fontSize='18px' fontWeight='700'>
+              {request?.orderTypeName} №{request?.nomer || ''}
+            </Box>
+
+            <TabContext value={value}>
+              <TabList
+                onChange={handleChange}
+                centered
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  minHeight: '36px',
+                  '& .MuiTab-root': {
+                    minHeight: '36px',
+                  },
+                }}
+              >
+                <Tab label="Общие сведения" value="1" />
+                <Tab label="Файлы" icon={hasFiles ? <AttachFileOutlined /> : undefined} iconPosition='end' value="2" />
+                <Tab label="Согласование" icon={<PriorityHighOutlined />} iconPosition='end' value="3" />
+                <Tab label="Задачи" icon={hasTasks ? <LanOutlined /> : undefined} iconPosition='end' value="4" />
+                <Tab label="Обсуждение" icon={hasMessages ? <PeopleAltOutlined /> : undefined} iconPosition='end' value="5" />
+                <Tab label="История" value="6" />
+              </TabList>
+            </TabContext>
+            <IconButton onClick={handleClose}>
+              <Close />
+            </IconButton>
+          </Box>
+
           <TabContext value={value}>
-            <TabList onChange={handleChange} centered>
-              <Tab label="Общие сведения" value="1" />
-              <Tab label="Файлы" icon={hasFiles ? <AttachFileOutlined /> : undefined} iconPosition='end' value="2" />
-              <Tab label="Согласование" icon={<PriorityHighOutlined />} iconPosition='end' value="3" />
-              <Tab label="Задачи" icon={hasTasks ? <LanOutlined /> : undefined} iconPosition='end' value="4" />
-              <Tab label="Обсуждение" icon={hasMessages ? <PeopleAltOutlined /> : undefined} iconPosition='end' value="5" />
-              <Tab label="История" value="6" />
-            </TabList>
-            <TabPanel value="1" sx={{ padding: "0px" }}>
+            <TabPanel value="1" sx={{ padding: "0px", flexGrow: 1 }}>
               <SupportGeneralTab
                 isOpen={true}
                 request={request}
@@ -263,7 +274,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
             onClick={handleCancel}
             sx={{ minWidth: '100px' }}
           >
-            Отмена
+            Назад
           </Button>
         </DialogActions>
       </Dialog>
@@ -279,7 +290,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description" color='black'>
-            У вас есть несохраненные изменения, хотите сохранить их перед закрытием?
+            У вас есть несохраненные изменения. Хотите сохранить их перед закрытием?
           </DialogContentText>
         </DialogContent>
         <Grid2 size='auto' sx={{ margin: '0px 0px 20px 0px', display: 'flex', gap: 1, justifyContent: 'center' }}>
