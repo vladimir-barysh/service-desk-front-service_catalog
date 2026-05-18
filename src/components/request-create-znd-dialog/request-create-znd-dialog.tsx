@@ -8,6 +8,7 @@ import {
   TextField, InputAdornment,
   FormControl, MenuItem, Select,
   SelectChangeEvent,
+  Autocomplete,
 } from '@mui/material';
 import {
   Input, Text, CloseButton, Radio, Group, Checkbox,
@@ -203,7 +204,7 @@ export const RequestCreateZNDDialog = (props: {
       idInitiator: 1,
       idOrderType: 1,
       description: description,
-      
+
       comment: comment
     };
 
@@ -222,11 +223,10 @@ export const RequestCreateZNDDialog = (props: {
     setAccessType(value);
   };
 
-  const handleDispatcherChange = (event: SelectChangeEvent<number>) => {
-    const selectedId = Number(event.target.value);
+  const handleDispatcherChange = (id: number | null) => {
 
     const selectedObject = users.find(
-      (item: User) => item.idItUser === selectedId
+      (item: User) => item.idItUser === id
     ) ?? null;
     setSelected(selectedObject);
   };
@@ -398,22 +398,27 @@ export const RequestCreateZNDDialog = (props: {
                 <Text fw={600}>Кому доступ *</Text>
               </Grid2>
               <Grid2 size="auto">
-                <FormControl fullWidth size="small">
-                  <Select
-                    onChange={handleDispatcherChange}
-                    renderValue={(selected) => {
-                      if (!selected) return <em>Не выбрано</em>;
-                      const p = users.find((x: User) => x.idItUser === selected);
-                      return p?.fio1c;
-                    }}
-                  >
-                    {users.map((item: User) => (
-                      <MenuItem key={item.idItUser} value={item.idItUser}>
-                        {item.fio1c}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  fullWidth
+                  size="small"
+                  options={users}
+                  value={
+                    users.find((x: User) => x.idItUser === selected?.idItUser) || null
+                  }
+                  onChange={(_, newValue) => {
+                    handleDispatcherChange(newValue?.idItUser || null);
+                  }}
+                  getOptionLabel={(option: User) => option.fio1c || ''}
+                  isOptionEqualToValue={(option, value) =>
+                    option.idItUser === value.idItUser
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder="Не выбран"
+                    />
+                  )}
+                />
               </Grid2>
             </Grid2>
 
