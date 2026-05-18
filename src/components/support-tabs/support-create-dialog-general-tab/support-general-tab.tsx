@@ -3,7 +3,8 @@ import {
   Grid2, TextField,
   Box, Typography,
   MenuItem, FormControl,
-  Select, InputAdornment, SelectChangeEvent
+  Select, InputAdornment, SelectChangeEvent,
+  Autocomplete
 } from '@mui/material';
 import { DateTimePicker, DateValue } from '@mantine/dates';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -29,7 +30,7 @@ interface SupportGeneralTabProps {
 }
 
 export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps) {
-  
+
   const [editedRequest, setEditedRequest] = useState<Order | null>(request);
 
   const isEditing = !editedRequest?.orderStateName?.includes('Закрыта');              // флаг режима редактирования
@@ -118,6 +119,19 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     height: 41,
   };
 
+  const autoCompleteInputStyle = {
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+        borderWidth: '1px 1px 0px 1px',
+      },
+      '&:hover fieldset': {
+        borderWidth: '1px',
+      },
+      borderRadius: 0,
+      height: 41,
+    }
+  };
+
   if (!editedRequest) {
     return <Typography>Заявка не выбрана</Typography>;
   }
@@ -172,14 +186,16 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     );
   };
 
-  const handleDispatcherChange = (event: SelectChangeEvent<number>) => {
-    const selectedId = Number(event.target.value);
+  const handleDispatcherChange = (id: number | null) => {
+    if (id) {
+      const selectedObject = users.find(
+        (item: User) => item.idItUser === id
+      ) ?? null;
 
-    const selectedObject = users.find(
-      (item: User) => item.idItUser === selectedId
-    ) ?? null;
-
-    setEditedRequest(prev => prev ? { ...prev, dispatcherId: selectedObject.idItUser } : null);
+      setEditedRequest(prev => prev ? { ...prev, dispatcherId: selectedObject.idItUser, dispatcherFio: selectedObject.fio1c } : null);
+    } else {
+      setEditedRequest(prev => prev ? { ...prev, dispatcherId: null, dispatcherFio: null } : null)
+    }
 
   };
 
@@ -562,27 +578,25 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <Typography variant="subtitle2">Диспетчер</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <FormControl fullWidth size="small">
-                <Select
-                  displayEmpty
-                  value={editedRequest.dispatcherId || ''}
-                  onChange={handleDispatcherChange}
-
-                  renderValue={(selected) => {
-                    if (!selected) return <em>Не выбран</em>;
-                    const p = users.find((x: User) => x.idItUser === Number(selected));
-                    return p?.fio1c;
-                  }}
-
-                  sx={selectInputStyle}
-                >
-                  {users.map((item: User) => (
-                    <MenuItem key={item.idItUser} value={item.idItUser}>
-                      {item.fio1c}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                fullWidth
+                size="small"
+                options={users}
+                value={
+                  users.find((x: User) => x.idItUser === editedRequest.dispatcherId) || null
+                }
+                onChange={(_, newValue) => {
+                  handleDispatcherChange(newValue?.idItUser || null);
+                }}
+                getOptionLabel={(option: User) => option.fio1c || ''}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Не выбран"
+                  />
+                )}
+                sx={autoCompleteInputStyle}
+              />
             </Grid2>
           </Grid2>
 
