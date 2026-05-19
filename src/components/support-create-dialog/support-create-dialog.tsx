@@ -25,7 +25,7 @@ import { useQuery} from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { getTasks } from '../../api/services/taskService';
 import { components } from '../../types/api';
-import { useUpdateOrder } from '../../hooks/useOrderMutations';
+import { useUpdateOrder } from '../../hooks/useOrder';
 
 type Order = components['schemas']['OrderResponseDTO'];
 
@@ -192,7 +192,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
 
             <Box fontSize='18px' fontWeight='700'>
-              {request?.orderTypeName} №{request?.nomer || ''}
+              {request?.orderTypeName} №{request?.nomer}
             </Box>
 
             <TabContext value={value}>

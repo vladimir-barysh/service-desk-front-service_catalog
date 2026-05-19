@@ -18,7 +18,7 @@ import SplitButton from '../../components/split-button/split-button.component';
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
-import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrderMutations';
+import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrder';
 import { getOrderStates, getUsers } from '../../api'; // пока оставляем старые, но можно заменить позже
 import { components } from '../../types/api';
 import * as XLSX from 'xlsx';

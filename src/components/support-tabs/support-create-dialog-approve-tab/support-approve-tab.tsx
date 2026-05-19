@@ -8,7 +8,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Typography,
   Chip,
 } from '@mui/material';
 import {
@@ -20,7 +19,7 @@ import {
 } from '@mui/icons-material';
 
 import { components } from '../../../types/api';
-import { useApprovesByOrder } from '../../../hooks/useApproveMutations';
+import { useApprovesByOrder } from '../../../hooks/useApprove';
 
 type Order = components['schemas']['OrderResponseDTO'];
 
@@ -37,10 +36,10 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   // Цвета для статуса согласования
   const approveStatusMap: Record<number, { label: string; icon: JSX.Element, bgColor: string;}> = {
     7: { label: 'На согласовании', icon: <Pending />, bgColor: '#FFF3E0'},
-    8: { label: 'Согласовано', icon: <CheckCircle />, bgColor: '#dcf7df'},
+    13: { label: 'Согласовано', icon: <CheckCircle />, bgColor: '#dcf7df'},
     9: { label: 'Не согласовано', icon: <Cancel />, bgColor: '#ffd7d7'},
-    10: { label: 'Согласование отклонено', icon: <Block />, bgColor: '#FFEBEE'},
-    11: { label: 'Согласование отменено', icon: <RemoveCircle />, bgColor: '#efefef'},
+    14: { label: 'Согласование отклонено', icon: <Block />, bgColor: '#FFEBEE'},
+    15: { label: 'Согласование отменено', icon: <RemoveCircle />, bgColor: '#efefef'},
   };
 
   // Перевод даты в строку
@@ -68,13 +67,6 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
           Подтянуть согласующих из ИТ-каталога
         </Button>
-      </Box>
-
-      {/* Информация о типе заявки */}
-      <Box padding='0px 0px 10px 0px'>
-        <Typography variant="subtitle2" color="text.secondary" fontSize='1.0rem'>
-          Тип заявки: <strong>{order?.orderTypeName || 'не определен'}</strong>
-        </Typography>
       </Box>
 
       {/* Таблица согласования */}
