@@ -13,9 +13,10 @@ import {
   type MRT_ColumnDef,
   type MRT_ColumnFiltersState,
 } from 'mantine-react-table';
+import { useQueryClient } from '@tanstack/react-query';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { components } from '../../types/api';
-import { useApproveCandidate } from '../../hooks/useApprove';
+import { useApproveCandidate, useCreateApprove } from '../../hooks/useApprove';
 
 type Order = components['schemas']['OrderResponseDTO'];
 type Candidate = components['schemas']['ApproveCandidateResponseDTO'];
@@ -30,10 +31,12 @@ export const CreateApproveDialog = ({ open, order, onClose }: CreateApproveDialo
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
 
-  const { data: candidates = [], isLoading } = useApproveCandidate(
+  const { data: candidates = []} = useApproveCandidate(
     order?.serviceId ?? 0,
     open && !!order?.serviceId
   );
+
+  const { mutate: createApprove, isPending } = useCreateApprove();
 
   const columns = useMemo<MRT_ColumnDef<Candidate>[]>(
     () => [
@@ -59,14 +62,22 @@ export const CreateApproveDialog = ({ open, order, onClose }: CreateApproveDialo
     []
   );
 
+  const queryClient = useQueryClient();
+
   const handleConfirm = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedUserIds = selectedRows.map(row => row.original.idUser);
-    if (selectedUserIds.length === 0) return;
+    if (!order || !order.idOrder || selectedUserIds.length === 0) return;
     
-    
-
-    onClose();
+    createApprove(
+        { idOrder: order.idOrder, userIds: selectedUserIds },
+        {
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['approves', 'order', order.idOrder] });
+            onClose();
+        },
+        }
+    );
   };
 
   const table = useMantineReactTable<Candidate>({
@@ -116,7 +127,12 @@ export const CreateApproveDialog = ({ open, order, onClose }: CreateApproveDialo
         <MantineReactTable table={table} />
       </DialogContent>
       <DialogActions sx={{ margin: '0px 15px 15px 0px', gap: 1 }}>
-        <Button variant="contained" size="small" onClick={handleConfirm}>
+        <Button 
+            variant="contained" 
+            size="small" 
+            onClick={handleConfirm}
+            disabled={isPending || Object.keys(rowSelection).length === 0}
+        >
           Создать
         </Button>
         <Button variant="contained" color="inherit" size="small" onClick={onClose}>

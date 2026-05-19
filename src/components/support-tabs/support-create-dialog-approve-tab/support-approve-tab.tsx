@@ -17,11 +17,10 @@ import {
   Block,
   RemoveCircle,
 } from '@mui/icons-material';
-
+import { useDialogs, CreateApproveDialog } from '../../../components';
 import { components } from '../../../types/api';
 import { useApprovesByOrder } from '../../../hooks/useApprove';
-
-import { useDialogs, CreateApproveDialog } from '../../../components';
+import { useApproveUserByApprove } from '../../../hooks/useApproveUser';
 
 type Order = components['schemas']['OrderResponseDTO'];
 
@@ -32,6 +31,8 @@ interface SupportApproveTabProps {
 export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const { dialogs, openDialog, closeDialog } = useDialogs();
   const { data: approves = [], isLoading, error } = useApprovesByOrder(order?.idOrder ?? 0);
+/*   const { data: approveUser = [], isLoadingh, errorh } = useApproveUserByApprove(approve ?? 0); */
+  
 
   if (isLoading) return <Box p={2}>Загрузка согласований...</Box>;
   if (error) return <Box p={2} color="error.main">Ошибка загрузки: {error.message}</Box>;
@@ -108,6 +109,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
             {approves.map((approve, index) => (
               <TableRow key={approve.idApprove}>
                 <TableCell>{index + 1}</TableCell>
+                {/*TODO: заменить на согласующего  */}
                 <TableCell>{approve.name}</TableCell>
                 <TableCell>{formatDate(approve.dateCreated)}</TableCell>
                 <TableCell>{formatDate(approve.datePlan)}</TableCell>
