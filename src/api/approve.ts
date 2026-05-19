@@ -12,5 +12,5 @@ export const approveApi = {
     create: (data: ApproveCreateRequest): Promise<ApproveResponse> =>
         api.post('/api/approve', data).then(res => res.data),
     getCandidate: (serviceId: number): Promise<ApproveCandidateResponse[]> => 
-        api.get(`/api/approve/candidate?serviceId=${serviceId}`).then(res => res.data),
+        api.get('/api/approve/candidate', { params: { serviceId } }).then(res => res.data),
 };

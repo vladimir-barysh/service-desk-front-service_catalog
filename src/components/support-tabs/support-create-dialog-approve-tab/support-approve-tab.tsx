@@ -21,6 +21,8 @@ import {
 import { components } from '../../../types/api';
 import { useApprovesByOrder } from '../../../hooks/useApprove';
 
+import { useDialogs, CreateApproveDialog } from '../../../components';
+
 type Order = components['schemas']['OrderResponseDTO'];
 
 interface SupportApproveTabProps {
@@ -28,10 +30,22 @@ interface SupportApproveTabProps {
 }
 
 export function SupportApproveTab({ order }: SupportApproveTabProps) {
+  const { dialogs, openDialog, closeDialog } = useDialogs();
   const { data: approves = [], isLoading, error } = useApprovesByOrder(order?.idOrder ?? 0);
 
   if (isLoading) return <Box p={2}>Загрузка согласований...</Box>;
   if (error) return <Box p={2} color="error.main">Ошибка загрузки: {error.message}</Box>;
+
+  // Обработчик нажатия кнопки Создать согласование 
+  const handleCreateApprove = () => {
+    if (!order) return;
+    const type = order.orderTypeName;
+    if (type === 'ЗНО' || type === 'ЗНТ') {
+      openDialog('createApprove', order); // открываем диалог выбора согласующих
+    } else {
+      /* createAutoApprove({ idOrder: order.idOrder }); // автоматическое создание */
+    }
+  };
 
   // Цвета для статуса согласования
   const approveStatusMap: Record<number, { label: string; icon: JSX.Element, bgColor: string;}> = {
@@ -52,7 +66,14 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     <Box sx={{ p: 2 }}>
       {/* Панель кнопок */}
       <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
+        <Button 
+          variant="contained"
+          color="primary"
+          size="medium"
+          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
+          disabled={!order}
+          onClick={handleCreateApprove}
+        >
           Создать согласование
         </Button>
         <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
@@ -119,6 +140,13 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Диалоги кнопок */}
+      <CreateApproveDialog
+        open={dialogs.createApprove.open}
+        order={dialogs.createApprove.order}
+        onClose={() => closeDialog('createApprove')}
+      />
     </Box>
-  );
+  );  
 }
