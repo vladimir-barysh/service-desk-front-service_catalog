@@ -25,10 +25,12 @@ export const useApproveCandidate = (serviceId: number, enabled: boolean) => {
   });
 };
 
+// Создание согласования и добавление в него пользователей
 export const useCreateApprove = createCRUDMutation<ApproveCreateRequest, ApproveResponse>({
   type: 'create',
   mutationFn: approveApi.create,
   queryKey: ['approves'],
+  invalidateKeys: [['approves', 'order'], ['approveUsers', 'order']],
   addToCache: (old, newApprove) => old ? [newApprove, ...old] : [newApprove],
   successMessage: 'Согласование успешно создано',
   errorMessage: 'Не удалось создать согласование',

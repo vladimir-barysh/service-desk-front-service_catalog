@@ -13,7 +13,6 @@ import {
   type MRT_ColumnDef,
   type MRT_ColumnFiltersState,
 } from 'mantine-react-table';
-import { useQueryClient } from '@tanstack/react-query';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { components } from '../../types/api';
 import { useApproveCandidate, useCreateApprove } from '../../hooks/useApprove';
@@ -62,22 +61,12 @@ export const CreateApproveDialog = ({ open, order, onClose }: CreateApproveDialo
     []
   );
 
-  const queryClient = useQueryClient();
-
   const handleConfirm = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedUserIds = selectedRows.map(row => row.original.idUser);
     if (!order || !order.idOrder || selectedUserIds.length === 0) return;
     
-    createApprove(
-        { idOrder: order.idOrder, userIds: selectedUserIds },
-        {
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['approves', 'order', order.idOrder] });
-            onClose();
-        },
-        }
-    );
+    createApprove({ idOrder: order.idOrder, userIds: selectedUserIds }, { onSuccess: () => onClose()});
   };
 
   const table = useMantineReactTable<Candidate>({

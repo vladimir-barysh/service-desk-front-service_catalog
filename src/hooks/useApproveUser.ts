@@ -4,11 +4,20 @@ import { approveUserApi } from '../api/approveUser';
 
 type ApproveUserResponse = components['schemas']['ApproveUserResponseDTO'];
 
-// Получение всех согласований по заявке
+// Получение всех согласовантов по согласованию
 export const useApproveUserByApprove = (approveId: number) => {
   return useQuery<ApproveUserResponse[]>({
     queryKey: ['approveUsers', 'approve', approveId],
     queryFn: () => approveUserApi.getByApproveId(approveId),
     enabled: !!approveId,
   });
+};
+
+// Получение всех согласовантов по заявке
+export const useApproveUsersByOrder = (orderId: number) => {
+    return useQuery<ApproveUserResponse[]>({
+        queryKey: ['approveUsers', 'order', orderId],
+        queryFn: () => approveUserApi.getByOrderId(orderId),
+        enabled: !!orderId,
+    });
 };

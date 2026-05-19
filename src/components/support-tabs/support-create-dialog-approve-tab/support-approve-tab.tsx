@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Box,
   Button,
@@ -20,7 +21,7 @@ import {
 import { useDialogs, CreateApproveDialog } from '../../../components';
 import { components } from '../../../types/api';
 import { useApprovesByOrder } from '../../../hooks/useApprove';
-import { useApproveUserByApprove } from '../../../hooks/useApproveUser';
+import { useApproveUsersByOrder } from '../../../hooks/useApproveUser';
 
 type Order = components['schemas']['OrderResponseDTO'];
 
@@ -30,12 +31,17 @@ interface SupportApproveTabProps {
 
 export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const { dialogs, openDialog, closeDialog } = useDialogs();
-  const { data: approves = [], isLoading, error } = useApprovesByOrder(order?.idOrder ?? 0);
-/*   const { data: approveUser = [], isLoadingh, errorh } = useApproveUserByApprove(approve ?? 0); */
-  
+  const { data: approves = [], isLoading: approvesLoading, error: approvesError } = useApprovesByOrder(order?.idOrder ?? 0);
+  const { data: approveUsers = [], isLoading: usersLoading, error: usersError } = useApproveUsersByOrder(order?.idOrder ?? 0);
 
-  if (isLoading) return <Box p={2}>Загрузка согласований...</Box>;
-  if (error) return <Box p={2} color="error.main">Ошибка загрузки: {error.message}</Box>;
+  const isLoading = approvesLoading || usersLoading;
+  const error = approvesError || usersError;
+
+  const approvesMap = useMemo(() => {
+    const map = new Map<number, (typeof approves)[0]>();
+    approves.forEach(approve => map.set(approve.idApprove, approve));
+    return map;
+  }, [approves]);
 
   // Обработчик нажатия кнопки Создать согласование 
   const handleCreateApprove = () => {
@@ -62,6 +68,9 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleString();
   };
+
+  if (isLoading) return <Box p={2}>Загрузка согласований...</Box>;
+  if (error) return <Box p={2} color="error.main">Ошибка загрузки: {error.message}</Box>;
 
   return (
     <Box sx={{ p: 2 }}>
@@ -106,34 +115,34 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {approves.map((approve, index) => (
-              <TableRow key={approve.idApprove}>
-                <TableCell>{index + 1}</TableCell>
-                {/*TODO: заменить на согласующего  */}
-                <TableCell>{approve.name}</TableCell>
-                <TableCell>{formatDate(approve.dateCreated)}</TableCell>
-                <TableCell>{formatDate(approve.datePlan)}</TableCell>
-                <TableCell>{formatDate(approve.dateFact)}</TableCell>
-                <TableCell>{approve.taskText}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={approveStatusMap[approve.idApproveState]?.label || 'Неизвестно'}
-                    icon={approveStatusMap[approve.idApproveState]?.icon}
-                    sx={{
-                      backgroundColor: approveStatusMap[approve.idApproveState]?.bgColor,
-                      color: '#000000',
-                      '& .MuiChip-icon': {
+            {approveUsers.map((approveUser, index) => {
+              const approve = approvesMap.get(approveUser.idApprove);
+              return (
+                <TableRow key={approveUser.idApproveUser}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{approveUser.userFio}</TableCell>
+                  <TableCell>{formatDate(approve?.dateCreated ?? null)}</TableCell>
+                  <TableCell>{formatDate(approveUser.datePlan)}</TableCell>
+                  <TableCell>{formatDate(approveUser.dateFact)}</TableCell>
+                  <TableCell>{approveUser.taskText || '—'}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={approveStatusMap[approve?.idApproveState ?? 0]?.label || 'Неизвестно'}
+                      icon={approveStatusMap[approve?.idApproveState ?? 0]?.icon}
+                      sx={{
+                        backgroundColor: approveStatusMap[approve?.idApproveState ?? 0]?.bgColor,
                         color: '#000000',
-                      },
-                      borderRadius: '8px',       // скругление
-                      padding: '4px 8px',        // увеличиваем внутренние отступы
-                      height: 'auto',            // автоматическая высота под контент
-                      minHeight: '36px',         // минимальная высота
-                    }}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+                        '& .MuiChip-icon': { color: '#000000' },
+                        borderRadius: '8px',
+                        padding: '4px 8px',
+                        height: 'auto',
+                        minHeight: '36px',
+                      }}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
             {approves.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} align="center">Нет согласований для заявки</TableCell>
