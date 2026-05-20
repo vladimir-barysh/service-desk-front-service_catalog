@@ -18,10 +18,11 @@ import {
   Cancel,
   Block,
   RemoveCircle,
+  HourglassEmpty,
 } from '@mui/icons-material';
 import { useDialogs, CreateApproveDialog } from '../../../components';
 import { components } from '../../../types/api';
-import { useApprovesByOrder } from '../../../hooks/useApprove';
+import { useApprovesByOrder, useCreateApprove } from '../../../hooks/useApprove';
 import { useApproveUsersByOrder } from '../../../hooks/useApproveUser';
 
 type Order = components['schemas']['OrderResponseDTO'];
@@ -40,6 +41,8 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const isLoading = approvesLoading || usersLoading;
   const error = approvesError || usersError;
 
+  const { mutate: createApprove, isPending } = useCreateApprove();
+
   // Фильтруем участников по выбранному согласованию
   const selectedApproveUsers = useMemo(() => {
     if (!selectedApproveId) return [];
@@ -48,7 +51,8 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
 
   // Цвета для статуса согласования
   const approveStatusMap: Record<number, { label: string; icon: JSX.Element, bgColor: string;}> = {
-    7: { label: 'На согласовании', icon: <Pending />, bgColor: '#FFF3E0'},
+    2: { label: 'В ожидании', icon: <HourglassEmpty />, bgColor: '#FFF9C4'},
+    7: { label: 'На согласовании', icon: <Pending />, bgColor: '#ffe6bd'},
     13: { label: 'Согласовано', icon: <CheckCircle />, bgColor: '#dcf7df'},
     9: { label: 'Не согласовано', icon: <Cancel />, bgColor: '#ffd7d7'},
     14: { label: 'Согласование отклонено', icon: <Block />, bgColor: '#FFEBEE'},
@@ -57,7 +61,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
 
   // Цвета для статуса участника согласования
   const approveUserStatusMap: Record<number, { label: string; bgColor: string;}> = {
-    0: { label: 'Ожидание', bgColor: '#FFF3E0'},
+    0: { label: 'Ожидание', bgColor: '#FFF9C4'},
     1: { label: 'Согласовано', bgColor: '#dcf7df'},
     2: { label: 'Отклонено', bgColor: '#ffd7d7'},
   };
@@ -75,7 +79,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     if (type === 'ЗНО' || type === 'ЗНТ') {
       openDialog('createApprove', order); // открываем диалог выбора согласующих
     } else {
-      /* createAutoApprove({ idOrder: order.idOrder }); // автоматическое создание */
+      createApprove({ idOrder: order.idOrder });
     }
   };
 
@@ -116,7 +120,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         <Grid2 size={6}>
           <TableContainer component={Paper} sx={{ maxHeight: 400, overflow: 'auto' }}>
             <Table size="small" stickyHeader>
-              <TableHead sx={{ bgcolor: 'grey.200', '& th': { bgcolor: 'grey.200' } }}>
+              <TableHead sx={{ bgcolor: 'grey.200', '& th': { bgcolor: 'grey.200' }}}>
                 <TableRow>
                   <TableCell>№</TableCell>
                   <TableCell>Название</TableCell>
@@ -168,7 +172,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         <Grid2 size={6}>
           <TableContainer component={Paper} sx={{ maxHeight: 400, overflow: 'auto' }}>
             <Table size="small" stickyHeader>
-              <TableHead sx={{ bgcolor: 'grey.200', '& th': { bgcolor: 'grey.200' } }}>
+              <TableHead sx={{ bgcolor: 'grey.200', '& th': { bgcolor: 'grey.200' }}}>
                 <TableRow>
                   <TableCell>Согласующий</TableCell>
                   <TableCell>Срок</TableCell>
