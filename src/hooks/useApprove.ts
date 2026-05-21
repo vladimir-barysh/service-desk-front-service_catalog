@@ -25,13 +25,31 @@ export const useApproveCandidate = (serviceId: number, enabled: boolean) => {
   });
 };
 
-// Создание согласования и добавление в него пользователей
+// Создание согласования
 export const useCreateApprove = createCRUDMutation<ApproveCreateRequest, ApproveResponse>({
   type: 'create',
   mutationFn: approveApi.create,
   queryKey: ['approves'],
-  invalidateKeys: [['approves', 'order'], ['approveUsers', 'order']],
+  invalidateKeys: (vars) => [
+    ['approves', 'order', vars.idOrder],
+    ['approveUsers', 'order', vars.idOrder],
+  ],
   addToCache: (old, newApprove) => old ? [newApprove, ...old] : [newApprove],
   successMessage: 'Согласование успешно создано',
   errorMessage: 'Не удалось создать согласование',
+});
+
+// Запуск процесса согласования
+export const useStartApproveProcess = createCRUDMutation<{ id: number; orderId: number }, ApproveResponse>({
+  type: 'update',
+  mutationFn: ({ id }) => approveApi.startProcess(id),
+  queryKey: ['approves'],
+  getEntityId: (vars) => vars.id,
+  idField: 'idApprove',
+  invalidateKeys: (vars) => [
+    ['approves', 'order', vars.orderId],
+    ['approveUsers', 'order', vars.orderId],
+  ],
+  successMessage: 'Процесс согласования запущен',
+  errorMessage: 'Не удалось запустить процесс согласования',
 });

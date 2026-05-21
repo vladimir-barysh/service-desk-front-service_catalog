@@ -31,7 +31,7 @@ interface BaseConfig<TVariables, TResponse> {
   queryKey: string[];
   successMessage: string;
   errorMessage?: string;
-  invalidateKeys?: string[][];
+  invalidateKeys?: (variables: TVariables) => (string | number)[][];
   onSuccessMutate?: (data: TResponse, vars: TVariables, queryClient: any) => void;
 }
 
@@ -77,9 +77,10 @@ export function createCRUDMutation<TVariables, TResponse>(
         // Сброс основного кэша
         queryClient.invalidateQueries({ queryKey });
 
-        // Дополнительная инвалидация
+        // Дополнительная инвалидация (динамическая)
         if (config.invalidateKeys) {
-          config.invalidateKeys.forEach(key => queryClient.invalidateQueries({ queryKey: key }));
+          const additionalKeys = config.invalidateKeys(variables);
+          additionalKeys.forEach(key => queryClient.invalidateQueries({ queryKey: key }));
         }
 
         // Оптимистичное обновление кэша

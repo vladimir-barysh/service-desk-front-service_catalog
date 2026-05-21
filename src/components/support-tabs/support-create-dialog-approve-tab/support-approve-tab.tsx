@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 import { useDialogs, CreateApproveDialog } from '../../../components';
 import { components } from '../../../types/api';
-import { useApprovesByOrder, useCreateApprove } from '../../../hooks/useApprove';
+import { useApprovesByOrder, useCreateApprove, useStartApproveProcess } from '../../../hooks/useApprove';
 import { useApproveUsersByOrder } from '../../../hooks/useApproveUser';
 
 type Order = components['schemas']['OrderResponseDTO'];
@@ -42,6 +42,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const error = approvesError || usersError;
 
   const { mutate: createApprove, isPending } = useCreateApprove();
+  const { mutate: startProcess, isPending: isStarting } = useStartApproveProcess();
 
   // Фильтруем участников по выбранному согласованию
   const selectedApproveUsers = useMemo(() => {
@@ -83,6 +84,16 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     }
   };
 
+  // Обработчик нажатия кнопки Запустить процесс
+  const handleStartProcess = () => {
+    if (!selectedApproveId || !order) return;
+    startProcess({ id: selectedApproveId, orderId: order.idOrder });
+  };
+
+  // Доступность кнопок на панели
+  const selectedApprove = approves.find(a => a.idApprove === selectedApproveId);
+  const isAlreadyStarted = selectedApprove?.idApproveState === 7;
+
   if (isLoading) return <Box p={2}>Загрузка согласований...</Box>;
   if (error) return <Box p={2} color="error.main">Ошибка загрузки: {error.message}</Box>;
 
@@ -96,7 +107,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
           color="primary"
           size="medium"
           sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
-          disabled={!order}
+          disabled={isPending || !order}
           onClick={handleCreateApprove}
         >
           Создать согласование
@@ -107,7 +118,14 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
           Удалить согласование
         </Button>
-        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
+        <Button 
+          variant="contained" 
+          color="success" 
+          size="medium" 
+          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
+          onClick={handleStartProcess}
+          disabled={!selectedApproveId || isAlreadyStarted || isStarting}
+        >
           Запустить процесс
         </Button>
         <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>

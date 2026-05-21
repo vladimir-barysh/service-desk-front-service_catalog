@@ -13,4 +13,6 @@ export const approveApi = {
         api.post('/api/approve', data).then(res => res.data),
     getCandidate: (serviceId: number): Promise<ApproveCandidateResponse[]> => 
         api.get('/api/approve/candidate', { params: { serviceId } }).then(res => res.data),
+    startProcess: (id: number): Promise<ApproveResponse> =>
+        api.patch(`/api/approve/${id}/start`).then(res => res.data),
 };
