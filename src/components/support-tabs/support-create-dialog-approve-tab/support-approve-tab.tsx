@@ -11,6 +11,11 @@ import {
   Paper,
   Chip,
   Grid2,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import {
   Pending,
@@ -22,7 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useDialogs, CreateApproveDialog } from '../../../components';
 import { components } from '../../../types/api';
-import { useApprovesByOrder, useCreateApprove, useStartApproveProcess } from '../../../hooks/useApprove';
+import { useApprovesByOrder, useCreateApprove, useStartApproveProcess, useDeleteApprove } from '../../../hooks/useApprove';
 import { useApproveUsersByOrder } from '../../../hooks/useApproveUser';
 
 type Order = components['schemas']['OrderResponseDTO'];
@@ -41,8 +46,10 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const isLoading = approvesLoading || usersLoading;
   const error = approvesError || usersError;
 
-  const { mutate: createApprove, isPending } = useCreateApprove();
+  // Мутации через фабрику
+  const { mutate: createApprove, isPending: isCreating } = useCreateApprove();
   const { mutate: startProcess, isPending: isStarting } = useStartApproveProcess();
+  const { mutate: deleteApprove, isPending: isDeleting } = useDeleteApprove();
 
   // Фильтруем участников по выбранному согласованию
   const selectedApproveUsers = useMemo(() => {
@@ -90,6 +97,32 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     startProcess({ id: selectedApproveId, orderId: order.idOrder });
   };
 
+  // Обработчик нажатия кнопки Удалить согласование
+  const handleDeleteClick = (approveId: number) => {
+    setDeletingApproveId(approveId);
+    setConfirmDeleteOpen(true);
+  };
+
+  // Состояния для диалога подтверждения удаления
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deletingApproveId, setDeletingApproveId] = useState<number | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (deletingApproveId && order) {
+      deleteApprove(
+        { id: deletingApproveId, orderId: order.idOrder },
+        { onSuccess: () => { setSelectedApproveId(null); }},
+      );
+    }
+    setConfirmDeleteOpen(false);
+    setDeletingApproveId(null);
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDeleteOpen(false);
+    setDeletingApproveId(null);
+  };
+
   // Доступность кнопок на панели
   const selectedApprove = approves.find(a => a.idApprove === selectedApproveId);
   const isAlreadyStarted = selectedApprove?.idApproveState === 7;
@@ -107,7 +140,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
           color="primary"
           size="medium"
           sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
-          disabled={isPending || !order}
+          disabled={isCreating || !order}
           onClick={handleCreateApprove}
         >
           Создать согласование
@@ -115,7 +148,14 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
           Изменить согласование
         </Button>
-        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
+        <Button 
+          variant="contained"
+          color="error"
+          size="medium"
+          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
+          disabled={!selectedApproveId || isDeleting}
+          onClick={() => selectedApproveId && handleDeleteClick(selectedApproveId)}
+        >
           Удалить согласование
         </Button>
         <Button 
@@ -237,6 +277,23 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         order={dialogs.createApprove.order}
         onClose={() => closeDialog('createApprove')}
       />
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog open={confirmDeleteOpen} onClose={handleCancelDelete}>
+        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Вы действительно хотите удалить согласование?<br />
+            <strong>Внимание: </strong> вместе с ним будут удалены данные об участниках согласования
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="inherit">Отмена</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
-  );  
+  );
 }

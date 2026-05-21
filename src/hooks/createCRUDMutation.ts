@@ -28,7 +28,7 @@ type MutationType = 'create' | 'update' | 'delete';
 // Базовый конфиг для всех операций
 interface BaseConfig<TVariables, TResponse> {
   mutationFn: (vars: TVariables) => Promise<TResponse>;
-  queryKey: string[];
+  queryKey: (string | number)[] | ((vars: TVariables) => (string | number)[]);
   successMessage: string;
   errorMessage?: string;
   invalidateKeys?: (variables: TVariables) => (string | number)[][];
@@ -74,8 +74,13 @@ export function createCRUDMutation<TVariables, TResponse>(
     return useMutation({
       mutationFn,
       onSuccess: (data, variables) => {
+        // Вычисляем ключи, если они зависят от variables
+        const resolvedQueryKey = typeof config.queryKey === 'function'
+          ? config.queryKey(variables)
+          : config.queryKey;
+
         // Сброс основного кэша
-        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: resolvedQueryKey });
 
         // Дополнительная инвалидация (динамическая)
         if (config.invalidateKeys) {
@@ -94,7 +99,7 @@ export function createCRUDMutation<TVariables, TResponse>(
                 : item
             )
           );
-          queryClient.setQueryData(config.queryKey, (old: any[] | undefined) => {
+          queryClient.setQueryData(resolvedQueryKey, (old: any[] | undefined) => {
             if (!old) return old;
             return updateCache(old, data, id);
           });
@@ -104,12 +109,12 @@ export function createCRUDMutation<TVariables, TResponse>(
           const deleteFromCache = config.deleteFromCache || ((old, id) =>
             old.filter(item => item[idField] !== id)
           );
-          queryClient.setQueryData(queryKey, (old: any[] | undefined) => {
+          queryClient.setQueryData(resolvedQueryKey, (old: any[] | undefined) => {
             if (!old) return old;
             return deleteFromCache(old, id);
           });
         } else if (config.type === 'create' && config.addToCache) {
-          queryClient.setQueryData(queryKey, (old: any[] | undefined) => {
+          queryClient.setQueryData(resolvedQueryKey, (old: any[] | undefined) => {
             return config.addToCache!(old, data);
           });
         }

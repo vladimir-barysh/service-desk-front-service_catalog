@@ -29,9 +29,8 @@ export const useApproveCandidate = (serviceId: number, enabled: boolean) => {
 export const useCreateApprove = createCRUDMutation<ApproveCreateRequest, ApproveResponse>({
   type: 'create',
   mutationFn: approveApi.create,
-  queryKey: ['approves'],
+  queryKey: ({idOrder}) => ['approves', 'order', idOrder],
   invalidateKeys: (vars) => [
-    ['approves', 'order', vars.idOrder],
     ['approveUsers', 'order', vars.idOrder],
   ],
   addToCache: (old, newApprove) => old ? [newApprove, ...old] : [newApprove],
@@ -43,13 +42,26 @@ export const useCreateApprove = createCRUDMutation<ApproveCreateRequest, Approve
 export const useStartApproveProcess = createCRUDMutation<{ id: number; orderId: number }, ApproveResponse>({
   type: 'update',
   mutationFn: ({ id }) => approveApi.startProcess(id),
-  queryKey: ['approves'],
-  getEntityId: (vars) => vars.id,
+  queryKey: ({ orderId }) => ['approves', 'order', orderId],
+  getEntityId: ({ id }) => id,
   idField: 'idApprove',
   invalidateKeys: (vars) => [
-    ['approves', 'order', vars.orderId],
     ['approveUsers', 'order', vars.orderId],
   ],
   successMessage: 'Процесс согласования запущен',
   errorMessage: 'Не удалось запустить процесс согласования',
+});
+
+// Удаление согласования
+export const useDeleteApprove = createCRUDMutation<{ id: number; orderId: number }, void>({
+    type: 'delete',
+    mutationFn: ({ id }) => approveApi.delete(id),
+    queryKey: ({ orderId }) => ['approves', 'order', orderId],
+    getEntityId: ({ id }) => id,
+    idField: 'idApprove',
+    invalidateKeys: (vars) => [
+      ['approveUsers', 'order', vars.orderId],
+    ],
+    successMessage: 'Согласование удалено',
+    errorMessage: 'Не удалось удалить согласование',
 });

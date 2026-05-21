@@ -15,4 +15,5 @@ export const approveApi = {
         api.get('/api/approve/candidate', { params: { serviceId } }).then(res => res.data),
     startProcess: (id: number): Promise<ApproveResponse> =>
         api.patch(`/api/approve/${id}/start`).then(res => res.data),
+    delete: (id: number): Promise<void> => api.delete(`/api/approve/${id}`).then(() => undefined),
 };
