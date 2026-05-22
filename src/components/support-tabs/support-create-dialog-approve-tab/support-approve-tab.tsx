@@ -27,7 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useDialogs, CreateApproveDialog } from '../../../components';
 import { components } from '../../../types/api';
-import { useApprovesByOrder, useCreateApprove, useStartApproveProcess, useDeleteApprove } from '../../../hooks/useApprove';
+import { useApprovesByOrder, useStartApproveProcess, useDeleteApprove } from '../../../hooks/useApprove';
 import { useApproveUsersByOrder } from '../../../hooks/useApproveUser';
 
 type Order = components['schemas']['OrderResponseDTO'];
@@ -47,7 +47,6 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const error = approvesError || usersError;
 
   // Мутации через фабрику
-  const { mutate: createApprove, isPending: isCreating } = useCreateApprove();
   const { mutate: startProcess, isPending: isStarting } = useStartApproveProcess();
   const { mutate: deleteApprove, isPending: isDeleting } = useDeleteApprove();
 
@@ -83,12 +82,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   // Обработчик нажатия кнопки Создать согласование 
   const handleCreateApprove = () => {
     if (!order) return;
-    const type = order.orderTypeName;
-    if (type === 'ЗНО' || type === 'ЗНТ') {
-      openDialog('createApprove', order); // открываем диалог выбора согласующих
-    } else {
-      createApprove({ idOrder: order.idOrder });
-    }
+    openDialog('createApprove', order);
   };
 
   // Обработчик нажатия кнопки Запустить процесс
@@ -140,7 +134,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
           color="primary"
           size="medium"
           sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
-          disabled={isCreating || !order}
+          disabled={!order}
           onClick={handleCreateApprove}
         >
           Создать согласование

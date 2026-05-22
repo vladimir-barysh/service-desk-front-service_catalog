@@ -17,10 +17,10 @@ export const useApprovesByOrder = (orderId: number) => {
 };
 
 // Получение кандидатов для согласования
-export const useApproveCandidate = (serviceId: number, enabled: boolean) => {
+export const useApproveCandidateForOrder = (orderId: number, enabled: boolean) => {
   return useQuery<ApproveCandidateResponse[]>({
-    queryKey: ['approveCandidate', serviceId],
-    queryFn: () => approveApi.getCandidate(serviceId),
+    queryKey: ['approveCandidate', orderId],
+    queryFn: () => approveApi.getCandidate(orderId),
     enabled: enabled,
   });
 };

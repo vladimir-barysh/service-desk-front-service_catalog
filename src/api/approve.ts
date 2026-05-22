@@ -11,8 +11,8 @@ export const approveApi = {
     getById: (id: number): Promise<ApproveResponse> => api.get(`/api/approve/${id}`).then(res => res.data),
     create: (data: ApproveCreateRequest): Promise<ApproveResponse> =>
         api.post('/api/approve', data).then(res => res.data),
-    getCandidate: (serviceId: number): Promise<ApproveCandidateResponse[]> => 
-        api.get('/api/approve/candidate', { params: { serviceId } }).then(res => res.data),
+    getCandidate: (orderId: number): Promise<ApproveCandidateResponse[]> => 
+        api.get('/api/approve/candidate', { params: { orderId } }).then(res => res.data),
     startProcess: (id: number): Promise<ApproveResponse> =>
         api.patch(`/api/approve/${id}/start`).then(res => res.data),
     delete: (id: number): Promise<void> => api.delete(`/api/approve/${id}`).then(() => undefined),

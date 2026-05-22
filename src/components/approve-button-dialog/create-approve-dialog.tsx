@@ -15,7 +15,7 @@ import {
 } from 'mantine-react-table';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { components } from '../../types/api';
-import { useApproveCandidate, useCreateApprove } from '../../hooks/useApprove';
+import { useApproveCandidateForOrder, useCreateApprove } from '../../hooks/useApprove';
 
 type Order = components['schemas']['OrderResponseDTO'];
 type Candidate = components['schemas']['ApproveCandidateResponseDTO'];
@@ -30,15 +30,15 @@ export const CreateApproveDialog = ({ open, order, onClose }: CreateApproveDialo
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
 
-  const { data: candidates = []} = useApproveCandidate(
-    order?.serviceId ?? 0,
+  const { data: candidates = []} = useApproveCandidateForOrder(
+    order?.idOrder ?? 0,
     open && !!order?.serviceId
   );
 
   const { mutate: createApprove, isPending } = useCreateApprove();
 
-  const columns = useMemo<MRT_ColumnDef<Candidate>[]>(
-    () => [
+  const columns = useMemo<MRT_ColumnDef<Candidate>[]>(() => {
+  const baseColumns: MRT_ColumnDef<Candidate>[] = [
       {
         accessorKey: 'fio1c',
         header: 'ФИО',
@@ -46,20 +46,25 @@ export const CreateApproveDialog = ({ open, order, onClose }: CreateApproveDialo
         mantineFilterTextInputProps: { placeholder: 'Поиск по ФИО' },
       },
       {
-        accessorKey: 'userRoleName',
-        header: 'Роль',
-        size: 150,
-        mantineFilterTextInputProps: { placeholder: 'Поиск по роли' },
-      },
-      {
         accessorKey: 'podrName',
         header: 'Подразделение',
         size: 200,
         mantineFilterTextInputProps: { placeholder: 'Поиск по подразделению' },
       },
-    ],
-    []
-  );
+    ];
+
+    // Добавляем колонку Роль только для ЗНД
+    if (order?.orderTypeName === 'ЗНД') {
+      baseColumns.splice(1, 0, {
+        accessorKey: 'userRoleName',
+        header: 'Роль',
+        size: 150,
+        mantineFilterTextInputProps: { placeholder: 'Поиск по роли' },
+      });
+    }
+
+    return baseColumns;
+  }, [order?.orderTypeName]); // обновляем, если тип заявки изменился
 
   const handleConfirm = () => {
     const selectedRows = table.getSelectedRowModel().rows;
