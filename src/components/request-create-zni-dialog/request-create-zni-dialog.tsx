@@ -57,9 +57,7 @@ export const RequestCreateZNIDialog = (props: {
 
   const isFormValid = useMemo(() => {
     return (
-      chosen !== null &&
-      problemDescription.trim() !== '' &&
-      resultText.trim() !== ''
+      problemDescription.trim() !== ''
     );
   }, [chosen, problemDescription, resultText]);
 
@@ -90,18 +88,12 @@ export const RequestCreateZNIDialog = (props: {
       });
       return;
     }
-
-    if (!chosen) {
-      showNotification({
-        title: 'Выберите сервис',
-        color: 'orange',
-      });
-      return;
-    }
     
     const dto: OrderCreateDTO = {
-      name: chosen.fullname,
-      idService: chosen.idService,
+      // TODO: исправить заголовок заявки
+      name: chosen?.fullname || 'Заголовок ЗНИ',
+      // TODO: исправить хард код
+      idService: chosen?.idService || 1,
       // TODO: исправить ХАРД КОД - услуга н1 и инициатор
       idCatItem: 1,
       idInitiator: 1,
@@ -169,7 +161,7 @@ export const RequestCreateZNIDialog = (props: {
         maxWidth="md"
       >
         <DialogContent
-          sx={{ minHeight: '60vh', minWidth: '75vh', padding: '20px' }}
+          sx={{ minHeight: '50vh', minWidth: '75vh', padding: '20px' }}
         >
           <Grid2
             container
@@ -206,7 +198,7 @@ export const RequestCreateZNIDialog = (props: {
                   fullWidth={true}
                   onClick={CreateDialog}
                 >
-                  Выберите ИТ-сервис *
+                  Выберите ИТ-сервис
                 </Button>
               </Grid2>
 
@@ -230,7 +222,7 @@ export const RequestCreateZNIDialog = (props: {
 
             <Grid2 container spacing={1} alignItems="center" size="auto">
               <Grid2 size="auto">
-                <Text fw={600}>Желаемый срок *</Text>
+                <Text fw={600}>Желаемый срок</Text>
               </Grid2>
               <Grid2 size="auto">
                 <DateTimePicker
@@ -264,23 +256,6 @@ export const RequestCreateZNIDialog = (props: {
             </Grid2>
           </Grid2>
 
-          <Grid2
-            container
-            spacing={1}
-            direction="column"
-            margin="0px 0px 10px 0px"
-          >
-            <Grid2 size="auto">
-              <Text fw={600}>Ожидаемый результат *</Text>
-            </Grid2>
-            <Grid2 size="auto">
-              <TextInputField
-                value={resultText}
-                onChange={(e) => setresultText(e.target.value)}
-                rows={3}
-              />
-            </Grid2>
-          </Grid2>
           <Grid2
             container
             spacing={1}
