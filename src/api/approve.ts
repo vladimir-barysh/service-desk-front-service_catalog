@@ -16,4 +16,6 @@ export const approveApi = {
     startProcess: (id: number): Promise<ApproveResponse> =>
         api.patch(`/api/approve/${id}/start`).then(res => res.data),
     delete: (id: number): Promise<void> => api.delete(`/api/approve/${id}`).then(() => undefined),
+    refreshByOrder: (orderId: number): Promise<ApproveResponse[]> =>
+        api.post(`/api/approve/refresh/${orderId}`).then(res => res.data),
 };

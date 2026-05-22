@@ -65,3 +65,13 @@ export const useDeleteApprove = createCRUDMutation<{ id: number; orderId: number
     successMessage: 'Согласование удалено',
     errorMessage: 'Не удалось удалить согласование',
 });
+
+// Удаление всех согласований и автоматическое создание для ЗНД и ЗНИ
+export const useRefreshApprove = createCRUDMutation<{ orderId: number }, ApproveResponse[]>({
+  type: 'create', // или 'update'
+  mutationFn: ({ orderId }) => approveApi.refreshByOrder(orderId),
+  queryKey: ({ orderId }) => ['approves', 'order', orderId],
+  invalidateKeys: ({ orderId }) => [['approveUsers', 'order', orderId]],
+  successMessage: 'Согласования обновлены',
+  errorMessage: 'Ошибка обновления согласований',
+});

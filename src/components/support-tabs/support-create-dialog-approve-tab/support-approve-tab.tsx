@@ -11,11 +11,6 @@ import {
   Paper,
   Chip,
   Grid2,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
 } from '@mui/material';
 import {
   Pending,
@@ -27,8 +22,9 @@ import {
 } from '@mui/icons-material';
 import { useDialogs, CreateApproveDialog } from '../../../components';
 import { components } from '../../../types/api';
-import { useApprovesByOrder, useStartApproveProcess, useDeleteApprove } from '../../../hooks/useApprove';
+import { useApprovesByOrder, useStartApproveProcess, useDeleteApprove, useRefreshApprove } from '../../../hooks/useApprove';
 import { useApproveUsersByOrder } from '../../../hooks/useApproveUser';
+import { ConfirmDialog } from '../../confirmDialog';
 
 type Order = components['schemas']['OrderResponseDTO'];
 
@@ -49,6 +45,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   // Мутации через фабрику
   const { mutate: startProcess, isPending: isStarting } = useStartApproveProcess();
   const { mutate: deleteApprove, isPending: isDeleting } = useDeleteApprove();
+  const { mutate: refreshApprove, isPending: isRefreshing } = useRefreshApprove();
 
   // Фильтруем участников по выбранному согласованию
   const selectedApproveUsers = useMemo(() => {
@@ -79,6 +76,10 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     return new Date(dateStr).toLocaleString();
   };
 
+  // Состояния диалогов
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [confirmRefreshOpen, setConfirmRefreshOpen] = useState(false);
+
   // Обработчик нажатия кнопки Создать согласование 
   const handleCreateApprove = () => {
     if (!order) return;
@@ -92,29 +93,40 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   };
 
   // Обработчик нажатия кнопки Удалить согласование
-  const handleDeleteClick = (approveId: number) => {
-    setDeletingApproveId(approveId);
+  const handleDeleteClick = () => {
+    if (!selectedApproveId) return;
     setConfirmDeleteOpen(true);
   };
 
-  // Состояния для диалога подтверждения удаления
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [deletingApproveId, setDeletingApproveId] = useState<number | null>(null);
-
   const handleConfirmDelete = () => {
-    if (deletingApproveId && order) {
-      deleteApprove(
-        { id: deletingApproveId, orderId: order.idOrder },
-        { onSuccess: () => { setSelectedApproveId(null); }},
-      );
-    }
-    setConfirmDeleteOpen(false);
-    setDeletingApproveId(null);
+    if (!selectedApproveId || !order) return;
+    deleteApprove(
+      { id: selectedApproveId, orderId: order.idOrder },
+      {
+        onSuccess: () => {
+          setSelectedApproveId(null);
+          setConfirmDeleteOpen(false);
+        },
+      }
+    );
   };
 
-  const handleCancelDelete = () => {
-    setConfirmDeleteOpen(false);
-    setDeletingApproveId(null);
+  // Обработчик нажатия кнопки Обновить согласующих
+  const handleConfirmRefresh = () => {
+    if (!order) return;
+    refreshApprove(
+      { orderId: order.idOrder },
+      {
+        onSuccess: () => {
+          setSelectedApproveId(null);
+          setConfirmRefreshOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleRefreshClick = () => {
+    setConfirmRefreshOpen(true);
   };
 
   // Доступность кнопок на панели
@@ -148,7 +160,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
           size="medium"
           sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
           disabled={!selectedApproveId || isDeleting}
-          onClick={() => selectedApproveId && handleDeleteClick(selectedApproveId)}
+          onClick={handleDeleteClick}
         >
           Удалить согласование
         </Button>
@@ -162,7 +174,14 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         >
           Запустить процесс
         </Button>
-        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="medium"
+          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
+          onClick={handleRefreshClick}
+          disabled={isRefreshing || !order  || approves.length === 0}
+        >
           Обновить согласующих
         </Button>
       </Box>
@@ -265,7 +284,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         </Grid2>
       </Grid2>
 
-      {/* Диалоги кнопок */}
+      {/* Диалоги создания согласования */}
       <CreateApproveDialog
         open={dialogs.createApprove.open}
         order={dialogs.createApprove.order}
@@ -273,21 +292,36 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
       />
 
       {/* Диалог подтверждения удаления */}
-      <Dialog open={confirmDeleteOpen} onClose={handleCancelDelete}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Подтверждение удаления"
+        message={
+          <>
             Вы действительно хотите удалить согласование?<br />
-            <strong>Внимание: </strong> вместе с ним будут удалены данные об участниках согласования
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="inherit">Отмена</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <strong>Внимание:</strong> вместе с ним будут удалены данные об участниках согласования.
+          </>
+        }
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        confirmText="Удалить"
+        confirmColor="error"
+      />
+      
+      {/* Диалог подтверждения обновление согласований */}
+      <ConfirmDialog
+        open={confirmRefreshOpen}
+        title="Обновить согласующих"
+        message={
+          <>
+            <strong>Внимание:</strong> все существующие согласования будут удалены,<br />
+            а данные участников будут перезаписаны
+          </>
+        }
+        onConfirm={handleConfirmRefresh}
+        onCancel={() => setConfirmRefreshOpen(false)}
+        confirmText="Обновить"
+        confirmColor="primary"
+      />
     </Box>
   );
 }
