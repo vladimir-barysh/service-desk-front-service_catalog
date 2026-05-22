@@ -357,27 +357,6 @@ export const RequestCreateZNODialog = (props: {
                     />
                   )}
                 />
-                {/*<FormControl fullWidth size="small">
-                  <Select
-                    displayEmpty
-                    value={initiatorId || ''}
-                    onChange={handleInitiatorChange}
-
-                    renderValue={(selected) => {
-                      if (!selected) return <em>Не выбран</em>;
-                      const p = users.find((x: User) => x.idItUser === Number(selected));
-                      return p?.fio1c;
-                    }}
-
-                  >
-                    {users.map((item: User) => (
-                      <MenuItem key={item.idItUser} value={item.idItUser}>
-                        {item.fio1c}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>*/}
-
               </Grid2>
             </Grid2>
           )}

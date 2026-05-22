@@ -10,18 +10,22 @@ import {
   Paper,
   IconButton,
   DialogActions,
+  Autocomplete,
+  TextField,
 } from '@mui/material';
 import dayjs from 'dayjs';
-import { Input, Text, CloseButton } from '@mantine/core';
+import { Input, Text, CloseButton, MantineProvider, Checkbox } from '@mantine/core';
 import { DateTimePicker, DateValue } from '@mantine/dates';
 import { styled } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { Service } from '../../api/models';
+import { Service, User } from '../../api/models';
 import { TextInputField } from '../text-input-field';
 import { OrderCreateDTO } from '../../api/dtos';
 import { useCreateOrder } from '../../api/hooks';
 import { showNotification } from './../../context';
+import { useQuery } from '@tanstack/react-query';
+import { getUsers } from '../../api';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -51,11 +55,21 @@ export const RequestCreateZNTDialog = (props: {
   const [chosen, setChosen] = React.useState<Service | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [problemDescription, setProblemDescription] = useState('');
+  const [isOtherUser, setIsOtherUser] = useState(false);
+  const [initiatorId, setInitiatorId] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const [finishDate, setFinishDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
 
   const { mutate: createOrderMutation, isPending } = useCreateOrder();
+
+  const {
+      data: users = [],
+    } = useQuery({
+      queryKey: ['users'],
+      queryFn: getUsers,
+      staleTime: Infinity
+    });
 
   const isFormValid = useMemo(() => {
     return (
@@ -100,9 +114,10 @@ export const RequestCreateZNTDialog = (props: {
     const dto: OrderCreateDTO = {
       name: chosen.fullname,
       idService: chosen.idService,
-      // TODO: исправить ХАРД КОД - услуга н1 и инициатор
+      // TODO: исправить ХАРД КОД - услуга н1
       idCatItem: 1,
-      idInitiator: 1,
+      // TODO: исправить единицу на пользователя, который создает заявку
+      idInitiator: isOtherUser && initiatorId !== null ? initiatorId : 1,
       idOrderType: 4,
       description: problemDescription,
 
@@ -154,6 +169,10 @@ export const RequestCreateZNTDialog = (props: {
   const handleReturnDateChange = (date: DateValue) => {
     const temp = date ? dayjs(date).toISOString().split('.')[0] + 'Z' : '';
     setReturnDate(temp);
+  };
+
+  const handleInitiatorChange = (id: number | null) => {
+    setInitiatorId(id);
   };
 
   const addWorkDays = (startDate: Date, daysToAdd: number): Date => {
@@ -309,6 +328,63 @@ export const RequestCreateZNTDialog = (props: {
               />
             </Grid2>
           </Grid2>
+
+          <Grid2
+            container
+            spacing={1}
+            direction="row"
+            margin="0px 0px 10px 0px"
+          >
+            <Grid2 size="auto">
+              <Text fw={600}>Проблемы другого пользователя </Text>
+            </Grid2>
+            <Grid2 size="auto" alignContent="center">
+              <MantineProvider theme={{ cursorType: 'pointer' }}>
+                <Checkbox
+                  checked={isOtherUser}
+                  onChange={(event) => setIsOtherUser(event.currentTarget.checked)}
+                  size="md"
+                />
+              </MantineProvider>
+            </Grid2>
+          </Grid2>
+
+          {isOtherUser && (
+            <Grid2
+              container
+              spacing={1}
+              direction="column"
+              margin="0px 0px 10px 0px"
+            >
+              <Grid2 size="auto">
+                <Text fw={600}>Выберите пользователя:</Text>
+              </Grid2>
+              <Grid2 size="auto" alignContent="center">
+                <Autocomplete
+                  fullWidth
+                  size="small"
+                  options={users}
+                  value={
+                    users.find((x: User) => x.idItUser === initiatorId) || null
+                  }
+                  onChange={(_, newValue) => {
+                    handleInitiatorChange(newValue?.idItUser || null);
+                  }}
+                  getOptionLabel={(option: User) => option.fio1c || ''}
+                  isOptionEqualToValue={(option, value) =>
+                    option.idItUser === value.idItUser
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder="Не выбран"
+                    />
+                  )}
+                />
+
+              </Grid2>
+            </Grid2>
+          )}
 
           <Grid2
             container
