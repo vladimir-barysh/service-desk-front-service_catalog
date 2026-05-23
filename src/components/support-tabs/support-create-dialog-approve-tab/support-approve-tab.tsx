@@ -20,7 +20,7 @@ import {
   RemoveCircle,
   HourglassEmpty,
 } from '@mui/icons-material';
-import { useDialogs, CreateApproveDialog } from '../../../components';
+import { useDialogs, CreateApproveDialog, EditApproveUsersDialog } from '../../../components';
 import { components } from '../../../types/api';
 import { useApprovesByOrder, useStartApproveProcess, useDeleteApprove, useRefreshApprove } from '../../../hooks/useApprove';
 import { useApproveUsersByOrder } from '../../../hooks/useApproveUser';
@@ -79,11 +79,18 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   // Состояния диалогов
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [confirmRefreshOpen, setConfirmRefreshOpen] = useState(false);
+  const [editUsersOpen, setEditUsersOpen] = useState(false);
 
   // Обработчик нажатия кнопки Создать согласование 
   const handleCreateApprove = () => {
     if (!order) return;
     openDialog('createApprove', order);
+  };
+
+  // Обработчик нажатия кнопки Изменить согласующих
+  const handleEditUsers = () => {
+    if (!selectedApproveId) return;
+    setEditUsersOpen(true);
   };
 
   // Обработчик нажатия кнопки Запустить процесс
@@ -151,7 +158,14 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         >
           Создать согласование
         </Button>
-        <Button variant="contained" color="primary" size="medium" sx={{ flex: '1 1 auto', maxWidth: 'auto' }}>
+        <Button 
+          variant="contained"
+          color="warning"
+          size="medium"
+          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
+          disabled={!selectedApproveId}
+          onClick={handleEditUsers}
+        >
           Изменить согласование
         </Button>
         <Button 
@@ -321,6 +335,17 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         onCancel={() => setConfirmRefreshOpen(false)}
         confirmText="Обновить"
         confirmColor="primary"
+      />
+
+      {/* Диалог именения согласования */}
+      <EditApproveUsersDialog
+        key={selectedApproveId}
+        open={editUsersOpen}
+        approveId={selectedApproveId!}
+        orderId={order!.idOrder}
+        serviceId={order!.serviceId}
+        orderTypeName={order?.orderTypeName}
+        onClose={() => setEditUsersOpen(false)}
       />
     </Box>
   );

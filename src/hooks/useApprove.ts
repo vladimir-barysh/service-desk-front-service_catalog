@@ -75,3 +75,17 @@ export const useRefreshApprove = createCRUDMutation<{ orderId: number }, Approve
   successMessage: 'Согласования обновлены',
   errorMessage: 'Ошибка обновления согласований',
 });
+
+// Изменение согласующих для согласования
+export const useUpdateApproveUsers = createCRUDMutation<{ approveId: number; orderId: number; userIds: number[] }, void>({
+  type: 'update',
+  mutationFn: ({ approveId, userIds }) => approveApi.updateUsers(approveId, userIds),
+  queryKey: ({ orderId }) => ['approves', 'order', orderId],
+  getEntityId: ({ approveId}) => approveId,
+  idField: 'idApprove',
+  invalidateKeys: ({ orderId }) => [
+    ['approveUsers', 'order', orderId],
+  ],
+  successMessage: 'Состав согласующих обновлён',
+  errorMessage: 'Не удалось обновить состав согласующих',
+});

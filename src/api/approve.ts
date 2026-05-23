@@ -18,4 +18,6 @@ export const approveApi = {
     delete: (id: number): Promise<void> => api.delete(`/api/approve/${id}`).then(() => undefined),
     refreshByOrder: (orderId: number): Promise<ApproveResponse[]> =>
         api.post(`/api/approve/refresh/${orderId}`).then(res => res.data),
+    updateUsers: (approveId: number, userIds: number[]): Promise<void> =>
+        api.put(`/api/approve/${approveId}/users`, { userIds }).then(() => undefined),
 };
