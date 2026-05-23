@@ -68,6 +68,7 @@ export const TextInputField = ({
         variant={variant}
         value={value}
         placeholder={placeholder}
+        disabled={disabled}
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">

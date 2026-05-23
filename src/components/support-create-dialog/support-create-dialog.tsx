@@ -32,11 +32,11 @@ type Order = components['schemas']['OrderResponseDTO'];
 interface SupportGeneralDialogProps {
   isOpen: boolean;
   request: Order | null;
-
+  disabled: boolean;
   onClose: () => void;
 }
 
-export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGeneralDialogProps) {
+export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: SupportGeneralDialogProps) {
   const [value, setValue] = useState('1');
   const [hasFiles, setHasFiles] = useState(false);
   const [hasMessages, setHasMessages] = useState(false);
@@ -226,6 +226,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
               <SupportGeneralTab
                 isOpen={true}
                 request={request}
+                disabled={disabled}
                 onUpdate={(data, hasChanges) => {
                   setGeneralData(data);
                   setGeneralChanged(hasChanges);

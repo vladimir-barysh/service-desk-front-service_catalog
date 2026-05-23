@@ -26,10 +26,11 @@ type Order = components['schemas']['OrderResponseDTO'];
 interface SupportGeneralTabProps {
   isOpen: boolean;
   request: Order | null;
+  disabled: boolean;
   onUpdate?: (data: any, hasChanges: boolean) => void;
 }
 
-export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps) {
+export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGeneralTabProps) {
 
   const [editedRequest, setEditedRequest] = useState<Order | null>(request);
 
@@ -88,6 +89,24 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
     }
   };
 
+  const multilineTextFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+        borderWidth: '1px',
+      },
+      '&:hover fieldset': {
+        borderWidth: '1px',
+      },
+      borderRadius: '0px 0px 5px 0px',
+    },
+    '& .MuiOutlinedInput-root.Mui-disabled': {
+      backgroundColor: '#f5f5f5',
+      '&:hover fieldset': {
+        borderWidth: '1px 1px 0px 1px'
+      }
+    }
+  }
+
   const dateInputStyle = {
     input: {
       borderColor: '#c7c7c7',
@@ -109,17 +128,6 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
   };
 
   const selectInputStyle = {
-    '& fieldset': {
-      borderWidth: '1px 1px 0px 1px',
-    },
-    '&:hover fieldset': {
-      borderWidth: '1px',
-    },
-    borderRadius: 0,
-    height: 41,
-  };
-
-  const autoCompleteInputStyle = {
     '& .MuiOutlinedInput-root': {
       '& fieldset': {
         borderWidth: '1px 1px 0px 1px',
@@ -129,6 +137,12 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
       },
       borderRadius: 0,
       height: 41,
+    },
+    '& .MuiOutlinedInput-root.Mui-disabled': {
+      backgroundColor: '#f5f5f5',
+      '&:hover fieldset': {
+        borderWidth: '1px 1px 0px 1px'
+      }
     }
   };
 
@@ -297,6 +311,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               size="small"
               variant="outlined"
               InputProps={{ readOnly: true }}
+              disabled={disabled}
               sx={[
                 textFieldStyle,
                 {
@@ -352,6 +367,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     },
                   }
                 }}
+                disabled={disabled}
                 readOnly={true}
                 value={editedRequest?.dateCreated ? dayjs(editedRequest?.dateCreated).toDate() : null}
                 onChange={(newDateCreated) => handleDateChange('dateCreated', newDateCreated)}
@@ -390,6 +406,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                   borderRadius: '0px 5px 5px 0px'
                 }
               }}
+              disabled={disabled}
               readOnly={!isEditing}
               value={editedRequest?.dateFinishPlan ? dayjs(editedRequest?.dateFinishPlan).toDate() : null}
               onChange={(newDateFinishPlan) => handleDateChange('dateFinishPlan', newDateFinishPlan)}
@@ -436,6 +453,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                   },
                 }
               }}
+              disabled={disabled}
               readOnly={true}
               value={editedRequest?.dateFinishFact ? dayjs(editedRequest?.dateFinishFact).toDate() : null}
               onChange={(newDateFinishFact) => handleDateChange('dateFinishFact', newDateFinishFact)}
@@ -465,6 +483,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 fullWidth
                 size="small"
                 variant="outlined"
+                disabled={disabled}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('itModule')}
                 sx={[
@@ -497,6 +516,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 fullWidth
                 size="small"
                 variant="outlined"
+                disabled={disabled}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('service')}
                 sx={textFieldStyle}
@@ -522,6 +542,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 fullWidth
                 size="small"
                 variant="outlined"
+                disabled={disabled}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('name')}
                 sx={textFieldStyle}
@@ -548,19 +569,9 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('accessTo')}
-                disabled={editedRequest.orderTypeName === 'ЗНД' ? false : true}
+                disabled={(editedRequest.orderTypeName === 'ЗНД' ? false : true) || disabled}
                 value={editedRequest.orderTypeName === 'ЗНД' ? initiator.fio1c : 'Не тот тип заявки'}
-                sx={[
-                  textFieldStyle,
-                  {
-                    '& .MuiOutlinedInput-root.Mui-disabled': {
-                      backgroundColor: '#f5f5f5',
-                      '&:hover fieldset': {
-                        borderWidth: '1px 1px 0px 1px'
-                      }
-                    }
-                  }
-                ]}
+                sx={textFieldStyle}
               />
             </Grid2>
           </Grid2>
@@ -595,7 +606,8 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     placeholder="Не выбран"
                   />
                 )}
-                sx={autoCompleteInputStyle}
+                sx={selectInputStyle}
+                disabled={disabled}
               />
             </Grid2>
           </Grid2>
@@ -616,6 +628,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <TextInputField
                 value={editedRequest.comment || ''}
                 onChange={handleChange('comment')}
+                disabled={disabled}
                 readonly={!isEditing}
                 sx={textFieldStyle}
               />
@@ -657,6 +670,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
 
                   }
                 }}
+                disabled={disabled}
                 readOnly={!isEditing}
                 onChange={(newDatePostpone) => handleDateChange('datePostpone', newDatePostpone)}
 
@@ -700,7 +714,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     }
                   }
                 }}
-                disabled={editedRequest.orderTypeName === 'ЗНТ' ? false : true}
+                disabled={(editedRequest.orderTypeName === 'ЗНТ' ? false : true) || disabled}
                 readOnly={!isEditing}
                 value={editedRequest?.dateTechReturn ? dayjs(editedRequest?.dateTechReturn).toDate() : null}
                 onChange={(newDateTechReturn) => handleDateChange('dateTechReturn', newDateTechReturn)}
@@ -727,7 +741,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <Typography variant="subtitle2">Тип заявки</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small" sx={selectInputStyle}>
                 <Select
                   value={editedRequest.orderTypeId || ''}
                   onChange={handleOrderTypeChange}
@@ -738,7 +752,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     return p?.name;
                   }}
 
-                  sx={selectInputStyle}
+                  disabled={disabled}
                 >
                   {orderTypes.map((item: OrderType) => (
                     <MenuItem key={item.idOrderType} value={item.idOrderType}>
@@ -764,7 +778,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <Typography variant="subtitle2">Приоритет</Typography>
             </Grid2>
             <Grid2 size={9}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small" sx={selectInputStyle}>
                 <Select
                   value={editedRequest.orderPriorityId || ''}
                   onChange={handleOrderPriorityChange}
@@ -775,7 +789,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                     return p?.name;
                   }}
 
-                  sx={selectInputStyle}
+                  disabled={disabled}
                 >
                   {orderPriorities.map((item: OrderPriority) => (
                     <MenuItem key={item.idOrderPriority} value={item.idOrderPriority}>
@@ -807,6 +821,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 value={editedRequest.orderSourceName || ''}
                 rows={1}
+                disabled={disabled}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('contactMethod')}
 
@@ -835,6 +850,7 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
                 variant="outlined"
                 multiline
                 rows={1}
+                disabled={disabled}
                 InputProps={{ readOnly: !isEditing }}
                 onChange={(e) => handleFieldChange('knowledgeBase', e.target.value)}
                 sx={textFieldStyle}
@@ -862,19 +878,10 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <TextInputField
                 value={editedRequest.description || ''}
                 onChange={handleChange('description')}
+                disabled={disabled}
                 readonly={!isEditing}
                 rows={3}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderWidth: '1px',
-                    },
-                    '&:hover fieldset': {
-                      borderWidth: '1px',
-                    },
-                    borderRadius: '0px 0px 5px 0px',
-                  },
-                }}
+                sx={multilineTextFieldStyle}
               />
             </Grid2>
           </Grid2>
@@ -899,19 +906,10 @@ export function SupportGeneralTab({ request, onUpdate }: SupportGeneralTabProps)
               <TextInputField
                 value={editedRequest.resultText || ''}
                 onChange={handleChange('resultText')}
+                disabled={disabled}
                 readonly={!isEditing}
                 rows={3}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderWidth: '1px',
-                    },
-                    '&:hover fieldset': {
-                      borderWidth: '1px',
-                    },
-                    borderRadius: '0px 0px 5px 0px',
-                  },
-                }}
+                sx={multilineTextFieldStyle}
               />
             </Grid2>
           </Grid2>

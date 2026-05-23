@@ -548,6 +548,7 @@ export function RequestsAllPage() {
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         request={selectedRequest}
+        disabled={false}
         onClose={handleDialogClose}
       />
     </div>
