@@ -1,78 +1,222 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog, DialogContent,
-  DialogContentText, DialogTitle,
   DialogActions, Box,
   Button, Grid2,
-  IconButton, Typography,
-  TextField, InputAdornment,
-  FormControl, MenuItem, Select,
-  SelectChangeEvent,
+  IconButton,
+  TextField,
+  Autocomplete,
 } from '@mui/material';
-import {
-  Input, Textarea,
-  Text, CloseButton,
-  Radio, Group,
-  Checkbox,
-} from '@mantine/core';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useMutation } from '@tanstack/react-query'
-import { OrderCreateDTO } from '../../api/dtos';
-import { AxiosError } from 'axios';
-import { createOrder } from '../../api/services/orderService';
-import { getUsers } from '../../api/services/userService';
+import { Text, Radio, Group } from '@mantine/core';
 import { TextInputField } from '../text-input-field';
-import { User } from '../../api/models';
+import { Close } from '@mui/icons-material';
+import dayjs from 'dayjs';
+import { showNotification } from '../../context';
+
+
+import { components } from '../../types/api';
+import { useCreateTask } from '../../hooks/useTaskMutations';
+import { useUsers } from '../../hooks/useUserMutations';
+import { DateTimePicker, DateValue } from '@mantine/dates';
+type TaskCreateRequestDTO = components['schemas']['TaskCreateRequestDTO'];
+type User = components['schemas']['UserResponseDTO'];
 
 // TODO: add groups
 
-interface RedirectTaskDialogProps {
+interface NewTaskDialogProps {
+  idCurrOrder?: number;
   open: boolean;
   onClose: () => void;
-  onSave: (idExecutor: number) => void;
 }
 
-export function NewTaskDialog({ open, onClose, onSave }: RedirectTaskDialogProps) {
+export function NewTaskDialog({ idCurrOrder, open, onClose }: NewTaskDialogProps) {
   // Состояния компонентов
-  const [selectedExecutor, setSelectedExecutor] = useState(Number);
+  const [selectedExecutor, setSelectedExecutor] = useState<User | null>(null);
+  const [parentClose, setParentClose] = useState<string>('');
+  const [dateFinishPlan, setDateFinishPlan] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+
+  const { mutate: createTaskMutation } = useCreateTask();
+
   const labelStyle = {
     margin: '0px 0px -15px 0px',
   };
 
-  const {
-    data: users = [],
-    isLoading: userLoad,
-    error: userError,
-  } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-    staleTime: Infinity
-  });
+  const { data: users = [] } = useUsers();
+
+  const isFormValid = useMemo(() => {
+
+    return (
+      parentClose !== '' &&
+      selectedExecutor !== null &&
+      description !== ''
+    );
+  }, [parentClose, selectedExecutor, description]);
 
   const handleSave = () => {
-    onSave(selectedExecutor);
-    handleClose();
+
+    if (!isFormValid) {
+      showNotification({
+        title: 'Заполните обязательные все поля',
+        color: 'orange',
+      });
+      return;
+    }
+    if (!idCurrOrder) {
+      showNotification({
+        title: 'Не указан ID заявки',
+        color: 'orange',
+      });
+      return;
+    }
+
+    const dto: TaskCreateRequestDTO = {
+      idOrder: idCurrOrder,
+      idOrderTaskParent: undefined,
+      // TODO: Добавить возможность выбирать работу
+      idWork: undefined,
+      idExecutor: selectedExecutor?.idItUser,
+      closeParentCheck: parentClose === 'Да' ? true : false,
+      dateFinishPlan: dateFinishPlan,
+      description: description
+    };
+
+    createTaskMutation(dto, {
+      onSuccess: () => handleClose(),
+    });
+
   };
 
   const handleClose = () => {
+    setSelectedExecutor(null);
+    setDateFinishPlan('');
+    setDescription('');
+    setParentClose('');
+
     onClose();
   };
 
-  const handleExecutorChange = (event: SelectChangeEvent<number>) => {
-    const selectedId = Number(event.target.value);
+  const handleExecutorChange = (id: number | null) => {
 
     const selectedObject = users.find(
-      (item: User) => item.idItUser === selectedId
+      (item: User) => item.idItUser === id
     ) ?? null;
-    setSelectedExecutor(selectedObject.idItUser);
+    setSelectedExecutor(selectedObject);
+  };
+
+  const handleParentCloseChange = (value: string) => {
+    setParentClose(value);
+  };
+
+  const handleDateChange = (date: DateValue) => {
+    const temp = date ? dayjs(date).toISOString().split('.')[0] + 'Z' : '';
+    setDateFinishPlan(temp);
+  };
+
+  const addWorkDays = (startDate: Date, daysToAdd: number): Date => {
+    const result = new Date(startDate);
+    let addedDays = 0;
+
+    while (addedDays < daysToAdd) {
+      result.setDate(result.getDate() + 1);
+      // Если это рабочий день (пн-пт), увеличиваем счетчик
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        addedDays++;
+      }
+    }
+
+    return result;
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Перенаправить задачу</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="xl">
 
-      <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+      <DialogContent sx={{ minHeight: '45vh', display: 'flex', flexDirection: 'column' }}>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+
+          <Box fontSize='18px' fontWeight='700'>
+            Новая задача
+          </Box>
+
+          <IconButton onClick={handleClose}>
+            <Close />
+          </IconButton>
+
+        </Box>
+
+        <Box
+          width='80vh'
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            pt: 1
+          }}
+        >
+          <Grid2
+            container
+            spacing={0}
+            direction="row"
+            alignItems="left"
+            justifyContent="space-between"
+            margin='10px 0px 20px 0px'
+          >
+            <Grid2
+              container
+              spacing={3}
+              direction={'row'}
+              alignItems="center"
+              justifyContent="left"
+              padding="0px 0px 0px 0px"
+            >
+              <Grid2 size='auto'>
+                <Text fw={600}>Удалять родителя *</Text>
+              </Grid2>
+              <Radio.Group
+                value={parentClose}
+                onChange={handleParentCloseChange}
+                withAsterisk
+              >
+                <Group>
+                  <Radio
+                    fw={200}
+                    label="Да"
+                    value="Да"
+                  />
+
+                  <Radio
+                    fw={200}
+                    label="Нет"
+                    value="нет"
+                  />
+                </Group>
+              </Radio.Group>
+            </Grid2>
+
+            <Grid2 container spacing={1} alignItems="center" size="auto">
+              <Grid2 size="auto">
+                <Text fw={600}>Желаемый срок</Text>
+              </Grid2>
+              <Grid2 size="auto">
+                <DateTimePicker
+                  placeholder="ДД.MM.ГГ ЧЧ:ММ"
+                  valueFormat="DD.MM.YYYY HH:mm"
+                  withSeconds={false}
+                  onPointerEnterCapture={undefined}
+                  onPointerLeaveCapture={undefined}
+                  clearable
+                  locale="ru"
+                  onChange={(finishDate) => handleDateChange(finishDate)}
+                  minDate={addWorkDays(new Date(), 3)}
+                  excludeDate={(date) => {
+                    return date.getDay() === 0 || date.getDay() === 6;
+                  }}
+                />
+              </Grid2>
+            </Grid2>
+          </Grid2>
+
           {/* Поле "На кого" */}
           <Grid2
             container
@@ -81,28 +225,48 @@ export function NewTaskDialog({ open, onClose, onSave }: RedirectTaskDialogProps
             direction={'column'}
             alignItems="left"
             justifyContent="left"
-            margin="0px 0px 0px 0px"
+            margin="0px 0px 20px 0px"
           >
             <Grid2 size="auto" sx={labelStyle}>
-              <Text fw={600}>Укажите исполнителя(ей)</Text>
+              <Text fw={600}>Укажите исполнителя(ей) *</Text>
             </Grid2>
             <Grid2 size="auto">
-              <FormControl fullWidth size="small">
-                <Select
-                  onChange={handleExecutorChange}
-                  renderValue={(selected) => {
-                    if (!selected) return <em>Не выбрано</em>;
-                    const p = users.find((x: any) => x.idItUser === selected);
-                    return p?.fio1c;
-                  }}
-                >
-                  {users.map((item: any) => (
-                    <MenuItem key={item.idItUser} value={item.idItUser}>
-                      {item.fio1c}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                fullWidth
+                size="small"
+                options={users}
+                value={
+                  users.find((x: User) => x.idItUser === selectedExecutor?.idItUser) || null
+                }
+                onChange={(_, newValue) => {
+                  handleExecutorChange(newValue?.idItUser || null);
+                }}
+                getOptionLabel={(option: User) => option.fio1c || ''}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Не выбран"
+                  />
+                )}
+              />
+            </Grid2>
+          </Grid2>
+
+          <Grid2
+            container
+            spacing={1}
+            direction="column"
+            margin="0px 0px 0px 0px"
+          >
+            <Grid2 size="auto">
+              <Text fw={600}>Подробное описание проблемы *</Text>
+            </Grid2>
+            <Grid2 size="auto">
+              <TextInputField
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+              />
             </Grid2>
           </Grid2>
 
@@ -115,30 +279,27 @@ export function NewTaskDialog({ open, onClose, onSave }: RedirectTaskDialogProps
           display: 'flex',
           gap: 1,
           justifyContent: 'flex-end',
-        }}>
-        <Grid2 size={3}>
-          <Button
-            variant="contained"
-            color="success"
-            size={'small'}
-            fullWidth={true}
-            disabled={!selectedExecutor}
-            onClick={handleSave}
-          >
-            Сохранить
-          </Button>
-        </Grid2>
-        <Grid2 size={3}>
-          <Button
-            variant="contained"
-            color="inherit"
-            size={'small'}
-            fullWidth={true}
-            onClick={handleClose}
-          >
-            Отмена
-          </Button>
-        </Grid2>
+        }}
+      >
+        <Button
+          variant="contained"
+          color="success"
+          size="small"
+          onClick={handleSave}
+          sx={{ minWidth: '100px' }}
+          disabled={!isFormValid}
+        >
+          Создать
+        </Button>
+        <Button
+          variant="contained"
+          color="inherit"
+          size="small"
+          onClick={handleClose}
+          sx={{ minWidth: '100px' }}
+        >
+          Назад
+        </Button>
       </DialogActions>
     </Dialog>
   );

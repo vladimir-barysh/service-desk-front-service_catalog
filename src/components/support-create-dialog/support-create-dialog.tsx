@@ -14,7 +14,6 @@ import { Close } from '@mui/icons-material';
 
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined } from '@mui/icons-material'
-import { OrderTask } from '../../api/models';
 import { uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
 import {
@@ -26,8 +25,10 @@ import dayjs from 'dayjs';
 import { getTasks } from '../../api/services/taskService';
 import { components } from '../../types/api';
 import { useUpdateOrder } from '../../hooks/useOrderMutations';
+import { useTasks } from '../../hooks/useTaskMutations';
 
 type Order = components['schemas']['OrderResponseDTO'];
+type OrderTask = components['schemas']['TaskResponseDTO'];
 
 interface SupportGeneralDialogProps {
   isOpen: boolean;
@@ -64,16 +65,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
 
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
-  const {
-      data: tasks = [],
-    } = useQuery({
-      queryKey: ['tasks'],
-      queryFn: getTasks,
-      enabled: true,
-      staleTime: 5 * 60 * 1000,
-      refetchOnMount: 'always',
-      refetchOnWindowFocus: true,
-    });
+  const { data: tasks = [] } = useTasks();
     
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -126,7 +118,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
   const checkTasks = () => {
     if (!request?.nomer) return;
     const tasksForThisOrder = tasks.filter(
-      (task: OrderTask) => task.order?.nomer === String(request.nomer)
+      (task: OrderTask) => task.orderNomer === request.nomer
     );
     setHasTasks(tasksForThisOrder.length > 0);
   };

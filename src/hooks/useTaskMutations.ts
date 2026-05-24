@@ -4,7 +4,7 @@ import { components } from '../types/api';
 import { useQuery } from '@tanstack/react-query';
 
 type TaskResponse = components['schemas']['TaskResponseDTO'];
-//type TaskCreateRequest = components['schemas']['TaskCreateRequestDTO'];
+type TaskCreateRequest = components['schemas']['TaskCreateRequestDTO'];
 type TaskUpdateRequest = components['schemas']['TaskUpdateDTO'];
 
 interface UseTasksProps {
@@ -32,15 +32,14 @@ export const useTasks = ({
 });
 
 // Создание задачи
-/*
-export const useCreateOrder = createCRUDMutation<OrderCreateRequest, OrderResponse>({
+export const useCreateTask = createCRUDMutation<TaskCreateRequest, TaskResponse>({
   type: 'create',
-  mutationFn: orderApi.create,
-  queryKey: ['orders'],
-  addToCache: (old, newOrder) => old ? [newOrder, ...old] : [newOrder],
-  successMessage: 'Заявка успешно создана',
-  errorMessage: 'Не удалось создать заявку',
-});*/
+  mutationFn: taskApi.create,
+  queryKey: ['tasks'],
+  addToCache: (old, newTask) => old ? [newTask, ...old] : [newTask],
+  successMessage: 'Задача успешно создана',
+  errorMessage: 'Не удалось создать задачу',
+});
 
 // Обновление задачи
 export const useUpdateTask = createCRUDMutation<

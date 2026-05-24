@@ -287,7 +287,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
   };
 
   return (
-    <Box sx={{ mt: 2, position: 'relative', minHeight: '500px' }}>
+    <Box sx={{ mt: 2, position: 'relative', minHeight: '57vh' }}>
       {/* Первая строка - заголовки таблицы */}
       <Grid2 container spacing={0} paddingBottom="5px" justifyContent="center">
 

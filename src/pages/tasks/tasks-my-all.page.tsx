@@ -18,7 +18,7 @@ import { showNotification } from '../../context';
 import * as XLSX from 'xlsx';
 import dayjs, { Dayjs } from 'dayjs';
 import { components } from '../../types/api';
-import { useTasks, useUpdateTask } from '../../hooks/useTaskMutations';
+import { useTasks } from '../../hooks/useTaskMutations';
 import { useUsers } from '../../hooks/useUserMutations';
 import { useOrders } from '../../hooks/useOrderMutations';
 
@@ -30,8 +30,8 @@ export function TasksMyAllPage() {
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
+  // TODO: поменять на true
   const [hideAll, setHideAll] = useState(false);
   const [rowSelection, setRowSelection] = useState({});
 
@@ -45,10 +45,6 @@ export function TasksMyAllPage() {
   type Order = components['schemas']['OrderResponseDTO'];
   type OrderTask = components['schemas']['TaskResponseDTO'];
   type User = components['schemas']['UserResponseDTO'];
-
-  const clearAllFilters = () => {
-    setColumnFilters([]);
-  };
 
   const { data: tasks = [] } = useTasks();
   const { data: users = [] } = useUsers();
@@ -106,7 +102,7 @@ export function TasksMyAllPage() {
     () => [
       {
         header: '№ заявки',
-        accessorKey: 'nomer',
+        accessorKey: 'orderNomer',
         maxSize: 80,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
@@ -305,9 +301,6 @@ export function TasksMyAllPage() {
     else if (selected === "Заявка на технику") {
       createZNTDialog();
     }
-    else {
-      setIsCreateDialogOpen(true);
-    }
   }
   function createZNDDialog() {
     setIsCreateDialogZNDOpen(true);
@@ -322,7 +315,6 @@ export function TasksMyAllPage() {
     setIsCreateDialogZNTOpen(true);
   }
   const onCreateDialogClose = () => {
-    setIsCreateDialogOpen(false);
     setIsCreateDialogZNOOpen(false);
     setIsCreateDialogZNDOpen(false);
     setIsCreateDialogZNIOpen(false);
@@ -356,7 +348,8 @@ export function TasksMyAllPage() {
     if (!task.dateFinishPlan) return false;
 
     // Если заявка уже завершена не считаем просроченной
-    const completedStatuses = ['Закрыта', 'Отклонена'];
+    //const completedStatuses = ['Закрыта', 'Отклонена'];
+
     if (task.taskStateName) {
       return false;
     }
@@ -444,7 +437,7 @@ export function TasksMyAllPage() {
       density: 'xs',
       columnVisibility: { 'mrt-row-select': false },
       showColumnFilters: true,
-      sorting: [{ id: 'nomer', desc: true }],
+      sorting: [{ id: 'orderNomer', desc: true }],
     },
 
     mantineTableProps: {
@@ -469,7 +462,7 @@ export function TasksMyAllPage() {
     mantineTableBodyCellProps: ({ row, cell }) => ({
       onClick: (event) => {
         // Если это не ячейка "nomer", то выделяем строку
-        if (cell.column.id === 'nomer') {
+        if (cell.column.id === 'orderNomer') {
           event.stopPropagation();
           handleRowDoubleClick(row);
         }

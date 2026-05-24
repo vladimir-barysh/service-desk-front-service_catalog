@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useMemo, useEffect } from 'react';
-import { Button, Grid2, styled, Typography } from '@mui/material';
+import { Box, Button, Grid2, styled, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { Text } from '@mantine/core';
 import { Delete } from '@mui/icons-material';
@@ -247,7 +247,7 @@ export function SupportFilesTab({ order }: SupportGeneralFirstTabProps) {
   });
   
   return (
-    <div>
+    <Box sx={{ mt: 2, minHeight: '57vh' }}>
       <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left" paddingTop="15px">
         <Grid2 size='auto'>
           <Button
@@ -286,6 +286,6 @@ export function SupportFilesTab({ order }: SupportGeneralFirstTabProps) {
       <Grid2 paddingTop="15px">
         <MantineReactTable table={table} />
       </Grid2>
-    </div>
+    </Box>
   );
 }
