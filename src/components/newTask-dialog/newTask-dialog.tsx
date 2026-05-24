@@ -26,11 +26,12 @@ type Order = components['schemas']['OrderResponseDTO'];
 
 interface NewTaskDialogProps {
   currOrder: Order | null;
+  idParent?: number;
   open: boolean;
   onClose: () => void;
 }
 
-export function NewTaskDialog({ currOrder, open, onClose }: NewTaskDialogProps) {
+export function NewTaskDialog({ currOrder, idParent, open, onClose }: NewTaskDialogProps) {
   // Состояния компонентов
   const [selectedExecutor, setSelectedExecutor] = useState<User | null>(null);
   const [parentClose, setParentClose] = useState<string>('');
@@ -73,7 +74,7 @@ export function NewTaskDialog({ currOrder, open, onClose }: NewTaskDialogProps) 
 
     const dto: TaskCreateRequestDTO = {
       idOrder: currOrder.idOrder,
-      idOrderTaskParent: undefined,
+      idOrderTaskParent: idParent !== null ? idParent : undefined,
       // TODO: Добавить возможность выбирать работу
       idWork: undefined,
       idExecutor: selectedExecutor?.idItUser,
@@ -136,8 +137,8 @@ export function NewTaskDialog({ currOrder, open, onClose }: NewTaskDialogProps) 
 
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
 
-          <Box fontSize='18px' fontWeight='700'>
-            Новая задача
+          <Box fontSize='20px' fontWeight='700'>
+            {idParent === null ? 'Новая задача' : 'Новая подзадача'}
           </Box>
 
           <IconButton onClick={handleClose}>

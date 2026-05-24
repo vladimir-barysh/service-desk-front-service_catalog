@@ -31,8 +31,7 @@ export function TasksMyAllPage() {
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
-  // TODO: поменять на true
-  const [hideAll, setHideAll] = useState(false);
+  const [hideAll, setHideAll] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
 
   

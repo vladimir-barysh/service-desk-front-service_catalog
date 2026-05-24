@@ -1,18 +1,17 @@
 import { useState } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
-import { RedirectTaskDialog, RedirectData, PostponeTaskDialog, PostponeData, formatFIO } from '../../../components';
+import { RedirectTaskDialog, PostponeTaskDialog, PostponeData, formatFIO } from '../../../components';
 import { NewTaskDialog } from '../../newTask-dialog/newTask-dialog';
-import { showNotification } from '../../../context';
 
 import dayjs from 'dayjs';
 
 import { components } from '../../../types/api';
-import { useTasks, useCreateTask, useUpdateTask } from '../../../hooks/useTaskMutations';
+import { useTasks } from '../../../hooks/useTaskMutations';
+import { useUpdateOrder } from '../../../hooks/useOrderMutations';
 
 type OrderTask = components['schemas']['TaskResponseDTO'];
 
 type Order = components['schemas']['OrderResponseDTO'];
-type User = components['schemas']['UserResponseDTO'];
 
 // Пропсы для компонентов
 interface BlockSchemaProps {
@@ -76,57 +75,251 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
       item => item.orderTaskParentId === node.idOrderTask
     );
 
-    const indent = level * 100;
+    const indent = level * 220;
     const isSelected = selectedNode?.idOrderTask === node.idOrderTask;
 
+    /*
     return (
       <Box
         key={node.idOrderTask}
         sx={{
+          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
-          gap: 2,
-          ml: level * 4,
-
+          margin: `0px 0px 0px ${level}px`,
         }}
       >
+        {level > 0 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              left: indent - 26,
+              top: -20,
+              width: 26,
+              height: 50,
+              borderLeft: '2px solid #bdbdbd',
+              borderBottom: '2px solid #bdbdbd',
+              borderBottomLeftRadius: '10px',
+            }}
+          />
+        )}
+
         <Paper
+          onClick={() =>
+            onNodeSelect(
+              isSelected ? null : node
+            )
+          }
           sx={{
+            position: 'relative',
+            textAlign: 'center',
+            ml: level === 0 ? 0 : 4,
+            mb: 2,
             p: 1,
             minWidth: 200,
-            textAlign: 'center',
-            backgroundColor: blockColor(node),
-            color: 'white',
-            mb: 2,
-            ml: `${indent}px`,
             cursor: 'pointer',
+            color: 'white',
+            backgroundColor: blockColor(node),
             border: '2px solid',
             borderColor: blockColor(node),
+            transition: '0.2s',
+
+            boxShadow: '0 0px 15px rgba(0,0,0,0.2)',
+
             '&:hover': {
               backgroundColor: hoverColor(node),
+              boxShadow: '0 0px 15px rgba(0,0,0,0.3)',
             },
-            boxShadow: '0 0px 15px rgba(0,0,0,0.2)'
-          }}
-          onClick={() => {
-            if (isSelected) {
-              onNodeSelect(null);
-            } else {
-              onNodeSelect(node);
-            }
+            margin: `0px 0px 20px ${indent}px `
+
           }}
         >
           <Typography variant="body1">
             {formatFIO(node.executorFio || '')}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgb(119, 119, 119)' }}>
-            {dayjs(node.dateCreated).format('DD.MM.YYYY HH:mm')}
+
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'rgba(255,255,255,0.75)',
+            }}
+          >
+            {dayjs(node.dateCreated).format(
+              'DD.MM.YYYY HH:mm'
+            )}
           </Typography>
         </Paper>
 
-        {children.length > 0 && (
-          <Box>
-            {children.map(child => renderNode(child, level + 1))}
+        {children.length > 0 && children.length < 2 && (
+          <Box
+            sx={{
+              position: 'relative',
+            }}
+          >
+            {children
+              .sort(
+                (a, b) =>
+                  new Date(a.dateCreated).getTime() -
+                  new Date(b.dateCreated).getTime()
+              )
+              .map(child =>
+                renderNode(child, level + 1)
+              )}
+          </Box>
+        )}
+
+        {children.length > 1 && (
+          <Box
+            sx={{
+              position: 'relative',
+
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: indent + 25 + level,
+                top: 20,
+                bottom: 63,
+                borderLeft: '2px solid #bdbdbd',
+              },
+            }}
+          >
+            {children
+              .sort(
+                (a, b) =>
+                  new Date(a.dateCreated).getTime() -
+                  new Date(b.dateCreated).getTime()
+              )
+              .map(child =>
+                renderNode(child, level + 1)
+              )}
+          </Box>
+        )}
+      </Box>
+    );
+    */
+    return (
+      <Box
+        key={node.idOrderTask}
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          margin: `0px 0px 0px ${level}px`,
+        }}
+      >
+        {/* Линия к элементу */}
+        {level > 0 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              left: indent - 130,
+              top: 20,
+              width: 130,
+              height: 10,
+              borderLeft: '2px solid #bdbdbd',
+              borderBottom: '2px solid #bdbdbd',
+              borderBottomLeftRadius: '10px',
+            }}
+          />
+        )}
+
+        {/* Карточка */}
+        <Paper
+          onClick={() =>
+            onNodeSelect(
+              isSelected ? null : node
+            )
+          }
+          sx={{
+            position: 'relative',
+            textAlign: 'center',
+            ml: level === 0 ? 0 : 4,
+            mb: 2,
+            p: 1,
+            minWidth: 200,
+            cursor: 'pointer',
+            color: 'white',
+            backgroundColor: blockColor(node),
+            border: '2px solid',
+            borderColor: blockColor(node),
+            transition: '0.2s',
+
+            boxShadow: '0 0px 15px rgba(0,0,0,0.2)',
+
+            '&:hover': {
+              backgroundColor: hoverColor(node),
+              boxShadow: '0 0px 15px rgba(0,0,0,0.3)',
+            },
+            margin: `0px 0px -20px ${indent}px `
+
+          }}
+        >
+          <Typography variant="body1">
+            {formatFIO(node.executorFio || '')}
+          </Typography>
+
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'rgba(255,255,255,0.75)',
+            }}
+          >
+            {dayjs(node.dateCreated).format(
+              'DD.MM.YYYY HH:mm'
+            )}
+          </Typography>
+        </Paper>
+
+        {/* Дети */}
+        {children.length > 0 && children.length < 2 && (
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            {children
+              .sort(
+                (a, b) =>
+                  new Date(a.dateCreated).getTime() -
+                  new Date(b.dateCreated).getTime()
+              )
+              .map(child =>
+                renderNode(child, level + 1)
+              )}
+          </Box>
+        )}
+
+        {children.length > 1 && (
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: indent + 91 + level,
+                top: 20,
+                bottom: 20,
+                borderLeft: '2px solid #bdbdbd',
+              },
+            }}
+          >
+            {children
+              .sort(
+                (a, b) =>
+                  new Date(a.dateCreated).getTime() -
+                  new Date(b.dateCreated).getTime()
+              )
+              .map(child =>
+                renderNode(child, level + 1)
+              )}
           </Box>
         )}
       </Box>
@@ -135,7 +328,12 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
 
   return (
     <Box>
-      {data.map(node => renderNode(node))}
+      {data.filter(node => node.orderTaskParentId === null)
+        .sort((a, b) =>
+          new Date(a.dateCreated).getTime() -
+          new Date(b.dateCreated).getTime()
+        )
+        .map(node => renderNode(node))}
     </Box>
   );
 };
@@ -144,14 +342,13 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
 export function SupportTasksTab({ order }: SupportTasksTabProps) {
   // Состояния компонентов
   const [selectedNode, setSelectedNode] = useState<OrderTask | null>(null);
-  const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
   const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
   const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
-
-
-  const { mutate: updateTaskMutate } = useUpdateTask();
+  const [subTaskDialogOpen, setSubTaskDialogOpen] = useState(false);
+  const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
 
   const { data: tasks = [] } = useTasks();
+  const { mutate: updateOrderMutate } = useUpdateOrder();
 
   let orderTasks = tasks;
   orderTasks = orderTasks.filter((item: OrderTask) => (item.orderId === order?.idOrder));
@@ -164,6 +361,10 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
     setNewTaskDialogOpen(true);
   };
 
+  const handleSubTaskClick = () => {
+    setSubTaskDialogOpen(true);
+  }
+
   const handleRedirectClick = () => {
     if (selectedNode) {
       setRedirectDialogOpen(true);
@@ -174,34 +375,26 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
     setPostponeDialogOpen(true);
   };
 
-  const handleRedirectSave = (data: RedirectData) => {
-    /*
-    updateTaskMutate(
+  const handlePostponeSave = (data: PostponeData) => {
+    if (!order?.idOrder) return;
+    updateOrderMutate(
       {
-        id: selectedNode?.idOrderTask,
+        id: order.idOrder,
         data: {
-          idExecutor: data.to,
-          description: data.reason,
+          datePostpone: data?.datePostpone,
+          comment: `${order.comment}\nЗАЯВКА ОТЛОЖЕНА\nПричина: ${data?.comment}`,
         },
       },
     );
-    setRedirectDialogOpen(false);
-    */
-  };
-
-
-
-  const handlePostponeSave = (data: PostponeData) => {
-    console.log('Данные откладывания:', data);
-    // Здесь обновляем request с новой датой
-    if (order) {
-      // request.postponeDate = data.postponeUntil; // Раскомментировать когда добавите поле в Request
-    }
     setPostponeDialogOpen(false);
   };
 
   const handleNewTaskClose = () => {
     setNewTaskDialogOpen(false);
+  }
+
+  const handleSubTaskClose = () => {
+    setSubTaskDialogOpen(false);
   }
 
   const handleRedirectClose = () => {
@@ -234,9 +427,19 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
             Создать задачу
           </Button>
 
-          <Button variant="contained" color="inherit" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
+          <Button
+            variant="contained"
+            color="inherit"
+            size="small"
+            sx={{
+              flex: '1 1 auto', minWidth: '120px'
+            }}
+            onClick={handleSubTaskClick}
+            disabled={!selectedNode}
+          >
             Создать подзадачу
           </Button>
+
           <Button
             variant="contained"
             color="inherit"
@@ -254,8 +457,9 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
             sx={{ flex: '1 1 auto', minWidth: '120px' }}
             onClick={handlePostponeClick}
           >
-            Отложить задачу
+            Отложить заявку
           </Button>
+          {/*TODO: Реализовать работу закрытия задачи*/}
           <Button variant="contained" color="success" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
             Закрыть задачу
           </Button>
@@ -264,6 +468,8 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
         {/* Блок-схема */}
         <Box
           sx={{
+            height: '50vh',
+            maxWidth: '157.5vh',
             backgroundColor: 'rgb(240, 240, 240)',
             flexGrow: 1,
             overflow: 'auto',
@@ -279,13 +485,6 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
             onNodeSelect={handleNodeSelect}
           />
         </Box>
-
-        {/* Вывод выбранного блока */}
-        {selectedNode && (
-          <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-            Выбран: {selectedNode.executorFio}
-          </Typography>
-        )}
 
         {/* Обозначения */}
         <Box
@@ -321,18 +520,23 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
         onClose={handleNewTaskClose}
       />
 
+      <NewTaskDialog
+        currOrder={order}
+        idParent={selectedNode?.idOrderTask}
+        open={subTaskDialogOpen}
+        onClose={handleSubTaskClose}
+      />
+
       <RedirectTaskDialog
+        currTask={selectedNode}
         open={redirectDialogOpen}
         onClose={handleRedirectClose}
-        onSave={handleRedirectSave}
-        currentExecutor={selectedNode?.executorFio || ''}
       />
 
       <PostponeTaskDialog
         open={postponeDialogOpen}
         onClose={handlePostponeClose}
         onSave={handlePostponeSave}
-      //currentDate={request?.dateFinishPlan} // Передаем текущую дату из request
       />
     </div>
   );
