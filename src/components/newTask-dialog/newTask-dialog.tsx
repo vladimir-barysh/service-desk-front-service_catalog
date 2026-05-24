@@ -20,21 +20,22 @@ import { useUsers } from '../../hooks/useUserMutations';
 import { DateTimePicker, DateValue } from '@mantine/dates';
 type TaskCreateRequestDTO = components['schemas']['TaskCreateRequestDTO'];
 type User = components['schemas']['UserResponseDTO'];
+type Order = components['schemas']['OrderResponseDTO'];
 
 // TODO: add groups
 
 interface NewTaskDialogProps {
-  idCurrOrder?: number;
+  currOrder: Order | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function NewTaskDialog({ idCurrOrder, open, onClose }: NewTaskDialogProps) {
+export function NewTaskDialog({ currOrder, open, onClose }: NewTaskDialogProps) {
   // Состояния компонентов
   const [selectedExecutor, setSelectedExecutor] = useState<User | null>(null);
   const [parentClose, setParentClose] = useState<string>('');
   const [dateFinishPlan, setDateFinishPlan] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
+  const [description, setDescription] = useState<string>(currOrder?.description || '');
 
   const { mutate: createTaskMutation } = useCreateTask();
 
@@ -62,16 +63,16 @@ export function NewTaskDialog({ idCurrOrder, open, onClose }: NewTaskDialogProps
       });
       return;
     }
-    if (!idCurrOrder) {
+    if (!currOrder) {
       showNotification({
-        title: 'Не указан ID заявки',
+        title: 'Не указана заявка',
         color: 'orange',
       });
       return;
     }
 
     const dto: TaskCreateRequestDTO = {
-      idOrder: idCurrOrder,
+      idOrder: currOrder.idOrder,
       idOrderTaskParent: undefined,
       // TODO: Добавить возможность выбирать работу
       idWork: undefined,
@@ -90,7 +91,7 @@ export function NewTaskDialog({ idCurrOrder, open, onClose }: NewTaskDialogProps
   const handleClose = () => {
     setSelectedExecutor(null);
     setDateFinishPlan('');
-    setDescription('');
+    setDescription(currOrder?.description || '');
     setParentClose('');
 
     onClose();
@@ -217,7 +218,6 @@ export function NewTaskDialog({ idCurrOrder, open, onClose }: NewTaskDialogProps
             </Grid2>
           </Grid2>
 
-          {/* Поле "На кого" */}
           <Grid2
             container
             size={6}
@@ -228,7 +228,7 @@ export function NewTaskDialog({ idCurrOrder, open, onClose }: NewTaskDialogProps
             margin="0px 0px 20px 0px"
           >
             <Grid2 size="auto" sx={labelStyle}>
-              <Text fw={600}>Укажите исполнителя(ей) *</Text>
+              <Text fw={600}>Исполнитель(и) *</Text>
             </Grid2>
             <Grid2 size="auto">
               <Autocomplete
@@ -259,7 +259,7 @@ export function NewTaskDialog({ idCurrOrder, open, onClose }: NewTaskDialogProps
             margin="0px 0px 0px 0px"
           >
             <Grid2 size="auto">
-              <Text fw={600}>Подробное описание проблемы *</Text>
+              <Text fw={600}>Описание *</Text>
             </Grid2>
             <Grid2 size="auto">
               <TextInputField

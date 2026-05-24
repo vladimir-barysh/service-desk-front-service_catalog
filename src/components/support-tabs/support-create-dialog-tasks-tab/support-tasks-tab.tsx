@@ -87,7 +87,8 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
           flexDirection: 'column',
           alignItems: 'flex-start',
           gap: 2,
-          ml: level * 4
+          ml: level * 4,
+
         }}
       >
         <Paper
@@ -104,7 +105,8 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
             borderColor: blockColor(node),
             '&:hover': {
               backgroundColor: hoverColor(node),
-            }
+            },
+            boxShadow: '0 0px 15px rgba(0,0,0,0.2)'
           }}
           onClick={() => {
             if (isSelected) {
@@ -146,7 +148,7 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
   const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
   const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
 
-  
+
   const { mutate: updateTaskMutate } = useUpdateTask();
 
   const { data: tasks = [] } = useTasks();
@@ -266,7 +268,9 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
             flexGrow: 1,
             overflow: 'auto',
             borderRadius: '10px',
-            p: '15px 10px 10px 15px'
+            p: '15px 10px 10px 15px',
+            boxShadow: `inset 0 1px 3px rgba(0,0,0,0.12),
+                        inset 0 -1px 3px rgba(0,0,0,0.08)`
           }}
         >
           <BlockSchema
@@ -312,7 +316,7 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
 
 
       <NewTaskDialog
-        idCurrOrder={order?.idOrder}
+        currOrder={order}
         open={newTaskDialogOpen}
         onClose={handleNewTaskClose}
       />
@@ -328,7 +332,7 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
         open={postponeDialogOpen}
         onClose={handlePostponeClose}
         onSave={handlePostponeSave}
-        //currentDate={request?.dateFinishPlan} // Передаем текущую дату из request
+      //currentDate={request?.dateFinishPlan} // Передаем текущую дату из request
       />
     </div>
   );
