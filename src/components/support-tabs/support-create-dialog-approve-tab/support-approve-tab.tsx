@@ -11,6 +11,7 @@ import {
   Paper,
   Chip,
   Grid2,
+  ButtonProps,
 } from '@mui/material';
 import {
   Pending,
@@ -20,10 +21,10 @@ import {
   RemoveCircle,
   HourglassEmpty,
 } from '@mui/icons-material';
-import { useDialogs, CreateApproveDialog, EditApproveUsersDialog } from '../../../components';
+import { useDialogs, CreateApproveDialog, EditApproveUsersDialog, CommentDialog } from '../../../components';
 import { components } from '../../../types/api';
 import { useApprovesByOrder, useStartApproveProcess, useDeleteApprove, useRefreshApprove } from '../../../hooks/useApprove';
-import { useApproveUsersByOrder } from '../../../hooks/useApproveUser';
+import { useApproveUsersByOrder, useUpdateMyApproveUser } from '../../../hooks/useApproveUser';
 import { ConfirmDialog } from '../../confirmDialog';
 
 type Order = components['schemas']['OrderResponseDTO'];
@@ -42,10 +43,11 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const isLoading = approvesLoading || usersLoading;
   const error = approvesError || usersError;
 
-  // Мутации через фабрику
+  // Мутации
   const { mutate: startProcess, isPending: isStarting } = useStartApproveProcess();
   const { mutate: deleteApprove, isPending: isDeleting } = useDeleteApprove();
   const { mutate: refreshApprove, isPending: isRefreshing } = useRefreshApprove();
+  const { mutate: updateMyStatus, isPending: isUpdatingMyStatus } = useUpdateMyApproveUser(order?.idOrder ?? 0);
 
   // Фильтруем участников по выбранному согласованию
   const selectedApproveUsers = useMemo(() => {
@@ -57,8 +59,8 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const approveStatusMap: Record<number, { label: string; icon: JSX.Element, bgColor: string;}> = {
     2: { label: 'В ожидании', icon: <HourglassEmpty />, bgColor: '#FFF9C4'},
     7: { label: 'На согласовании', icon: <Pending />, bgColor: '#ffe6bd'},
-    13: { label: 'Согласовано', icon: <CheckCircle />, bgColor: '#dcf7df'},
-    9: { label: 'Не согласовано', icon: <Cancel />, bgColor: '#ffd7d7'},
+    13: { label: 'Согласовано', icon: <CheckCircle />, bgColor: '#c7ffcd'},
+    9: { label: 'Не согласовано', icon: <Cancel />, bgColor: '#feaeae'},
     14: { label: 'Согласование отклонено', icon: <Block />, bgColor: '#FFEBEE'},
     15: { label: 'Согласование отменено', icon: <RemoveCircle />, bgColor: '#efefef'},
   };
@@ -66,8 +68,9 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   // Цвета для статуса участника согласования
   const approveUserStatusMap: Record<number, { label: string; bgColor: string;}> = {
     0: { label: 'Ожидание', bgColor: '#FFF9C4'},
-    1: { label: 'Согласовано', bgColor: '#dcf7df'},
-    2: { label: 'Отклонено', bgColor: '#ffd7d7'},
+    1: { label: 'Согласовано', bgColor: '#c7ffcd'},
+    2: { label: 'Не согласовано', bgColor: '#feaeae'},
+    3: { label: 'Согласование отклонено', bgColor: '#FFEBEE'},
   };
 
   // Перевод даты в строку
@@ -136,9 +139,46 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     setConfirmRefreshOpen(true);
   };
 
+
+  // Обработчики кнопок Согласовно, Не согласовано, Отклонить согласование 
+  const [actionDialog, setActionDialog] = useState<{ open: boolean; approveId: number; state: number; title: string; required: boolean }>({
+    open: false,
+    approveId: 0,
+    state: 0,
+    title: '',
+    required: false,
+  });
+
+  const handleApproveAction = (state: number, title: string, required: boolean) => {
+    if (!selectedApproveId) return;
+    setActionDialog({ open: true, approveId: selectedApproveId, state, title, required });
+  };
+
+  const handleConfirmAction = (comment: string) => {
+    updateMyStatus({
+      approveId: actionDialog.approveId,
+      state: actionDialog.state,
+      resultText: comment,
+    }, {
+      onSuccess: () => setActionDialog(prev => ({ ...prev, open: false }))
+    });
+  };
+
   // Доступность кнопок на панели
   const selectedApprove = approves.find(a => a.idApprove === selectedApproveId);
   const isAlreadyStarted = selectedApprove?.idApproveState === 7;
+
+  // Обёртка для кнопок панели
+  const ActionButton = (props: ButtonProps) => {
+    return (
+      <Button
+        variant="contained"
+        size="medium"
+        sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
+        {...props}
+      />
+    );
+  };
 
   if (isLoading) return <Box p={2}>Загрузка согласований...</Box>;
   if (error) return <Box p={2} color="error.main">Ошибка загрузки: {error.message}</Box>;
@@ -148,56 +188,62 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
 
       {/* Панель кнопок */}
       <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-        <Button 
-          variant="contained"
+        <ActionButton 
           color="primary"
-          size="medium"
-          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
           disabled={!order}
           onClick={handleCreateApprove}
         >
           Создать согласование
-        </Button>
-        <Button 
-          variant="contained"
+        </ActionButton>
+        <ActionButton 
           color="warning"
-          size="medium"
-          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
           disabled={!selectedApproveId}
           onClick={handleEditUsers}
         >
           Изменить согласование
-        </Button>
-        <Button 
-          variant="contained"
+        </ActionButton>
+        <ActionButton 
           color="error"
-          size="medium"
-          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
           disabled={!selectedApproveId || isDeleting}
           onClick={handleDeleteClick}
         >
           Удалить согласование
-        </Button>
-        <Button 
-          variant="contained" 
+        </ActionButton>
+        <ActionButton 
           color="success" 
-          size="medium" 
-          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
           onClick={handleStartProcess}
           disabled={!selectedApproveId || isAlreadyStarted || isStarting}
         >
           Запустить процесс
-        </Button>
-        <Button
-          variant="contained"
+        </ActionButton>
+        <ActionButton
           color="primary"
-          size="medium"
-          sx={{ flex: '1 1 auto', maxWidth: 'auto' }}
           onClick={handleRefreshClick}
           disabled={isRefreshing || !order  || approves.length === 0}
         >
           Обновить согласующих
-        </Button>
+        </ActionButton>
+        <ActionButton
+          color="success"
+          disabled={!selectedApproveId || !isAlreadyStarted || isUpdatingMyStatus}
+          onClick={() => handleApproveAction(1, 'Согласовано', false)}
+        >
+          Согласовано
+        </ActionButton>
+        <ActionButton
+          color="error"
+          disabled={!selectedApproveId || !isAlreadyStarted || isUpdatingMyStatus}
+          onClick={() => handleApproveAction(2, 'Не согласовано', true)}
+        >
+          Не согласовано
+        </ActionButton>
+        <ActionButton
+          color="inherit"
+          disabled={!selectedApproveId || !isAlreadyStarted || isUpdatingMyStatus}
+          onClick={() => handleApproveAction(3, 'Отклонить согласование', false)}
+        >
+          Отклонить согласование
+        </ActionButton>
       </Box>
 
         <Grid2 container spacing={2}>
@@ -272,7 +318,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
                     <TableCell>{user.userFio}</TableCell>
                     <TableCell>{formatDate(user.datePlan)}</TableCell>
                     <TableCell>{formatDate(user.dateFact)}</TableCell>
-                    <TableCell>{user.taskText || '—'}</TableCell>
+                    <TableCell>{user.resultText || '—'}</TableCell>
                     <TableCell>
                       <Chip
                         label={approveUserStatusMap[user.state]?.label || 'Неизвестно'}
@@ -338,14 +384,25 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
       />
 
       {/* Диалог именения согласования */}
-      <EditApproveUsersDialog
-        key={selectedApproveId}
-        open={editUsersOpen}
-        approveId={selectedApproveId!}
-        orderId={order!.idOrder}
-        serviceId={order!.serviceId}
-        orderTypeName={order?.orderTypeName}
-        onClose={() => setEditUsersOpen(false)}
+      {selectedApproveId && order && (
+        <EditApproveUsersDialog
+          key={selectedApproveId}
+          open={editUsersOpen}
+          approveId={selectedApproveId}
+          orderId={order.idOrder}
+          serviceId={order.serviceId}
+          orderTypeName={order?.orderTypeName}
+          onClose={() => setEditUsersOpen(false)}
+        />
+      )}
+
+      {/* Диалог комментария */}
+      <CommentDialog
+        open={actionDialog.open}
+        title={`Подтверждение: ${actionDialog.title}`}
+        onConfirm={handleConfirmAction}
+        onClose={() => setActionDialog(prev => ({ ...prev, open: false }))}
+        required={actionDialog.required}
       />
     </Box>
   );
