@@ -3,7 +3,7 @@ import { stateApi } from '../api/state';
 import { components } from '../types/api';
 import { useQuery } from '@tanstack/react-query';
 
-type StateResponse = components['schemas']['StateResponseDTO'];
+type StateResponse = components['schemas']['OrderStateResponseDTO'];
 //type TaskCreateRequest = components['schemas']['TaskCreateRequestDTO'];
 //type TaskUpdateRequest = components['schemas']['TaskUpdateDTO'];
 
