@@ -25,7 +25,6 @@ import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
 
 export function SupportAllPage() {
-  const [requestTypeDialog, setRequestType] = useState('');
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
@@ -47,7 +46,7 @@ export function SupportAllPage() {
 
   // Получение всех статусов заявок
   const { data: orderStates } = useQuery({
-    queryKey: ['orderStates'],
+    queryKey: ['orderstates'],
     queryFn: getOrderStates,
   });
 
@@ -269,9 +268,9 @@ export function SupportAllPage() {
         }
       },
       {
-        id: 'dispatcher',
+        id: 'executor',
         header: 'Пользователь',
-        accessorFn: (row) => row.dispatcherId,
+        accessorFn: (row) => row.executorId,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -279,7 +278,7 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const user = users?.find((item: User) => item.idItUser === row.original.dispatcherId) || '';
+          const user = users?.find((item: User) => item.idItUser === row.original.executorId) || '';
           return formatFIO(user.fio1c);
         }
       },
@@ -333,7 +332,6 @@ export function SupportAllPage() {
   };
 
   const onRequestTypeSelect = (selected: string) => {
-    setRequestType(selected);
     if (selected === "Заявка на обслуживание") {
       createZNODialog();
     }
@@ -512,9 +510,6 @@ export function SupportAllPage() {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
     const order = selectedRows[0].original;
-    console.log('order.idOrder:', order.idOrder);
-    console.log('inWork:', inWork);
-    console.log('inWork?.idOrderState:', inWork?.idOrderState);
     if (order.idOrder == null || inWork?.idOrderState == null) return;
 
     updateStatus.mutate({ id: order.idOrder, statusId: inWork.idOrderState });
@@ -612,11 +607,6 @@ export function SupportAllPage() {
   return (
     <div>
       <Box height={50}>
-        <RequestCreateDialog
-          isOpen={isCreateDialogOpen}
-          requestName={requestType.toString()}
-          onClose={onCreateDialogClose}
-        />
         <RequestCreateZNODialog
           isOpen={isCreateDialogZNOOpen}
           onClose={onCreateDialogClose}
@@ -742,6 +732,7 @@ export function SupportAllPage() {
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         request={selectedRequest}
+        disabled={false}
         onClose={handleDialogClose}
       />
     </div>

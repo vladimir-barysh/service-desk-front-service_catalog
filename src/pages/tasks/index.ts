@@ -1,1 +1,1 @@
-export * from './all-tasks';
+export * from './tasks-my-all.page';

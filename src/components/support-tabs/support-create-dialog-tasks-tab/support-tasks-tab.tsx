@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { Box, Button, Typography, Paper } from '@mui/material';
-import { RedirectTaskDialog, RedirectData, PostponeTaskDialog, PostponeData, formatFIO } from '../../../components';
-import { components } from '../../../types/api';
-type Order = components['schemas']['OrderResponseDTO'];
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createTask, getTasks } from '../../../api/services/taskService';
-import { OrderTask } from '../../../api';
-import dayjs from 'dayjs';
-import { useUpdateTask } from '../../../api/hooks/useTask';
+import { Box, Button, Typography, Paper, IconButton, Grid2 } from '@mui/material';
+import { RedirectTaskDialog, PostponeTaskDialog, formatFIO } from '../../../components';
 import { NewTaskDialog } from '../../newTask-dialog/newTask-dialog';
-import { AxiosError } from 'axios';
 import { showNotification } from '../../../context';
-import { TaskCreateDTO } from '../../../api/dtos';
+import dayjs from 'dayjs';
+
+import { useTasks, useUpdateTask } from '../../../hooks/useTaskMutations';
+import { useStates } from '../../../hooks/useStateMutations';
+
+import { components } from '../../../types/api';
+import { Info, InfoOutlined } from '@mui/icons-material';
+type OrderTask = components['schemas']['TaskResponseDTO'];
+type Order = components['schemas']['OrderResponseDTO'];
 
 // Пропсы для компонентов
 interface BlockSchemaProps {
@@ -24,59 +24,323 @@ interface SupportTasksTabProps {
   order: Order | null;
 }
 
+const newTask = 'rgb(0, 207, 7)';
+const newFocus = 'rgb(150, 245, 153)';
+const newHover = 'rgb(0, 187, 6)';
+const newText = 'rgb(255, 255, 255)';
+const newTextFocus = 'rgb(0, 187, 6)';
+const newDate = 'rgba(255, 255, 255, 0.75)';
+const newDateFocus = 'rgba(0, 187, 6, 0.75)';
+
+const onWaitTask = 'rgb(255, 136, 0)';
+const onWaitFocus = 'rgb(255, 207, 153)';
+const onWaitHover = 'rgb(233, 124, 0)';
+const onWaitText = 'rgb(255, 255, 255)';
+const onWaitTextFocus = 'rgb(214, 114, 0)';
+const onWaitDate = 'rgba(255,255,255,0.75)';
+const onWaitDateFocus = 'rgba(214, 114, 0, 0.75)';
+
+const closedTask = 'rgb(231, 170, 166)';
+const closedFocus = 'rgb(255, 222, 219)';
+const closedHover = 'rgb(216, 163, 159)';
+const closedText = 'rgb(82, 82, 82)';
+const closedTextFocus = 'rgb(185, 137, 134)';
+const closedDate = 'rgba(107, 107, 107, 0.75)';
+const closedDateFocus = 'rgba(185, 137, 134, 0.75)';
+
 // Функция для блок схемы
 const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => {
+
+  const blockColor = (block: OrderTask) => {
+    const state = block.taskStateName;
+
+    if (selectedNode?.idOrderTask === block.idOrderTask) {
+      switch (state) {
+        case 'Новая':
+          return newFocus;
+        case 'В ожидании':
+          return onWaitFocus;
+        case 'Закрыта':
+          return closedFocus;
+        default:
+          return 'hsla(0, 88%, 72%, 1.00)';
+      }
+    }
+
+    switch (state) {
+      case 'Новая':
+        return newTask;
+      case 'В ожидании':
+        return onWaitTask;
+      case 'Закрыта':
+        return closedTask;
+      default:
+        return 'hsla(0, 88%, 72%, 1.00)';
+    }
+  };
+
+  const hoverColor = (block: OrderTask) => {
+
+    if (selectedNode?.idOrderTask === block.idOrderTask) {
+      return;
+    }
+
+    const state = block.taskStateName;
+
+    switch (state) {
+      case 'Новая':
+        return newHover;
+      case 'В ожидании':
+        return onWaitHover;
+      case 'Закрыта':
+        return closedHover;
+      default:
+        return 'hsla(0, 88%, 72%, 1.00)';
+    }
+  };
+
+  const textColor = (block: OrderTask) => {
+    const state = block.taskStateName;
+    if (selectedNode?.idOrderTask === block.idOrderTask) {
+      switch (state) {
+        case 'Новая':
+          return newTextFocus;
+        case 'В ожидании':
+          return onWaitTextFocus;
+        case 'Закрыта':
+          return closedTextFocus;
+        default:
+          return 'hsla(0, 88%, 72%, 1.00)';
+      }
+    }
+
+    switch (state) {
+      case 'Новая':
+        return newText;
+      case 'В ожидании':
+        return onWaitText;
+      case 'Закрыта':
+        return closedText;
+      default:
+        return 'hsla(0, 88%, 72%, 1.00)';
+    }
+  };
+
+  const dateColor = (block: OrderTask) => {
+    const state = block.taskStateName;
+
+    if (selectedNode?.idOrderTask === block.idOrderTask) {
+      switch (state) {
+        case 'Новая':
+          return newDateFocus;
+        case 'В ожидании':
+          return onWaitDateFocus;
+        case 'Закрыта':
+          return closedDateFocus;
+        default:
+          return 'hsla(0, 88%, 72%, 1.00)';
+      }
+    }
+
+    switch (state) {
+      case 'Новая':
+        return newDate;
+      case 'В ожидании':
+        return onWaitDate;
+      case 'Закрыта':
+        return closedDate;
+      default:
+        return 'hsla(0, 88%, 72%, 1.00)';
+    }
+  };
+
+  const { data: tasks = [] } = useTasks();
+
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+
+  const handleInfoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsInfoOpen(true);
+  }
+
+  const handleInfoClose = () => {
+    setIsInfoOpen(false);
+  }
+
   // Рекурсивная функция отрисовки узлов
   const renderNode = (node: OrderTask, level = 0) => {
-    const indent = level * 100;
+
+    const children = tasks.filter(
+      item => item.orderTaskParentId === node.idOrderTask
+    );
+
+    const indent = level * 220;
     const isSelected = selectedNode?.idOrderTask === node.idOrderTask;
 
     return (
-      <Box key={node.idOrderTask} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-        {/* Блок */}
+      <Box
+        key={node.idOrderTask}
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          margin: `0px 0px 0px ${level}px`
+        }}
+      >
+        {level > 0 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              left: indent - 130,
+              top: 20,
+              width: 130,
+              height: 10,
+              borderLeft: '2px solid #bdbdbd',
+              borderBottom: '2px solid #bdbdbd',
+              borderBottomLeftRadius: '10px',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          />
+        )}
+
         <Paper
+          onClick={() =>
+            onNodeSelect(
+              isSelected ? null : node
+            )
+          }
           sx={{
-            p: 1,
-            minWidth: 200,
-            textAlign: 'center',
-            backgroundColor: isSelected ? 'primary.light' : 'primary.main',
-            color: 'white',
+            position: 'relative',
+            textAlign: 'left',
+            ml: level === 0 ? 0 : 4,
             mb: 2,
-            ml: `${indent}px`,
+            p: 1,
+            pl: 2,
+            minWidth: 200,
             cursor: 'pointer',
-            border: '2px solid #1976d2',
+            backgroundColor: blockColor(node),
+            transition: '0.2s',
+
+            boxShadow: selectedNode?.idOrderTask === node.idOrderTask ? 'inset 0 0px 5px rgba(0,0,0,0.5)' : '0 1px 15px rgba(0,0,0,0.2)',
+
             '&:hover': {
-              backgroundColor: isSelected ? 'none' : 'primary.dark',
-            }
-          }}
-          onClick={() => {
-            // Если блок уже выбран, снимаем выделение, иначе выбираем
-            if (isSelected) {
-              onNodeSelect(null);
-            } else {
-              onNodeSelect(node);
-            }
+              backgroundColor: hoverColor(node),
+              boxShadow: selectedNode?.idOrderTask === node.idOrderTask ? 'inset 0 0px 5px rgba(0,0,0,0.5)' : '0 0px 15px rgba(0,0,0,0.3)',
+            },
+            margin: `0px 0px -20px ${indent}px `,
+            zIndex: 1,
+
           }}
         >
-          <Typography variant="body2">
-            {formatFIO(node.executor?.fio1c || '')}
-          </Typography>
+          <Grid2 container flexDirection='row' justifyContent='space-between'>
+            <Grid2 container flexDirection='column'>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: textColor(node),
+                  textDecoration: node.taskStateName === 'Закрыта' ? 'line-through' : 'none',
+                }}
+              >
+                {formatFIO(node.executorFio || '')}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  color: dateColor(node),
+                  textDecoration: node.taskStateName === 'Закрыта' ? 'line-through' : 'none',
+                }}
+              >
+                {dayjs(node.dateCreated).format(
+                  'DD.MM.YYYY HH:mm'
+                )}
+              </Typography>
+            </Grid2>
+            <IconButton
+              sx={{
+                color: textColor(node)
+              }}
+              onClick={handleInfoClick}
+            >
+              <InfoOutlined />
+            </IconButton>
+          </Grid2>
         </Paper>
 
-        {/* TODO: Дочерние элементы 
-        {node.orderTaskParent && (
-          <Box>
-            {node.orderTaskParent.map(child => renderNode(child, level + 1))}
+        {children.length > 0 && children.length < 2 && (
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            {children
+              .sort(
+                (a, b) =>
+                  new Date(a.dateCreated).getTime() -
+                  new Date(b.dateCreated).getTime()
+              )
+              .map(child =>
+                renderNode(child, level + 1)
+              )}
           </Box>
-        )}*/}
+        )}
+
+        {children.length > 1 && (
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: indent + 91 + level,
+                top: 20,
+                bottom: 20,
+                borderLeft: '2px solid #bdbdbd',
+                pointerEvents: 'none',
+                zIndex: 0,
+              },
+            }}
+          >
+            {children
+              .sort(
+                (a, b) =>
+                  new Date(a.dateCreated).getTime() -
+                  new Date(b.dateCreated).getTime()
+              )
+              .map(child =>
+                renderNode(child, level + 1)
+              )}
+          </Box>
+        )}
       </Box>
     );
   };
 
   return (
-    <Box>
-      {data.map(node => renderNode(node))}
-    </Box>
+    <div>
+      <Box>
+        {data.filter(node => node.orderTaskParentId === null)
+          .sort((a, b) =>
+            new Date(a.dateCreated).getTime() -
+            new Date(b.dateCreated).getTime()
+          )
+          .map(node => renderNode(node))}
+      </Box>
+
+      <NewTaskDialog
+        currOrder={null}
+        open={isInfoOpen}
+        onClose={handleInfoClose}
+      />
+    </div>
   );
 };
 
@@ -84,53 +348,29 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
 export function SupportTasksTab({ order }: SupportTasksTabProps) {
   // Состояния компонентов
   const [selectedNode, setSelectedNode] = useState<OrderTask | null>(null);
-  const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
   const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
   const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
+  const [subTaskDialogOpen, setSubTaskDialogOpen] = useState(false);
+  const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
 
-  const queryClient = useQueryClient();
-  const mutation = useMutation<any, AxiosError, TaskCreateDTO>({
-    mutationFn: createTask,
-    onSuccess: (newTask) => {
-      // Успех
-      showNotification({ title: 'Успешно', message: 'Задача создана', color: 'green' });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      handleNewTaskClose();
-    },
-    onError: (error: any) => {
-      showNotification({
-        title: 'Ошибка',
-        message: error?.response?.data?.message || error.message || 'Не удалось создать задачу',
-        color: 'red'
-      });
-    },
-  });
-
-  const {
-    data: tasks = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: getTasks,
-    enabled: true,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
+  const { data: tasks = [] } = useTasks();
+  const { mutate: updateTaskMutate } = useUpdateTask();
+  const { data: states = [] } = useStates();
 
   let orderTasks = tasks;
-  orderTasks = orderTasks.filter((item: OrderTask) => (item.order?.idOrder === order?.idOrder));
+  orderTasks = orderTasks.filter((item: OrderTask) => (item.orderId === order?.idOrder));
 
   const handleNodeSelect = (node: OrderTask | null) => {
     setSelectedNode(node);
   };
 
-  const handleCreateNewTask = () => {
-    if (selectedNode) {
-      setNewTaskDialogOpen(true);
-    }
+  const handleCreateClick = () => {
+    setNewTaskDialogOpen(true);
   };
+
+  const handleSubTaskClick = () => {
+    setSubTaskDialogOpen(true);
+  }
 
   const handleRedirectClick = () => {
     if (selectedNode) {
@@ -142,58 +382,31 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
     setPostponeDialogOpen(true);
   };
 
-  const { mutate: updateTaskMutate, isPending } = useUpdateTask();
-
-  const handleNewTaskCreate = async (idExecutor: number) => {
-    
-    const finPlan = dayjs(selectedNode?.dateFinishPlan).toISOString();
-    console.log(finPlan);
-    
-    const dto: TaskCreateDTO = {
-      idOrder: order?.idOrder,
-      idOrderTaskParent: selectedNode?.idOrderTask,
-      idWork: selectedNode?.work?.idWork,
-      idExecutor: idExecutor, 
-      dateFinishPlan: finPlan,
-      description: selectedNode?.description,
-      closeParentCheck: selectedNode?.closeParentCheck,
-      idTaskState: selectedNode?.taskState?.idTaskState,
-      idCreator: selectedNode?.creator?.idItUser
-    };
-
-    mutation.mutate(dto);
-
-    handleNewTaskClose();
-  };
-
-  const handleRedirectSave = (data: RedirectData) => {
-    console.log('Сохранение данных:', data);
+  const handleCloseClick = () => {
+    if (!selectedNode) {
+      showNotification({
+        title: 'Не указана задача',
+        color: 'orange',
+      });
+      return;
+    }
+    const newState = states.find(state => state.name === 'Закрыта');
     updateTaskMutate(
       {
-        id: selectedNode?.idOrderTask,
+        id: selectedNode.idOrderTask,
         data: {
-          idExecutor: data.to,
-          description: data.reason,
+          idTaskState: newState?.idOrderState
         },
       },
     );
-    console.log('Данные перенаправления:', data);
-    setRedirectDialogOpen(false);
-  };
-
-
-
-  const handlePostponeSave = (data: PostponeData) => {
-    console.log('Данные откладывания:', data);
-    // Здесь обновляем request с новой датой
-    if (order) {
-      // request.postponeDate = data.postponeUntil; // Раскомментировать когда добавите поле в Request
-    }
-    setPostponeDialogOpen(false);
   };
 
   const handleNewTaskClose = () => {
     setNewTaskDialogOpen(false);
+  }
+
+  const handleSubTaskClose = () => {
+    setSubTaskDialogOpen(false);
   }
 
   const handleRedirectClose = () => {
@@ -205,83 +418,159 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      {/* Верхние кнопки действий */}
-      <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
-          sx={{
-            flex: '1 1 auto', minWidth: '120px'
-          }}
-          onClick={handleCreateNewTask}
-        >
-          Создать задачу
-        </Button>
+    <div>
+      <Box
+        display="flex"
+        flexDirection="column"
+        height="100%"
+        sx={{ mt: 2, minHeight: '57vh' }}
+      >
 
-        <Button variant="contained" color="inherit" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
-          Создать подзадачу
-        </Button>
-        <Button
-          variant="contained"
-          color="inherit"
-          size="small"
-          sx={{ flex: '1 1 auto', minWidth: '120px' }}
-          onClick={handleRedirectClick}
-          disabled={!selectedNode}
+        <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+          {/* TODO: убрать или добавить кнопку */}
+          {false && (
+            <Button
+              variant="contained"
+              color="success"
+              size="small"
+              sx={{
+                flex: '1 1 auto', minWidth: '120px'
+              }}
+              onClick={handleCreateClick}
+
+            >
+              Создать задачу
+            </Button>
+          )}
+
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            sx={{
+              flex: '1 1 auto', minWidth: '120px', minHeight: '40px', backgroundColor: 'rgb(0, 207, 7)'
+            }}
+            onClick={handleSubTaskClick}
+            disabled={!selectedNode}
+          >
+            Создать подзадачу
+          </Button>
+
+          <Button
+            variant="contained"
+            color="inherit"
+            size="small"
+            sx={{ flex: '1 1 auto', minWidth: '120px'  }}
+            onClick={handleRedirectClick}
+            disabled={!selectedNode}
+          >
+            Перенаправить задачу
+          </Button>
+          <Button
+            variant="contained"
+            color="warning"
+            size="small"
+            sx={{ flex: '1 1 auto', minWidth: '120px', backgroundColor: 'rgb(255, 136, 0)' }}
+            onClick={handlePostponeClick}
+            disabled={!selectedNode}
+          >
+            Отложить задачу
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            sx={{
+              flex: '1 1 auto',
+              minWidth: '120px', backgroundColor: 'rgb(255, 101, 91)'
+            }} 
+            onClick={handleCloseClick}
+            disabled={!selectedNode}
+          >
+            Закрыть задачу
+          </Button>
+        </Box>
+
+        {/* Блок-схема */}
+        <Box
+          sx={{
+            height: '49vh',
+            maxWidth: '157.5vh',
+            backgroundColor: 'rgb(240, 240, 240)',
+            flexGrow: 1,
+            overflow: 'auto',
+            borderRadius: '10px',
+            p: '15px 10px 10px 15px',
+            boxShadow: `inset 0 1px 3px rgba(0,0,0,0.12),
+                        inset 0 -1px 3px rgba(0,0,0,0.08)`
+          }}
         >
-          Перенаправить задачу
-        </Button>
-        <Button
-          variant="contained"
-          color="warning"
-          size="small"
-          sx={{ flex: '1 1 auto', minWidth: '120px' }}
-          onClick={handlePostponeClick}
+          <BlockSchema
+            data={orderTasks}
+            selectedNode={selectedNode}
+            onNodeSelect={handleNodeSelect}
+          />
+        </Box>
+
+        {/* Обозначения */}
+        <Box
+          display="flex"
+          justifyContent="flex-start"
+          alignItems="center"
+          gap={1}
+          mt="auto"
         >
-          Отложить задачу
-        </Button>
-        <Button variant="contained" color="success" size="small" sx={{ flex: '1 1 auto', minWidth: '120px' }}>
-          Закрыть задачу
-        </Button>
+          <Typography>Обозначения:</Typography>
+          <Paper sx={{
+            width: 14,
+            height: 14,
+            backgroundColor: newTask,
+            borderRadius: '2px',
+          }} />
+          <Typography>- новая</Typography>
+          <Paper sx={{
+            width: 14,
+            height: 14,
+            backgroundColor: onWaitTask,
+            borderRadius: '2px',
+          }} />
+          <Typography>- в ожидании</Typography>
+          <Paper sx={{
+            width: 14,
+            height: 14,
+            backgroundColor: closedTask,
+            borderRadius: '2px',
+          }} />
+          <Typography>- закрыта</Typography>
+        </Box>
       </Box>
 
-      {/* Блок-схема */}
-      <BlockSchema
-        data={orderTasks}
-        selectedNode={selectedNode}
-        onNodeSelect={handleNodeSelect}
+
+
+      <NewTaskDialog
+        currOrder={order}
+        open={newTaskDialogOpen}
+        onClose={handleNewTaskClose}
       />
 
       <NewTaskDialog
-        open={newTaskDialogOpen}
-        onClose={handleNewTaskClose}
-        onSave={handleNewTaskCreate}
+        currOrder={order}
+        idParent={selectedNode?.idOrderTask}
+        open={subTaskDialogOpen}
+        onClose={handleSubTaskClose}
       />
 
-      {/* Диалог перенаправления задачи */}
       <RedirectTaskDialog
+        currTask={selectedNode}
         open={redirectDialogOpen}
         onClose={handleRedirectClose}
-        onSave={handleRedirectSave}
-        currentExecutor={selectedNode?.executor?.fio1c || ''}
       />
 
-      {/* Диалог откладывания задачи */}
       <PostponeTaskDialog
+        currTask={selectedNode}
         open={postponeDialogOpen}
         onClose={handlePostponeClose}
-        onSave={handlePostponeSave}
-      //currentDate={request?.dateFinishPlan} // Передаем текущую дату из request
       />
-
-      {/* Вывод выбранного блока */}
-      {selectedNode && (
-        <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-          Выбран: {selectedNode.executor?.fio1c}
-        </Typography>
-      )}
-    </Box>
+    </div>
   );
 }

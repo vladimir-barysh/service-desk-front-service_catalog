@@ -65,17 +65,17 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-  "prefetch:api": "node -e \"try { require('fs').unlinkSync('openapi.json') } catch(e) {}\"",
-  "fetch:api": "curl -o openapi.json http://localhost:8081/v3/api-docs",
-  "gen:api": "openapi-typescript ./openapi.json --output ./src/types/api.ts",
-  "fix:api": "node src/fix-api-types.cjs",
-  "prestart": "npm run prefetch:api && npm run fetch:api && npm run fix:api",
-  "prebuild": "npm run prefetch:api && npm run fetch:api && npm run fix:api",
-  "start": "craco start",
-  "build": "craco build",
-  "test": "craco test",
-  "eject": "react-scripts eject"
-},
+    "prefetch:api": "node -e \"try { require('fs').unlinkSync('openapi.json') } catch(e) {}\"",
+    "fetch:api": "curl -o openapi.json http://localhost:8081/v3/api-docs",
+    "gen:api": "openapi-typescript ./openapi.json --output ./src/types/api.ts",
+    "fix:api": "node src/fix-api-types.cjs",
+    "prestart": "npm run prefetch:api && npm run fetch:api && npm run fix:api",
+    "prebuild": "npm run prefetch:api && npm run fetch:api && npm run fix:api",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "react-scripts eject"
+  },
   "proxy": "http://localhost:8081",
   "eslintConfig": {
     "extends": [

@@ -95,7 +95,7 @@ export function LeftSidebar() {
   const isNAgreedActive = isSupportAll && status === 'nAgreed';
   const isNConfirmedActive = isSupportAll && status === 'nConfirmed';
   const isOnControlActive = isSupportAll && status === 'onControl';
-  const isOnExecution = isTasksAll && status === 'onExecution';
+  const isOnExecution = isTasksAll && !status;
   const isOnAgree = isTasksAll && status === 'onAgree';
   const isMeActive = isTasksAll && status === 'mine';
 
@@ -305,7 +305,7 @@ export function LeftSidebar() {
           <MenuItem
             {...menuItemCommon}
             icon={<ViewListOutlined />}
-            component={<Link to={'/tasks/all?status=onExecution'} />}
+            component={<Link to={'/tasks/all'} />}
             active={isOnExecution}
             suffix={<Badge badgeContent={exeCount} color="warning"></Badge>}
           >

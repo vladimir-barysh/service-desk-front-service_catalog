@@ -6,7 +6,7 @@ import { HomePage, LoginPage, RequestsAllPage,
   SupportAllPage, ManualPage, SchedulePage,
   ProfilePage, WebServicesPage, ItCatalogPage,
   KnowBasePage, NotificationsPage, ReferencePage } from './pages';
-import { TasksMyAllPage } from './pages/tasks/all-tasks/tasks-my-all.page';
+import { TasksMyAllPage } from './pages/tasks/tasks-my-all.page';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { LeftSidebar } from './sidebar/sidebar';
 import { ruRU } from '@mui/material/locale';

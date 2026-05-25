@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog, DialogContent,
   DialogContentText, DialogTitle,
@@ -8,6 +8,7 @@ import {
   TextField, InputAdornment,
   FormControl, MenuItem, Select,
   SelectChangeEvent,
+  Autocomplete,
 } from '@mui/material';
 import {
   Input, Textarea,
@@ -15,19 +16,20 @@ import {
   Radio, Group,
   Checkbox,
 } from '@mantine/core';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useMutation } from '@tanstack/react-query'
-import { OrderCreateDTO } from '../../api/dtos';
-import { AxiosError } from 'axios';
-import { createOrder } from '../../api/services/orderService';
-import { getUsers } from '../../api/services/userService';
 import { TextInputField } from '../text-input-field';
-import { User } from '../../api/models';
+
+import { components } from '../../types/api';
+import { useUsers } from '../../hooks/useUserMutations';
+import { useUpdateTask } from '../../hooks/useTaskMutations';
+import dayjs from 'dayjs';
+import { showNotification } from '../../context';
+import { Close } from '@mui/icons-material';
+type User = components['schemas']['UserResponseDTO'];
+type OrderTask = components['schemas']['TaskResponseDTO'];
 interface RedirectTaskDialogProps {
+  currTask: OrderTask | null;
   open: boolean;
   onClose: () => void;
-  onSave: (data: RedirectData) => void;
-  currentExecutor: string;
 }
 
 export interface RedirectData {
@@ -41,83 +43,107 @@ export interface Reason {
   reason: string;
 }
 
-export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: RedirectTaskDialogProps) {
-  // Состояния компонентов
-  const [formData, setFormData] = useState<RedirectData>({ from: currentExecutor, to: 0, reason: '' });
-  const [customReason, setCustomReason] = useState('');
+export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDialogProps) {
+
+  const [selectedExecutor, setSelectedExecutor] = useState<User | null>(null);
+  const [reason, setReason] = useState('');
   const labelStyle = {
     margin: '0px 0px -15px 0px',
   };
 
-  const {
-    data: users = [],
-    isLoading: userLoad,
-    error: userError,
-  } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-    staleTime: Infinity
-  });
+  const { data: users = [] } = useUsers();
+  const { mutate: updateTaskMutate } = useUpdateTask();
 
   const reasons: Reason[] = [
-    {id: 1, reason: "Первая причина"},
-    {id: 2, reason: "Вторая причина"},
-    {id: 3, reason: "Третья причина"}
+    { id: 1, reason: "Своя причина" },
+    { id: 2, reason: "Первая причина" },
+    { id: 3, reason: "Вторая причина" },
+    { id: 4, reason: "Третья причина" }
   ]
-  // Для обновления формы при изменении currentExecutor
-  useEffect(() => {
-    if (open) {
-      setFormData(prev => ({
-        ...prev,
-        from: currentExecutor // обновляем поле "От кого" при каждом открытии
-      }));
-    }
-  }, [open, currentExecutor]);
+
+  const isFormValid = useMemo(() => {
+    return (
+      selectedExecutor !== null &&
+      reason !== ''
+    );
+  }, [selectedExecutor, reason]);
 
   const handleSave = () => {
-    // Проверка обязательных полей
-    if (formData.to && formData.reason && formData.from) {
-      onSave(formData)
-      handleClose()
+    if (!isFormValid) {
+      showNotification({
+        title: 'Заполните обязательные все поля',
+        color: 'orange',
+      });
+      return;
     }
+    if (!currTask) {
+      showNotification({
+        title: 'Задача не выбрана',
+        color: 'orange',
+      });
+      return;
+    }
+    updateTaskMutate(
+      {
+        id: currTask?.idOrderTask,
+        data: {
+          idExecutor: selectedExecutor?.idItUser,
+          description: `${currTask.description}\nЗАДАЧА ПЕРЕНАПРАВЛЕНА\nДата: ${dayjs(new Date()).format('DD.MM.YYYY HH:mm')}\nПричина: ${reason}`,
+        },
+      },
+    );
+    handleClose();
   };
 
   // Сброс формы при закрытии
   const handleClose = () => {
+    setReason('');
+    setSelectedExecutor(null);
     onClose();
-    setFormData(prev => ({
-      ...prev,
-      to: 0,
-      reason: ''
-    }));
-    setCustomReason('');
   };
 
-  const handleExecutorChange = (event: SelectChangeEvent<number>) => {
-    const selectedId = Number(event.target.value);
+  const handleExecutorChange = (id: number | null) => {
 
     const selectedObject = users.find(
-      (item: User) => item.idItUser === selectedId
+      (item: User) => item.idItUser === id
     ) ?? null;
-    setFormData({ ...formData, to: selectedObject.idItUser });
+    setSelectedExecutor(selectedObject);
   };
 
-  const handleCustomReasonChange = (event: SelectChangeEvent<number>) => {
+  const handleReasonChange = (event: SelectChangeEvent<number>) => {
     const selectedId = Number(event.target.value);
 
     const selectedObject = reasons.find(
       (item: Reason) => item.id === selectedId
     ) ?? null;
-    setFormData({ ...formData, reason: selectedObject?.reason || '' });
+    setReason(selectedObject?.reason || '');
   }
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Перенаправить задачу</DialogTitle>
 
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-          {/* Поле "От кого" */}
+          <Grid2
+            container
+            spacing={0}
+            direction="row"
+            alignItems="left"
+            justifyContent="space-between"
+          >
+            <Grid2 size="auto">
+              <Box fontSize="20px" fontWeight="700">
+                Перенаправить задачу
+              </Box>
+            </Grid2>
+
+            <Grid2 size="auto">
+              <IconButton onClick={handleClose}>
+                <Close />
+              </IconButton>
+            </Grid2>
+          </Grid2>
+
           <Grid2
             container
             size={6}
@@ -132,7 +158,7 @@ export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: R
             </Grid2>
             <Grid2 size="auto">
               <TextField
-                value={formData.from}
+                value={currTask?.executorFio}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -157,22 +183,24 @@ export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: R
               <Text fw={600}>На кого*</Text>
             </Grid2>
             <Grid2 size="auto">
-              <FormControl fullWidth size="small">
-                <Select
-                  onChange={handleExecutorChange}
-                  renderValue={(selected) => {
-                    if (!selected) return <em>Не выбрано</em>;
-                    const p = users.find((x: any) => x.idItUser === selected);
-                    return p?.fio1c;
-                  }}
-                >
-                  {users.map((item: any) => (
-                    <MenuItem key={item.idItUser} value={item.idItUser}>
-                      {item.fio1c}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                fullWidth
+                size="small"
+                options={users}
+                value={
+                  users.find((x: User) => x.idItUser === selectedExecutor?.idItUser) || null
+                }
+                onChange={(_, newValue) => {
+                  handleExecutorChange(newValue?.idItUser || null);
+                }}
+                getOptionLabel={(option: User) => option.fio1c || ''}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Не выбран"
+                  />
+                )}
+              />
             </Grid2>
           </Grid2>
 
@@ -192,14 +220,14 @@ export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: R
             <Grid2 size="auto">
               <FormControl fullWidth size="small">
                 <Select
-                  onChange={handleCustomReasonChange}
+                  onChange={handleReasonChange}
                   renderValue={(selected) => {
                     if (!selected) return <em>Не выбрано</em>;
-                    const r = reasons.find((x: any) => x.id === selected);
+                    const r = reasons.find((x: Reason) => x.id === selected);
                     return r?.reason;
                   }}
                 >
-                  {reasons.map((item: any) => (
+                  {reasons.map((item: Reason) => (
                     <MenuItem key={item.id} value={item.id}>
                       {item.reason}
                     </MenuItem>
@@ -225,7 +253,7 @@ export function RedirectTaskDialog({ open, onClose, onSave, currentExecutor }: R
             color="success"
             size={'small'}
             fullWidth={true}
-            disabled={!formData.to || !formData.reason}
+            disabled={!isFormValid}
             onClick={handleSave}
           >
             Сохранить

@@ -14,7 +14,6 @@ import { Close } from '@mui/icons-material';
 
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { AttachFileOutlined, PeopleAltOutlined, PriorityHighOutlined, LanOutlined } from '@mui/icons-material'
-import { OrderTask } from '../../api/models';
 import { uploadedFiles } from '../support-tabs/support-create-dialog-files-tab/makeData';
 import { seed } from '../support-tabs/support-create-dialog-discussion-tab/makeData'
 import {
@@ -26,17 +25,20 @@ import dayjs from 'dayjs';
 import { getTasks } from '../../api/services/taskService';
 import { components } from '../../types/api';
 import { useUpdateOrder } from '../../hooks/useOrder';
+import { useUpdateOrder } from '../../hooks/useOrderMutations';
+import { useTasks } from '../../hooks/useTaskMutations';
 
 type Order = components['schemas']['OrderResponseDTO'];
+type OrderTask = components['schemas']['TaskResponseDTO'];
 
 interface SupportGeneralDialogProps {
   isOpen: boolean;
   request: Order | null;
-
+  disabled: boolean;
   onClose: () => void;
 }
 
-export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGeneralDialogProps) {
+export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: SupportGeneralDialogProps) {
   const [value, setValue] = useState('1');
   const [hasFiles, setHasFiles] = useState(false);
   const [hasMessages, setHasMessages] = useState(false);
@@ -64,16 +66,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
 
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
-  const {
-      data: tasks = [],
-    } = useQuery({
-      queryKey: ['tasks'],
-      queryFn: getTasks,
-      enabled: true,
-      staleTime: 5 * 60 * 1000,
-      refetchOnMount: 'always',
-      refetchOnWindowFocus: true,
-    });
+  const { data: tasks = [] } = useTasks();
     
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -126,7 +119,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
   const checkTasks = () => {
     if (!request?.nomer) return;
     const tasksForThisOrder = tasks.filter(
-      (task: OrderTask) => task.order?.nomer === String(request.nomer)
+      (task: OrderTask) => task.orderNomer === request.nomer
     );
     setHasTasks(tasksForThisOrder.length > 0);
   };
@@ -226,6 +219,7 @@ export function SupportGeneralDialog({ isOpen, request, onClose }: SupportGenera
               <SupportGeneralTab
                 isOpen={true}
                 request={request}
+                disabled={disabled}
                 onUpdate={(data, hasChanges) => {
                   setGeneralData(data);
                   setGeneralChanged(hasChanges);
