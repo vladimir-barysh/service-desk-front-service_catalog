@@ -35,7 +35,7 @@ export const useUpdateMyApproveUser = (orderId: number) => {
       queryClient.invalidateQueries({ queryKey: ['approves', 'order', orderId] });
       showNotification({ title: 'Статус вашего согласования обновлён', message: '', color: 'green' });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       showNotification({ title: 'Ошибка', message: error.message, color: 'red' });
     },
   });

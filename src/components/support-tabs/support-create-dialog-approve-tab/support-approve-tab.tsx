@@ -139,7 +139,6 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     setConfirmRefreshOpen(true);
   };
 
-
   // Обработчики кнопок Согласовно, Не согласовано, Отклонить согласование 
   const [actionDialog, setActionDialog] = useState<{ open: boolean; approveId: number; state: number; title: string; required: boolean }>({
     open: false,
@@ -166,7 +165,12 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
 
   // Доступность кнопок на панели
   const selectedApprove = approves.find(a => a.idApprove === selectedApproveId);
+  const orderClosed = order?.orderStateName === 'Закрыта';
+  const isApproveCompleted = selectedApprove ? [13, 9].includes(selectedApprove.idApproveState) : false;
   const isAlreadyStarted = selectedApprove?.idApproveState === 7;
+  // TODO: Получить информацию о текущем пользователе из контекста
+  const currentUserApprove = selectedApproveUsers.find(u => u.userId === 1);
+  const canVote = currentUserApprove && currentUserApprove.state === 0 && isAlreadyStarted;
 
   // Обёртка для кнопок панели
   const ActionButton = (props: ButtonProps) => {
@@ -190,21 +194,21 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
       <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
         <ActionButton 
           color="primary"
-          disabled={!order}
+          disabled={!order || orderClosed}
           onClick={handleCreateApprove}
         >
           Создать согласование
         </ActionButton>
         <ActionButton 
           color="warning"
-          disabled={!selectedApproveId}
+          disabled={!selectedApproveId || isApproveCompleted}
           onClick={handleEditUsers}
         >
           Изменить согласование
         </ActionButton>
         <ActionButton 
           color="error"
-          disabled={!selectedApproveId || isDeleting}
+          disabled={!selectedApproveId || isApproveCompleted || isDeleting}
           onClick={handleDeleteClick}
         >
           Удалить согласование
@@ -225,21 +229,21 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         </ActionButton>
         <ActionButton
           color="success"
-          disabled={!selectedApproveId || !isAlreadyStarted || isUpdatingMyStatus}
+          disabled={!selectedApproveId || !canVote || isUpdatingMyStatus}
           onClick={() => handleApproveAction(1, 'Согласовано', false)}
         >
           Согласовано
         </ActionButton>
         <ActionButton
           color="error"
-          disabled={!selectedApproveId || !isAlreadyStarted || isUpdatingMyStatus}
+          disabled={!selectedApproveId || !canVote || isUpdatingMyStatus}
           onClick={() => handleApproveAction(2, 'Не согласовано', true)}
         >
           Не согласовано
         </ActionButton>
         <ActionButton
           color="inherit"
-          disabled={!selectedApproveId || !isAlreadyStarted || isUpdatingMyStatus}
+          disabled={!selectedApproveId || !canVote || isUpdatingMyStatus}
           onClick={() => handleApproveAction(3, 'Отклонить согласование', false)}
         >
           Отклонить согласование
