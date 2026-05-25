@@ -46,7 +46,7 @@ export function SupportAllPage() {
 
   // Получение всех статусов заявок
   const { data: orderStates } = useQuery({
-    queryKey: ['orderStates'],
+    queryKey: ['orderstates'],
     queryFn: getOrderStates,
   });
 

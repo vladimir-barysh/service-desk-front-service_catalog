@@ -11,17 +11,23 @@ import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
   formatFIO, SupportGeneralDialog, RequestCreateZNODialog,
   RequestCreateZNDDialog, RequestCreateZNTDialog,
-  RequestCreateZNIDialog
+  RequestCreateZNIDialog,
+  PostponeTaskDialog
 } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import { showNotification } from '../../context';
 import * as XLSX from 'xlsx';
 import dayjs, { Dayjs } from 'dayjs';
+
 import { components } from '../../types/api';
-import { useTasks } from '../../hooks/useTaskMutations';
+import { useTasks, useUpdateTask } from '../../hooks/useTaskMutations';
 import { useUsers } from '../../hooks/useUserMutations';
 import { useOrders } from '../../hooks/useOrderMutations';
+import { useStates } from '../../hooks/useStateMutations';
 
+type Order = components['schemas']['OrderResponseDTO'];
+type OrderTask = components['schemas']['TaskResponseDTO'];
+type User = components['schemas']['UserResponseDTO'];
 
 
 export function TasksMyAllPage() {
@@ -34,20 +40,19 @@ export function TasksMyAllPage() {
   const [hideAll, setHideAll] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
 
-  
+
 
   // фильтр по статусу
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
   const [searchParams] = useSearchParams();
   const urlStatus = searchParams.get('status');
 
-  type Order = components['schemas']['OrderResponseDTO'];
-  type OrderTask = components['schemas']['TaskResponseDTO'];
-  type User = components['schemas']['UserResponseDTO'];
+  const { mutate: updateTaskMutate } = useUpdateTask();
 
   const { data: tasks = [] } = useTasks();
   const { data: users = [] } = useUsers();
   const { data: orders = [] } = useOrders();
+  const { data: states = [] } = useStates();
 
   const filteredData = useMemo(() => {
     let result = tasks;
@@ -55,9 +60,6 @@ export function TasksMyAllPage() {
     // Фильтр по статусу из URL
     if (urlStatus === 'onAgree') {
       result = result.filter((item: OrderTask) => (item.taskStateName === 'На согласовании' || item.taskStateName === 'Закрыта'));
-    }
-    else if (urlStatus === 'onExecution') {
-      result = result.filter((item: OrderTask) => item.taskStateName !== 'Закрыта');
     }
     else if (urlStatus) {
       result = result.filter((item: OrderTask) => item.taskStateName === urlStatus);
@@ -399,6 +401,19 @@ export function TasksMyAllPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const inWork = states?.find(state => state.name === 'В работе');
+  const declined = states?.find(state => state.name === 'Отклонена');
+  const onWait = states?.find(state => state.name === 'В ожидании');
+
+  const handleAcceptClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const task = selectedRows[0].original;
+    if (task.idOrderTask == null || inWork?.idOrderState == null) return;
+
+    updateTaskMutate({ id: task.idOrderTask, data: { idTaskState: inWork.idOrderState } });
+  };
+
   // Обработчик двойного клика
   const handleRowDoubleClick = (row: MRT_Row<OrderTask>) => {
     setSelectedOrder(orders?.find((item: Order) => item.idOrder === row.original.orderId) || null);
@@ -523,6 +538,7 @@ export function TasksMyAllPage() {
               color="inherit"
               startIcon={<Build />}
               size={'small'}
+              onClick={handleAcceptClick}
               disabled={hasSelectedRows}
             >
               Принять в работу
@@ -616,6 +632,7 @@ export function TasksMyAllPage() {
         disabled={true}
         onClose={handleDialogClose}
       />
+
     </div>
   );
 }

@@ -16,24 +16,25 @@ import { TextInputField } from '../text-input-field';
 import { Text } from '@mantine/core';
 import { Close } from '@mui/icons-material';
 
+import { useUpdateTask } from '../../hooks/useTaskMutations';
+import { useStates } from '../../hooks/useStateMutations';
+import { components } from '../../types/api';
+import { showNotification } from '../../context';
+type OrderTask = components['schemas']['TaskResponseDTO'];
+
 interface PostponeTaskDialogProps {
+  currTask: OrderTask | null;
   open: boolean;
   onClose: () => void;
-  onSave: (data: PostponeData) => void;
 }
 
-export interface PostponeData {
-  datePostpone: string;
-  comment: string;
-}
+export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDialogProps) {
 
-export function PostponeTaskDialog({ open, onClose, onSave }: PostponeTaskDialogProps) {
   const [datePostpone, setDatePostpone] = useState('');
   const [reason, setReason] = useState('');
-  const [formData, setFormData] = useState<PostponeData>({
-    datePostpone: datePostpone || '',
-    comment: ''
-  });
+
+  const { mutate: updateTaskMutate } = useUpdateTask();
+  const { data: states = [] } = useStates();
 
   const isFormValid = useMemo(() => {
     return (
@@ -50,7 +51,31 @@ export function PostponeTaskDialog({ open, onClose, onSave }: PostponeTaskDialog
 
   // Обработчик сохранения
   const handleSave = () => {
-    onSave(formData);
+    if (!isFormValid) {
+      showNotification({
+        title: 'Заполните обязательные все поля',
+        color: 'orange',
+      });
+      return;
+    }
+    if (!currTask) {
+      showNotification({
+        title: 'Не указана задача',
+        color: 'orange',
+      });
+      return;
+    }
+    const newState = states.find(state => state.name === 'В ожидании');
+    updateTaskMutate(
+      {
+        id: currTask.idOrderTask,
+        data: {
+          idTaskState: newState?.idOrderState,
+          datePostpone: datePostpone,
+          description: `${currTask?.description}\nЗАЯВКА ОТЛОЖЕНА\nПричина: ${reason}`,
+        },
+      },
+    );
     handleClose();
   };
 
