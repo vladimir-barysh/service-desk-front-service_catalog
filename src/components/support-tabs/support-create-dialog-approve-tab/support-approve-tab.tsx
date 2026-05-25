@@ -13,18 +13,12 @@ import {
   Grid2,
   ButtonProps,
 } from '@mui/material';
-import {
-  Pending,
-  CheckCircle,
-  Cancel,
-  Block,
-  RemoveCircle,
-  HourglassEmpty,
-} from '@mui/icons-material';
+import { Block } from '@mui/icons-material';
 import { useDialogs, CreateApproveDialog, EditApproveUsersDialog, CommentDialog } from '../../../components';
 import { components } from '../../../types/api';
 import { useApprovesByOrder, useStartApproveProcess, useDeleteApprove, useRefreshApprove } from '../../../hooks/useApprove';
 import { useApproveUsersByOrder, useUpdateMyApproveUser } from '../../../hooks/useApproveUser';
+import { useOrderStatesMap } from '../../../hooks/useOrderStatesMap';
 import { ConfirmDialog } from '../../confirmDialog';
 
 type Order = components['schemas']['OrderResponseDTO'];
@@ -43,6 +37,9 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const isLoading = approvesLoading || usersLoading;
   const error = approvesError || usersError;
 
+  // Получение статусов согласования с визуальным отображением
+  const { statusMap, inProgressId, approvedId, notApprovedId, rejectedId } = useOrderStatesMap();
+
   // Мутации
   const { mutate: startProcess, isPending: isStarting } = useStartApproveProcess();
   const { mutate: deleteApprove, isPending: isDeleting } = useDeleteApprove();
@@ -54,24 +51,6 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     if (!selectedApproveId) return [];
     return approveUsers.filter(user => user.idApprove === selectedApproveId);
   }, [approveUsers, selectedApproveId]);
-
-  // Цвета для статуса согласования
-  const approveStatusMap: Record<number, { label: string; icon: JSX.Element, bgColor: string;}> = {
-    2: { label: 'В ожидании', icon: <HourglassEmpty />, bgColor: '#FFF9C4'},
-    7: { label: 'На согласовании', icon: <Pending />, bgColor: '#ffe6bd'},
-    13: { label: 'Согласовано', icon: <CheckCircle />, bgColor: '#c7ffcd'},
-    9: { label: 'Не согласовано', icon: <Cancel />, bgColor: '#feaeae'},
-    14: { label: 'Согласование отклонено', icon: <Block />, bgColor: '#FFEBEE'},
-    15: { label: 'Согласование отменено', icon: <RemoveCircle />, bgColor: '#efefef'},
-  };
-
-  // Цвета для статуса участника согласования
-  const approveUserStatusMap: Record<number, { label: string; bgColor: string;}> = {
-    0: { label: 'Ожидание', bgColor: '#FFF9C4'},
-    1: { label: 'Согласовано', bgColor: '#c7ffcd'},
-    2: { label: 'Не согласовано', bgColor: '#feaeae'},
-    3: { label: 'Согласование отклонено', bgColor: '#FFEBEE'},
-  };
 
   // Перевод даты в строку
   const formatDate = (dateStr: string | null) => {
@@ -156,7 +135,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   const handleConfirmAction = (comment: string) => {
     updateMyStatus({
       approveId: actionDialog.approveId,
-      state: actionDialog.state,
+      idApproveUserState: actionDialog.state,
       resultText: comment,
     }, {
       onSuccess: () => setActionDialog(prev => ({ ...prev, open: false }))
@@ -166,11 +145,12 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   // Доступность кнопок на панели
   const selectedApprove = approves.find(a => a.idApprove === selectedApproveId);
   const orderClosed = order?.orderStateName === 'Закрыта';
-  const isApproveCompleted = selectedApprove ? [13, 9].includes(selectedApprove.idApproveState) : false;
-  const isAlreadyStarted = selectedApprove?.idApproveState === 7;
+  const isApproveCompleted = selectedApprove && 
+    (selectedApprove.idApproveState === approvedId || selectedApprove.idApproveState === notApprovedId);
+  const isAlreadyStarted = selectedApprove?.idApproveState === inProgressId;
   // TODO: Получить информацию о текущем пользователе из контекста
   const currentUserApprove = selectedApproveUsers.find(u => u.userId === 1);
-  const canVote = currentUserApprove && currentUserApprove.state === 0 && isAlreadyStarted;
+  const canVote = currentUserApprove && currentUserApprove.idApproveUserState === inProgressId && isAlreadyStarted
 
   // Обёртка для кнопок панели
   const ActionButton = (props: ButtonProps) => {
@@ -230,21 +210,21 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         <ActionButton
           color="success"
           disabled={!selectedApproveId || !canVote || isUpdatingMyStatus}
-          onClick={() => handleApproveAction(1, 'Согласовано', false)}
+          onClick={() => handleApproveAction(approvedId, 'Согласовано', false)}
         >
           Согласовано
         </ActionButton>
         <ActionButton
           color="error"
           disabled={!selectedApproveId || !canVote || isUpdatingMyStatus}
-          onClick={() => handleApproveAction(2, 'Не согласовано', true)}
+          onClick={() => handleApproveAction(notApprovedId, 'Не согласовано', true)}
         >
           Не согласовано
         </ActionButton>
         <ActionButton
           color="inherit"
           disabled={!selectedApproveId || !canVote || isUpdatingMyStatus}
-          onClick={() => handleApproveAction(3, 'Отклонить согласование', false)}
+          onClick={() => handleApproveAction(rejectedId, 'Отклонить согласование', false)}
         >
           Отклонить согласование
         </ActionButton>
@@ -277,11 +257,11 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
                     <TableCell>{formatDate(approve.dateCreated)}</TableCell>
                     <TableCell>
                       <Chip
-                        label={approveStatusMap[approve?.idApproveState ?? 0]?.label || 'Неизвестно'}
-                        icon={approveStatusMap[approve?.idApproveState ?? 0]?.icon}
+                        label={statusMap[approve.idApproveState].label}
+                        icon={statusMap[approve.idApproveState].icon}
                         size="small"
                         sx={{
-                          backgroundColor: approveStatusMap[approve?.idApproveState ?? 0]?.bgColor,
+                          backgroundColor: statusMap[approve.idApproveState].bgColor,
                           color: '#000000',
                           '& .MuiChip-icon': { color: '#000000' },
                           borderRadius: '8px',
@@ -325,9 +305,10 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
                     <TableCell>{user.resultText || '—'}</TableCell>
                     <TableCell>
                       <Chip
-                        label={approveUserStatusMap[user.state]?.label || 'Неизвестно'}
+                        label={statusMap[user.idApproveUserState].label}
+                        icon={user.flagIgnored ? <Block /> : undefined}
                         size="small"
-                        sx={{ bgcolor: approveUserStatusMap[user.state]?.bgColor }}
+                        sx={{ bgcolor:statusMap[user.idApproveUserState].bgColor }}
                       />
                     </TableCell>
                   </TableRow>
