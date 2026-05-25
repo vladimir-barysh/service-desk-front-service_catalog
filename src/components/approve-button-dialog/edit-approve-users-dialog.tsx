@@ -74,7 +74,7 @@ export const EditApproveUsersDialog = ({
         onSuccess: () => {
           // После успешного обновления состава обновляем флаги игнорирования
           const ignoredPromises = Array.from(ignoredChanges.entries())
-            .filter(([_,ignored]) => typeof ignored === 'boolean')
+            .filter(entry => typeof entry[1] === 'boolean')
             .map(([approveUserId, ignored]) =>
               updateIgnored({ id: approveUserId, ignored })
             );
