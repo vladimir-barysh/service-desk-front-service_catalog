@@ -5,6 +5,9 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  FormControlLabel,
+  Switch,
+  CircularProgress,
 } from '@mui/material';
 import {
   MantineReactTable,
@@ -29,6 +32,12 @@ interface ApproveCandidatesTableProps {
   confirmButtonText?: string;
   orderTypeName?: string;
   isPending?: boolean;
+  // Режим редактирования (добавляет колонку игнорирования)
+  editMode?: boolean;
+  currentUsersMap?: Map<number, components['schemas']['ApproveUserResponseDTO']>;
+  ignoredChanges?: Map<number, boolean>;
+  onIgnoredChange?: (approveUserId: number, newValue: boolean) => void;
+  isUpdatingIgnored?: boolean;
 }
 
 export const ApproveCandidatesTable = ({
@@ -42,16 +51,21 @@ export const ApproveCandidatesTable = ({
   confirmButtonText = 'Сохранить',
   orderTypeName,
   isPending = false,
+  editMode = false,
+  currentUsersMap = new Map(),
+  ignoredChanges = new Map(),
+  onIgnoredChange,
+  isUpdatingIgnored = false,
 }: ApproveCandidatesTableProps) => {
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>(initialSelection);
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
 
-  // После загрузки данных, если пользователь ещё ничего не выбрал, применяем initialSelection
+  // Сброс выбора при открытии диалога (чтобы не оставались старые изменения)
   useEffect(() => {
-    if (!isLoading && Object.keys(rowSelection).length === 0 && Object.keys(initialSelection).length > 0) {
+    if (open) {
       setRowSelection(initialSelection);
     }
-  }, [isLoading, initialSelection, rowSelection]);
+  }, [open]);
 
   const columns = useMemo<MRT_ColumnDef<Candidate>[]>(() => {
     const baseColumns: MRT_ColumnDef<Candidate>[] = [
@@ -77,8 +91,40 @@ export const ApproveCandidatesTable = ({
         mantineFilterTextInputProps: { placeholder: 'Поиск по роли' },
       });
     }
+
+    if (editMode && onIgnoredChange) {
+      baseColumns.push({
+        id: 'ignored',
+        header: 'Игнорировать',
+        size: 120,
+        Cell: ({ row }) => {
+          const candidate = row.original;
+          const currentUser = currentUsersMap.get(candidate.idUser);
+          if (!currentUser) return null;
+
+          const isIgnored = ignoredChanges.has(currentUser.idApproveUser)
+            ? (ignoredChanges.get(currentUser.idApproveUser) ?? false)
+            : currentUser.flagIgnored;
+
+          return (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isIgnored}
+                  onChange={() => onIgnoredChange(currentUser.idApproveUser, !isIgnored)}
+                  size="small"
+                />
+              }
+              label={isIgnored ? 'Да' : 'Нет'}
+              labelPlacement="end"
+            />
+          );
+        },
+      });
+    }
+
     return baseColumns;
-  }, [orderTypeName]);
+  }, [orderTypeName, editMode, currentUsersMap, ignoredChanges, onIgnoredChange]);
 
   const handleConfirm = () => {
     const selectedIds = Object.keys(rowSelection).map(Number);
@@ -129,14 +175,14 @@ export const ApproveCandidatesTable = ({
     <Dialog open={open} onClose={onCancel} maxWidth="md" fullWidth>
       <DialogTitle>{title}</DialogTitle>
       <DialogContent sx={{ pt: 1, padding: '20px' }}>
-        {isLoading ? <div>Загрузка...</div> : <MantineReactTable table={table} />}
+        {isLoading ? <CircularProgress /> : <MantineReactTable table={table} />}
       </DialogContent>
       <DialogActions sx={{ margin: '0px 15px 15px 0px', gap: 1 }}>
         <Button
           variant="contained"
           size="small"
           onClick={handleConfirm}
-          disabled={isPending || Object.keys(rowSelection).length === 0}
+          disabled={isPending || (editMode && isUpdatingIgnored) || Object.keys(rowSelection).length === 0}
         >
           {confirmButtonText}
         </Button>

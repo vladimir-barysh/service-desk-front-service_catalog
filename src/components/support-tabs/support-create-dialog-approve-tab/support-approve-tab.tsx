@@ -181,7 +181,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         </ActionButton>
         <ActionButton 
           color="warning"
-          disabled={!selectedApproveId || isApproveCompleted}
+          disabled={!selectedApproveId}
           onClick={handleEditUsers}
         >
           Изменить согласование
@@ -368,7 +368,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
         confirmColor="primary"
       />
 
-      {/* Диалог именения согласования */}
+      {/* Диалог изменения согласования */}
       {selectedApproveId && order && (
         <EditApproveUsersDialog
           key={selectedApproveId}

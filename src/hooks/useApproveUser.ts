@@ -5,6 +5,7 @@ import { showNotification } from './../context';
 
 type ApproveUserResponse = components['schemas']['ApproveUserResponseDTO'];
 type ApproveUserUpdateRequest = components['schemas']['ApproveUserUpdateRequestDTO'];
+type ApproveUserUpdateIgnoredRequest = components['schemas']['ApproveUserUpdateIgnoredRequestDTO'];
 
 // Получение всех согласовантов по согласованию
 export const useApproveUserByApprove = (approveId: number) => {
@@ -34,6 +35,23 @@ export const useUpdateMyApproveUser = (orderId: number) => {
       queryClient.invalidateQueries({ queryKey: ['approveUsers', 'order', orderId] });
       queryClient.invalidateQueries({ queryKey: ['approves', 'order', orderId] });
       showNotification({ title: 'Статус вашего согласования обновлён', message: '', color: 'green' });
+    },
+    onError: (error: Error) => {
+      showNotification({ title: 'Ошибка', message: error.message, color: 'red' });
+    },
+  });
+};
+
+// Обновление флага игнорирования
+export const useUpdateApproveUserIgnored = (orderId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: number} & ApproveUserUpdateIgnoredRequest) =>
+      approveUserApi.updateIgnored(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['approveUsers', 'order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['approves', 'order', orderId] });
+      showNotification({ title: 'Статус игнорирования обновлён', message: '', color: 'green' });
     },
     onError: (error: Error) => {
       showNotification({ title: 'Ошибка', message: error.message, color: 'red' });

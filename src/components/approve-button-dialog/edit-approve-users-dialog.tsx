@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ApproveCandidatesTable } from './ApproveCandidatesTable';
-import { useApproveUsersByOrder } from '../../hooks/useApproveUser';
-import { useUpdateApproveUsers, useApproveCandidateForOrder } from '../../hooks/useApprove';
+import { useApproveUsersByOrder, useUpdateApproveUserIgnored } from '../../hooks/useApproveUser';
+import { useApproveCandidateForOrder, useUpdateApproveUsers } from '../../hooks/useApprove';
+import { components } from '../../types/api';
 
 interface EditApproveUsersDialogProps {
   open: boolean;
@@ -20,28 +21,66 @@ export const EditApproveUsersDialog = ({
   orderTypeName,
   onClose,
 }: EditApproveUsersDialogProps) => {
+  const [ignoredChanges, setIgnoredChanges] = useState<Map<number, boolean>>(new Map());
+
+  // Сброс ползунков игнорирования при открытии диалога
+  useEffect(() => {
+    if (open) {
+      setIgnoredChanges(new Map());
+    }
+  }, [open, approveId]);
+
   const { data: candidates = [], isLoading: candidatesLoading } = useApproveCandidateForOrder(
     orderId,
     open && !!serviceId
   );
   const { data: allApproveUsers = [], isLoading: usersLoading } = useApproveUsersByOrder(orderId);
-  const { mutate: updateUsers, isPending } = useUpdateApproveUsers();
+  const { mutate: updateUsers, isPending: isUpdatingUsers } = useUpdateApproveUsers();
+  const { mutate: updateIgnored, isPending: isUpdatingIgnored } = useUpdateApproveUserIgnored(orderId);
 
   const isLoading = candidatesLoading || usersLoading;
 
+  const currentUsersMap = useMemo(() => {
+    const map = new Map<number, components['schemas']['ApproveUserResponseDTO']>();
+    allApproveUsers
+      .filter(u => u.idApprove === approveId)
+      .forEach(u => map.set(u.userId, u));
+    return map;
+  }, [allApproveUsers, approveId]);
+
   const initialSelection = useMemo(() => {
-    if (isLoading) return {};
-    const current = allApproveUsers.filter(u => u.idApprove === approveId);
     const selection: Record<string, boolean> = {};
-    current.forEach(u => {
-      const userId = u.userId ?? u.userId;
-      if (userId) selection[String(userId)] = true;
+    currentUsersMap.forEach((_, userId) => {
+      selection[String(userId)] = true;
     });
     return selection;
-  }, [allApproveUsers, approveId, isLoading]);
+  }, [currentUsersMap]);
 
-  const handleConfirm = (selectedIds: number[]) => {
-    updateUsers({ approveId, orderId, userIds: selectedIds }, { onSuccess: onClose });
+  const handleConfirm = (selectedUserIds: number[]) => {
+    // Сначала обновляем состав участников
+    updateUsers(
+      { approveId, orderId, userIds: selectedUserIds },
+      {
+        onSuccess: () => {
+          // После успешного обновления состава обновляем флаги игнорирования
+          const ignoredPromises = Array.from(ignoredChanges.entries())
+            .filter(([_,ignored]) => typeof ignored === 'boolean')
+            .map(([approveUserId, ignored]) =>
+              updateIgnored({ id: approveUserId, ignored })
+            );
+          Promise.all(ignoredPromises)
+            .finally(onClose);
+        },
+      }
+    );
+  };
+
+  const handleIgnoredChange = (approveUserId: number, newValue: boolean) => {
+    setIgnoredChanges(prev => {
+      const newMap = new Map(prev);
+      newMap.set(approveUserId, newValue);
+      return newMap;
+    });
   };
 
   return (
@@ -55,7 +94,12 @@ export const EditApproveUsersDialog = ({
       onCancel={onClose}
       confirmButtonText="Сохранить"
       orderTypeName={orderTypeName}
-      isPending={isPending}
+      isPending={isUpdatingUsers}
+      editMode
+      currentUsersMap={currentUsersMap}
+      ignoredChanges={ignoredChanges}
+      onIgnoredChange={handleIgnoredChange}
+      isUpdatingIgnored={isUpdatingIgnored}
     />
   );
 };
