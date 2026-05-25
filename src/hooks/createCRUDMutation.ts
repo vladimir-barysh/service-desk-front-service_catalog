@@ -13,6 +13,7 @@
  * - updateCache       – как именно обновить элемент в кэше. По умолчанию: ищет элемент по idField и делает { ...oldItem, ...newItem } (поверхностное слияние)
  * - deleteFromCache   – как именно удалить элемент из кэша. По умолчанию: удаляет по idField (например, item.idOrder !== id)
  * - onSuccessMutate   – дополнительные действия после успешной мутации. Выполняется после того, как обновлён кэш
+ * - invalidateKeys    – позволяет автоматически инвалидировать (сбросить) несколько кэшей после успешного выполнения мутации
  *
  * Если кэш обычный массив плоских объектов с единым полем ID – достаточно idField.
  * Если кэш сложный (объект, дерево и тд.) – нужно передать свои updateCache/deleteFromCache
@@ -27,9 +28,10 @@ type MutationType = 'create' | 'update' | 'delete';
 // Базовый конфиг для всех операций
 interface BaseConfig<TVariables, TResponse> {
   mutationFn: (vars: TVariables) => Promise<TResponse>;
-  queryKey: string[];
+  queryKey: (string | number)[] | ((vars: TVariables) => (string | number)[]);
   successMessage: string;
   errorMessage?: string;
+  invalidateKeys?: (variables: TVariables) => (string | number)[][];
   onSuccessMutate?: (data: TResponse, vars: TVariables, queryClient: any) => void;
 }
 
@@ -72,8 +74,19 @@ export function createCRUDMutation<TVariables, TResponse>(
     return useMutation({
       mutationFn,
       onSuccess: (data, variables) => {
+        // Вычисляем ключи, если они зависят от variables
+        const resolvedQueryKey = typeof config.queryKey === 'function'
+          ? config.queryKey(variables)
+          : config.queryKey;
+
         // Сброс основного кэша
-        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: resolvedQueryKey });
+
+        // Дополнительная инвалидация (динамическая)
+        if (config.invalidateKeys) {
+          const additionalKeys = config.invalidateKeys(variables);
+          additionalKeys.forEach(key => queryClient.invalidateQueries({ queryKey: key }));
+        }
 
         // Оптимистичное обновление кэша
         if (config.type === 'update') {
@@ -86,7 +99,7 @@ export function createCRUDMutation<TVariables, TResponse>(
                 : item
             )
           );
-          queryClient.setQueryData(config.queryKey, (old: any[] | undefined) => {
+          queryClient.setQueryData(resolvedQueryKey, (old: any[] | undefined) => {
             if (!old) return old;
             return updateCache(old, data, id);
           });
@@ -96,12 +109,12 @@ export function createCRUDMutation<TVariables, TResponse>(
           const deleteFromCache = config.deleteFromCache || ((old, id) =>
             old.filter(item => item[idField] !== id)
           );
-          queryClient.setQueryData(queryKey, (old: any[] | undefined) => {
+          queryClient.setQueryData(resolvedQueryKey, (old: any[] | undefined) => {
             if (!old) return old;
             return deleteFromCache(old, id);
           });
         } else if (config.type === 'create' && config.addToCache) {
-          queryClient.setQueryData(queryKey, (old: any[] | undefined) => {
+          queryClient.setQueryData(resolvedQueryKey, (old: any[] | undefined) => {
             return config.addToCache!(old, data);
           });
         }

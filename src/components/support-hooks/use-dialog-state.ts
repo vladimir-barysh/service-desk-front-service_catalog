@@ -9,6 +9,7 @@ type DialogState = {
   close: { open: boolean; order: Order | null };
   control: { open: boolean; order: Order | null };
   confirm: { open: boolean; order: Order | null };
+  createApprove: { open: boolean; order: Order | null };
 };
 
 export function useDialogs() {
@@ -19,6 +20,7 @@ export function useDialogs() {
     close: { open: false, order: null },
     control: { open: false, order: null },
     confirm: { open: false, order: null },
+    createApprove: { open: false, order: null },
   });
 
   const openDialog = (dialogName: keyof DialogState, order: Order) => {
@@ -43,6 +45,7 @@ export function useDialogs() {
       close: { open: false, order: null },
       control: { open: false, order: null },
       confirm: { open: false, order: null },
+      createApprove: { open: false, order: null },
     });
   };
 
