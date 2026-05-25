@@ -48,6 +48,16 @@ export const EditApproveUsersDialog = ({
     return map;
   }, [allApproveUsers, approveId]);
 
+
+  // Сортируем кандидатов: сначала те, кто уже в согласовании
+  const sortedCandidates = useMemo(() => {
+    if (!candidates.length) return [];
+    const selectedIdsSet = new Set(currentUsersMap.keys());
+    const selected = candidates.filter(c => selectedIdsSet.has(c.idUser));
+    const notSelected = candidates.filter(c => !selectedIdsSet.has(c.idUser));
+    return [...selected, ...notSelected];
+  }, [candidates, currentUsersMap]);
+
   const initialSelection = useMemo(() => {
     const selection: Record<string, boolean> = {};
     currentUsersMap.forEach((_, userId) => {
@@ -87,7 +97,7 @@ export const EditApproveUsersDialog = ({
     <ApproveCandidatesTable
       open={open}
       title="Редактирование состава согласующих"
-      candidates={candidates}
+      candidates={sortedCandidates}
       isLoading={isLoading}
       initialSelection={initialSelection}
       onConfirm={handleConfirm}

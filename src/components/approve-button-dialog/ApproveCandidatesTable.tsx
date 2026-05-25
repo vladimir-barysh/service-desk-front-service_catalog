@@ -107,17 +107,19 @@ export const ApproveCandidatesTable = ({
             : currentUser.flagIgnored;
 
           return (
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isIgnored}
-                  onChange={() => onIgnoredChange(currentUser.idApproveUser, !isIgnored)}
-                  size="small"
-                />
-              }
-              label={isIgnored ? 'Да' : 'Нет'}
-              labelPlacement="end"
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isIgnored}
+                    onChange={() => onIgnoredChange(currentUser.idApproveUser, !isIgnored)}
+                    size="small"
+                  />
+                }
+                label={isIgnored ? 'Да' : 'Нет'}
+                labelPlacement="end"
+              />
+            </div>
           );
         },
       });
