@@ -26,6 +26,7 @@ import { getTasks } from '../../api/services/taskService';
 import { components } from '../../types/api';
 import { useUpdateOrder } from '../../hooks/useOrder';
 import { useTasks } from '../../hooks/useTaskMutations';
+import { useApprovesByOrder } from '../../hooks/useApprove';
 
 type Order = components['schemas']['OrderResponseDTO'];
 type OrderTask = components['schemas']['TaskResponseDTO'];
@@ -42,6 +43,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
   const [hasFiles, setHasFiles] = useState(false);
   const [hasMessages, setHasMessages] = useState(false);
   const [hasTasks, setHasTasks] = useState(false);
+  const [hasApproves, setHasApproves] = useState(false);
 
   // Состояния для каждого таба
   const [generalData, setGeneralData] = useState(request);
@@ -66,6 +68,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
   const { data: tasks = [] } = useTasks();
+  const { data: approves = [], isLoading: approvesLoading, error: approvesError } = useApprovesByOrder(request?.idOrder ?? 0);
     
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -123,10 +126,17 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
     setHasTasks(tasksForThisOrder.length > 0);
   };
 
+  const checkApproves = () => {
+    if (!request?.nomer) return;
+    
+    setHasTasks(approves.length > 0);
+  };
+
   useEffect(() => {
     checkFiles();
     checkMessages();
     checkTasks();
+    checkApproves();
   }, [request]);
 
   const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
@@ -202,7 +212,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
               >
                 <Tab label="Общие сведения" value="1" />
                 <Tab label="Файлы" icon={hasFiles ? <AttachFileOutlined /> : undefined} iconPosition='end' value="2" />
-                <Tab label="Согласование" icon={<PriorityHighOutlined />} iconPosition='end' value="3" />
+                <Tab label="Согласование" icon={hasApproves ? <PriorityHighOutlined /> : undefined} iconPosition='end' value="3" />
                 <Tab label="Задачи" icon={hasTasks ? <LanOutlined /> : undefined} iconPosition='end' value="4" />
                 <Tab label="Обсуждение" icon={hasMessages ? <PeopleAltOutlined /> : undefined} iconPosition='end' value="5" />
                 <Tab label="История" value="6" />
