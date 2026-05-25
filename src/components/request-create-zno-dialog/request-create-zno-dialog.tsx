@@ -48,7 +48,7 @@ const FileListContainer = styled(Paper)(({ theme }) => ({
 
 export const RequestCreateZNODialog = (props: {
   isOpen: boolean;
-  onClose: any;
+  onClose: () => void;
 }) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -193,7 +193,7 @@ export const RequestCreateZNODialog = (props: {
       <ChooseServiceCreateDialog
         isOpen={isCreateDialogOpen}
         onClose={onCreateDialogClose}
-        onSelect={(service: any) => {
+        onSelect={(service: Service | null) => {
           setChosen(service);
         }}
       />

@@ -49,7 +49,7 @@ export class rolesDataClass {
 export const roles: rolesDataClass[] = [
     {
         'roleName': 'Администратор',
-        'roleDescription': 'Полные права доступасчмчсмячсмсчямчяываываыфвмчсмывмчсчмывываывсмчсмывывмывмыв sfsdfsdfhdfhdfgfd доступасчмчсмячсмсчямчяываываыфвмчсмывмчсчмывываывсмчсмывывмывмыв',
+        'roleDescription': 'Полные права доступа',
         'id': 1,
     },
     {

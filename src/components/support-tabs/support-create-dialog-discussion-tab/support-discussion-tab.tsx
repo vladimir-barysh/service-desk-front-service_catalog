@@ -104,7 +104,7 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
 
 
   return (
-    <Box>
+    <Box sx={{ mt: 2, minHeight: '57vh' }}>
       <Grid2 container spacing={1} alignItems="center" justifyContent="left">
         <Grid2>
           <MUIButton
