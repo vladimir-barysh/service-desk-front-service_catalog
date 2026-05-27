@@ -1,7 +1,7 @@
 import api from './axios';
 import { components } from '../types/api';
 
-type StateResponse = components['schemas']['StateResponseDTO'];
+type StateResponse = components['schemas']['OrderStateResponseDTO'];
 //type TaskCreateRequest = components['schemas']['TaskCreateRequestDTO'];
 //type TaskUpdateRequest = components['schemas']['TaskUpdateDTO'];
 //type TaskStatusUpdateRequest = components['schemas']['TaskStatusUpdateDTO'];
