@@ -10,24 +10,25 @@ import { DateTimePicker, DateValue } from '@mantine/dates';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { OrderPriority, OrderType, Podr, User } from '../../../api/models';
 import { PhoneOutlined, AlternateEmail } from '@mui/icons-material';
 import { TextInputField } from '../../text-input-field';
-import { useQuery } from '@tanstack/react-query';
-import { getOrderTypes } from '../../../api/services/orderTypeService';
-import { getOrderStates } from '../../../api/services/orderStateService';
-import { getOrderPriorities } from '../../../api/services/orderPriorityService';
-import { getUsers } from '../../../api/services/userService';
-import { getPodrs } from '../../../api/services/podrService';
 
+import { useUsers } from '../../../hooks/useUser';
+import { usePodrs } from '../../../hooks/usePodr';
+import { useOrderPriorities } from '../../../hooks/useOrderPriority';
+import { useOrderTypes } from '../../../hooks/useOrderType';
 import { components } from '../../../types/api';
 type Order = components['schemas']['OrderResponseDTO'];
+type OrderPriority = components['schemas']['OrderPriorityResponseDTO'];
+type OrderType = components['schemas']['OrderTypeResponseDTO'];
+type Podr = components['schemas']['PodrResponseDTO'];
+type User = components['schemas']['UserResponseDTO'];
 
 interface SupportGeneralTabProps {
   isOpen: boolean;
   request: Order | null;
   disabled: boolean;
-  onUpdate?: (data: any, hasChanges: boolean) => void;
+  onUpdate?: (data: Order, hasChanges: boolean) => void;
 }
 
 export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGeneralTabProps) {
@@ -167,7 +168,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
 
   }, [editedRequest, hasChanges, onUpdate]);
 
-  const handleChange = (field: string) => (event: any) => {
+  const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = event.target.value;
     setEditedRequest(prev => prev ? { ...prev, [field]: value } : null);
   };
@@ -180,9 +181,9 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
   const handleOrderTypeChange = (event: SelectChangeEvent<number>) => {
     const selectedId = Number(event.target.value);
 
-    const selectedObject = orderTypes.find(
-      (item: OrderType) => item.idOrderType === selectedId
-    ) ?? null;
+    const selectedObject = orderTypes.find((item: OrderType) => item.idOrderType === selectedId);
+
+    if (!selectedObject) return;
 
     setEditedRequest(prev => prev ? { ...prev, orderTypeId: selectedObject.idOrderType, orderTypeName: selectedObject.name } : null);
 
@@ -191,9 +192,9 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
   const handleOrderPriorityChange = (event: SelectChangeEvent<number>) => {
     const selectedId = Number(event.target.value);
 
-    const selectedObject = orderPriorities.find(
-      (item: OrderPriority) => item.idOrderPriority === selectedId
-    ) ?? null;
+    const selectedObject = orderPriorities.find((item: OrderPriority) => item.idOrderPriority === selectedId);
+
+    if (!selectedObject) return;
 
     setEditedRequest(prev =>
       prev ? { ...prev, orderPriorityId: selectedObject.idOrderPriority } : null
@@ -202,9 +203,9 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
 
   const handleDispatcherChange = (id: number | null) => {
     if (id) {
-      const selectedObject = users.find(
-        (item: User) => item.idItUser === id
-      ) ?? null;
+      const selectedObject = users.find((item: User) => item.idItUser === id);
+
+      if (!selectedObject) return;
 
       setEditedRequest(prev => prev ? { ...prev, dispatcherId: selectedObject.idItUser, dispatcherFio: selectedObject.fio1c } : null);
     } else {
@@ -213,42 +214,13 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
 
   };
 
-  const {
-    data: users = [],
-  } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-    staleTime: Infinity
-  });
+  const { data: users = [] } = useUsers();
 
-  const {
-    data: orderTypes = [],
-  } = useQuery({
-    queryKey: ['ordertypes'],
-    queryFn: getOrderTypes,
-    staleTime: Infinity
-  });
+  const { data: orderTypes = [] } = useOrderTypes();
 
-  const {
-    data: orderStates = [],
-  } = useQuery({
-    queryKey: ['orderstates'],
-    queryFn: getOrderStates,
-  });
+  const { data: orderPriorities = [] } = useOrderPriorities();
 
-  const {
-    data: orderPriorities = [],
-  } = useQuery({
-    queryKey: ['orderpriorities'],
-    queryFn: getOrderPriorities,
-  });
-
-  const {
-    data: podrs = [],
-  } = useQuery({
-    queryKey: ['podrs'],
-    queryFn: getPodrs,
-  });
+  const { data: podrs = [] } = usePodrs();
 
   const initiator = useMemo(() => {
     if (!editedRequest?.initiatorId) return null;
@@ -570,7 +542,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
                 InputProps={{ readOnly: !isEditing }}
                 onChange={handleChange('accessTo')}
                 disabled={(editedRequest.orderTypeName === 'ЗНД' ? false : true) || disabled}
-                value={editedRequest.orderTypeName === 'ЗНД' ? initiator.fio1c : 'Не тот тип заявки'}
+                value={editedRequest.orderTypeName === 'ЗНД' ? initiator?.fio1c : 'Не тот тип заявки'}
                 sx={textFieldStyle}
               />
             </Grid2>
@@ -938,7 +910,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
             <Grid2 size={9}>
               <TextField
                 disabled={true}
-                value={initiator.fio1c}
+                value={initiator?.fio1c}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -975,7 +947,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
             <Grid2 size={9}>
               <TextField
                 disabled={true}
-                value={initiator.dolzh1c || ''}
+                value={initiator?.dolzh1c || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -1048,7 +1020,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
             <Grid2 size={9}>
               <TextField
                 disabled={true}
-                value={initiator.telAd || ''}
+                value={initiator?.telAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -1090,7 +1062,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
             <Grid2 size={9}>
               <TextField
                 disabled={true}
-                value={initiator.telAd || ''}
+                value={initiator?.telAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -1127,7 +1099,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
             <Grid2 size={9}>
               <TextField
                 disabled={true}
-                value={initiator.emailAd || ''}
+                value={initiator?.emailAd || ''}
                 fullWidth
                 size="small"
                 variant="outlined"

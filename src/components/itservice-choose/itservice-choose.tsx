@@ -16,13 +16,11 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Grid2,
 } from '@mui/material';
-
-import { type Service } from '../../api/models';
-
-import { useQuery } from '@tanstack/react-query';
-import { getServices } from '../../api/services/ServiceService';
+import { useServices } from '../../hooks/useService';
+import { components } from '../../types/api';
+import { Updater } from '@tanstack/react-table';
+type Service = components['schemas']['ServResponseDTO'];
 
 export type ChooseServiceCreateDialogProps = {
   isOpen: boolean;
@@ -34,18 +32,10 @@ export const ChooseServiceCreateDialog: React.FC<
   ChooseServiceCreateDialogProps
 > = ({ isOpen, onClose, onSelect }) => {
 
-  const {
-    data: services = [],
-    isLoading: serviceLoad,
-    error: serviceError,
-  } = useQuery({
-    queryKey: ['services'],
-    queryFn: getServices,
-    staleTime: Infinity,
-  });
+  const { data: services = [] } = useServices();
 
   const filteredData = React.useMemo(
-    () => services.filter((s: Service) => s.serviceState?.name !== 'Выведена из эксплуатации' && s.isService),
+    () => services.filter((s: Service) => s.serviceStateName !== 'Выведена из эксплуатации' && s.isService),
     [services],
   );
 
@@ -69,7 +59,7 @@ export const ChooseServiceCreateDialog: React.FC<
     {},
   );
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
-  const handleFiltersChange = (updater: any) => {
+  const handleFiltersChange = (updater: Updater<MRT_ColumnFiltersState>) => {
     setColumnFilters(updater);
   };
 
@@ -122,9 +112,9 @@ export const ChooseServiceCreateDialog: React.FC<
 
     mantineTableBodyRowProps: ({ row }) => ({
       onClick: row.getToggleSelectedHandler(),
-      sx: (theme: any) => ({
+      sx: {
         cursor: 'pointer',
-      }),
+      },
     }),
 
     state: {

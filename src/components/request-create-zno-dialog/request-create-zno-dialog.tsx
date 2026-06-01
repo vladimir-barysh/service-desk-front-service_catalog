@@ -19,12 +19,16 @@ import { DateTimePicker, DateValue } from '@mantine/dates';
 import { styled } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { Service, User } from '../../api/models';
 import { TextInputField } from '../text-input-field';
-import { OrderCreateDTO } from '../../api/dtos';
-import { getUsers, useCreateOrder } from '../../api';
 import { showNotification } from './../../context';
-import { useQuery } from '@tanstack/react-query';
+
+import { useCreateOrder } from '../../hooks/useOrder';
+import { useUsers } from '../../hooks/useUser';
+
+import { components } from '../../types/api';
+type User = components['schemas']['UserResponseDTO'];
+type OrderCreateDTO = components['schemas']['OrderCreateRequestDTO'];
+type Service = components['schemas']['ServResponseDTO'];
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -63,14 +67,7 @@ export const RequestCreateZNODialog = (props: {
 
   const { mutate: createOrderMutation, isPending } = useCreateOrder();
 
-
-  const {
-    data: users = [],
-  } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-    staleTime: Infinity
-  });
+  const { data: users = [] } = useUsers();
 
   const isFormValid = useMemo(() => {
     return (

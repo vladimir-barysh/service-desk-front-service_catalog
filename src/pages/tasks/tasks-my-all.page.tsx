@@ -21,7 +21,7 @@ import dayjs, { Dayjs } from 'dayjs';
 
 import { components } from '../../types/api';
 import { useTasks, useUpdateTask } from '../../hooks/useTaskMutations';
-import { useUsers } from '../../hooks/useUserMutations';
+import { useUsers } from '../../hooks/useUser';
 import { useOrders } from '../../hooks/useOrder';
 import { useStates } from '../../hooks/useStateMutations';
 

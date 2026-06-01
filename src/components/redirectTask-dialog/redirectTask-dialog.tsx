@@ -19,7 +19,7 @@ import {
 import { TextInputField } from '../text-input-field';
 
 import { components } from '../../types/api';
-import { useUsers } from '../../hooks/useUserMutations';
+import { useUsers } from '../../hooks/useUser';
 import { useUpdateTask } from '../../hooks/useTaskMutations';
 import dayjs from 'dayjs';
 import { showNotification } from '../../context';
