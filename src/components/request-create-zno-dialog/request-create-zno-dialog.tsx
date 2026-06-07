@@ -63,6 +63,8 @@ export const RequestCreateZNODialog = (props: {
 
   const { mutate: createOrderMutation, isPending } = useCreateOrder();
 
+  // DIPLOM
+  const [visibleFlag] = useState(false);
 
   const {
     data: users = [],
@@ -378,7 +380,7 @@ export const RequestCreateZNODialog = (props: {
               />
             </Grid2>
           </Grid2>
-
+          {visibleFlag && (
           <Grid2
             container
             spacing={3}
@@ -445,6 +447,7 @@ export const RequestCreateZNODialog = (props: {
               </FileListContainer>
             </Grid2>
           </Grid2>
+          )}
 
 
         </DialogContent>

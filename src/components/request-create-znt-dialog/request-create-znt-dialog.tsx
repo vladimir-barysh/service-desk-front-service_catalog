@@ -61,6 +61,10 @@ export const RequestCreateZNTDialog = (props: {
   const [finishDate, setFinishDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
 
+
+  // DIPLOM
+  const [visibleFlag] = useState(false);
+
   const { mutate: createOrderMutation, isPending } = useCreateOrder();
 
   const {
@@ -404,6 +408,7 @@ export const RequestCreateZNTDialog = (props: {
             </Grid2>
           </Grid2>
 
+          {visibleFlag && (
           <Grid2
             container
             spacing={3}
@@ -470,7 +475,7 @@ export const RequestCreateZNTDialog = (props: {
               </FileListContainer>
             </Grid2>
           </Grid2>
-
+          )}
 
         </DialogContent>
         <DialogActions

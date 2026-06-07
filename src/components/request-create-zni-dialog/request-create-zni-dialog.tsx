@@ -55,6 +55,9 @@ export const RequestCreateZNIDialog = (props: {
   const [comment, setComment] = useState('');
   const [finishDate, setFinishDate] = useState('');
 
+  // DIPLOM
+  const [visibleFlag] = useState(false);
+
   const isFormValid = useMemo(() => {
     return (
       problemDescription.trim() !== ''
@@ -88,7 +91,7 @@ export const RequestCreateZNIDialog = (props: {
       });
       return;
     }
-    
+
     const dto: OrderCreateDTO = {
       // TODO: исправить заголовок заявки
       name: chosen?.fullname || 'Заголовок ЗНИ',
@@ -273,7 +276,8 @@ export const RequestCreateZNIDialog = (props: {
               />
             </Grid2>
           </Grid2>
-
+          
+          {visibleFlag && (
           <Grid2
             container
             spacing={3}
@@ -340,6 +344,7 @@ export const RequestCreateZNIDialog = (props: {
               </FileListContainer>
             </Grid2>
           </Grid2>
+          )}
         </DialogContent>
 
         <DialogActions
