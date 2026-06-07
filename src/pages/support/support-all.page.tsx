@@ -307,7 +307,7 @@ export function SupportAllPage() {
         Cell: ({ row }) => row.original.catalogItemName || ''
       },
     ],
-    [urlStatus],
+    [urlStatus, users],
   );
 
   const colorRow = (row: MRT_Row<Order>) => {

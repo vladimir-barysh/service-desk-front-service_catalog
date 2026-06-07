@@ -262,7 +262,7 @@ export function TasksMyAllPage() {
         Cell: ({ row }) => row.original.orderCatItemName || ''
       },
     ],
-    [urlStatus],
+    [urlStatus, users],
   );
 
   // Цвет заливки строки

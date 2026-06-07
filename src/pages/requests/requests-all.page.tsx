@@ -243,7 +243,7 @@ export function RequestsAllPage() {
         Cell: ({ row }) => row.original.catalogItemName || ''
       },
     ],
-    [],
+    [users],
   );
 
   // Цвет заливки строки
