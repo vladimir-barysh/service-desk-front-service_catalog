@@ -10,12 +10,11 @@ import {
 } from '@mui/icons-material'
 import '../styles/sidebar.scss';
 
-import { useQuery } from '@tanstack/react-query';
-import { getOrders } from '../api/services/orderService';
-import { getTasks } from '../api/services/taskService';
-import { OrderTask } from "../api";
+import { useOrders } from '../hooks/useOrder';
+import { useTasks } from "../hooks/useTask";
 import { components } from '../types/api';
 type Order = components['schemas']['OrderResponseDTO'];
+type OrderTask = components['schemas']['TaskResponseDTO'];
 
 const activeColor = '#455980ff';
 const submenuColor = '#32415c';
@@ -23,25 +22,13 @@ const submenuColor1 = '#2c3951';
 const backgroundColor = '#3b4c6c';
 const color = '#909fbbff';
 
+const currExecutorId = 1;
+
 function useRequestCounts() {
 
-  const {
-      data: orders = []
-  } = useQuery({
-      queryKey: ['orders'],
-      queryFn: getOrders,
-  });
+  const { data: orders = [] } = useOrders();
 
-  const {
-    data: tasks = [],
-  } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: getTasks,
-    enabled: true,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
+  const { data: tasks = [] } = useTasks();
 
   return useMemo(() => {
 
@@ -50,7 +37,7 @@ function useRequestCounts() {
     const nAgreedCount = orders.filter((item: Order) => item.orderStateName === 'Не согласовано').length;
     const nConfirmedCount = orders.filter((item: Order) => item.orderStateName === 'Возобновлена').length;
     const onControlCount = orders.filter((item: Order) => item.orderTypeName === 'ЗНТ' && item.orderStateName !== 'Закрыта').length;
-    const exeCount = tasks.filter((item: OrderTask) => item.taskState?.name !== 'Закрыта').length;
+    const exeCount = tasks.filter((item: OrderTask) => item.taskStateName !== 'Закрыта' && item.executorId === currExecutorId).length;
     return {
       newCount,
       allCount,

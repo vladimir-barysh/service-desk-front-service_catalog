@@ -25,7 +25,7 @@ import dayjs from 'dayjs';
 import { getTasks } from '../../api/services/taskService';
 import { components } from '../../types/api';
 import { useUpdateOrder } from '../../hooks/useOrder';
-import { useTasks } from '../../hooks/useTaskMutations';
+import { useTasks } from '../../hooks/useTask';
 import { useApprovesByOrder } from '../../hooks/useApprove';
 
 type Order = components['schemas']['OrderResponseDTO'];

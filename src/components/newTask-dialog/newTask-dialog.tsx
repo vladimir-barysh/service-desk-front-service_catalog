@@ -15,7 +15,7 @@ import { showNotification } from '../../context';
 
 
 import { components } from '../../types/api';
-import { useCreateTask } from '../../hooks/useTaskMutations';
+import { useCreateTask } from '../../hooks/useTask';
 import { useUsers } from '../../hooks/useUser';
 import { DateTimePicker, DateValue } from '@mantine/dates';
 type TaskCreateRequestDTO = components['schemas']['TaskCreateRequestDTO'];

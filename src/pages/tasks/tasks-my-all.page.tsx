@@ -20,10 +20,10 @@ import * as XLSX from 'xlsx';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { components } from '../../types/api';
-import { useTasks, useUpdateTask } from '../../hooks/useTaskMutations';
+import { useTasks, useUpdateTask } from '../../hooks/useTask';
 import { useUsers } from '../../hooks/useUser';
 import { useOrders } from '../../hooks/useOrder';
-import { useStates } from '../../hooks/useStateMutations';
+import { useStates } from '../../hooks/useState';
 
 type Order = components['schemas']['OrderResponseDTO'];
 type OrderTask = components['schemas']['TaskResponseDTO'];
@@ -31,7 +31,7 @@ type User = components['schemas']['UserResponseDTO'];
 
 
 export function TasksMyAllPage() {
-  const currUser = 'Воронин Владимир Владимирович';
+  const currExecutorId = 1;
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
@@ -40,7 +40,8 @@ export function TasksMyAllPage() {
   const [hideAll, setHideAll] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
 
-
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // фильтр по статусу
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
@@ -70,11 +71,11 @@ export function TasksMyAllPage() {
     }
 
     if (hideAll) {
-      result = result.filter((item: OrderTask) => item.executorFio === currUser || item.taskStateName === 'Закрыта');
+      result = result.filter((item: OrderTask) => item.executorId === currExecutorId || item.taskStateName === 'Закрыта');
     }
 
     return result;
-  }, [urlStatus, hideClosed, hideAll, currUser, tasks]);
+  }, [urlStatus, hideClosed, hideAll, currExecutorId, tasks]);
 
   const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
     const next = typeof updater === 'function' ? updater(columnFilters) : updater;
@@ -398,8 +399,12 @@ export function TasksMyAllPage() {
     }
   };
 
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const isNewTask = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const task = selectedRows[0].original;
+    return task.taskStateName === 'Новая' ? true : false;
+  }
 
   const inWork = states?.find(state => state.name === 'В работе');
   const declined = states?.find(state => state.name === 'Отклонена');
@@ -539,7 +544,7 @@ export function TasksMyAllPage() {
               startIcon={<Build />}
               size={'small'}
               onClick={handleAcceptClick}
-              disabled={hasSelectedRows}
+              disabled={hasSelectedRows || !isNewTask()}
             >
               Принять в работу
             </Button>

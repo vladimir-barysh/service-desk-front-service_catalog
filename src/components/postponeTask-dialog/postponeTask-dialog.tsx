@@ -16,8 +16,8 @@ import { TextInputField } from '../text-input-field';
 import { Text } from '@mantine/core';
 import { Close } from '@mui/icons-material';
 
-import { useUpdateTask } from '../../hooks/useTaskMutations';
-import { useStates } from '../../hooks/useStateMutations';
+import { useUpdateTask } from '../../hooks/useTask';
+import { useStates } from '../../hooks/useState';
 import { components } from '../../types/api';
 import { showNotification } from '../../context';
 type OrderTask = components['schemas']['TaskResponseDTO'];

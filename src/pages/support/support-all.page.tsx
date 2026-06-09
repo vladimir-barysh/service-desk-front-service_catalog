@@ -22,7 +22,7 @@ import { showNotification } from '../../context';
 
 import { components } from '../../types/api';
 import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrder';
-import { useStates } from '../../hooks/useStateMutations';
+import { useStates } from '../../hooks/useState';
 
 type Order = components['schemas']['OrderResponseDTO'];
 type OrderUpdateDTO = components['schemas']['OrderUpdateDTO'];
@@ -34,8 +34,11 @@ export function SupportAllPage() {
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
-  
-  const currUser = "Воронин Владимир Владимирович";
+
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const currUser = "Арбузов Александр Александрович";
 
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
   const [searchParams] = useSearchParams();
@@ -389,17 +392,16 @@ export function SupportAllPage() {
   };
 
   const handleNomerClick = (row: MRT_Row<Order>) => {
-    setSelectedRequest(row.original);
+    setSelectedOrder(row.original);
     setIsDialogOpen(true);
   };
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    setSelectedRequest(null);
+    setSelectedOrder(null);
   };
 
-  const [selectedRequest, setSelectedRequest] = useState<Order | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
 
   const table = useMantineReactTable({
     columns: columns,
@@ -475,6 +477,13 @@ export function SupportAllPage() {
 
   const selectedRowsCount = table.getSelectedRowModel().rows.length;
   const hasSelectedRows = !(selectedRowsCount > 0);
+
+  const isNewOrder = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return order.orderStateName === 'Новая' ? true : false;
+  }
 
   // Хуки для управления диалогами
   const { dialogs, openDialog, closeDialog } = useDialogs();
@@ -594,7 +603,7 @@ export function SupportAllPage() {
               color="inherit"
               startIcon={<Build />}
               size={'small'}
-              disabled={hasSelectedRows}
+              disabled={hasSelectedRows || !isNewOrder()}
               onClick={handleAcceptClick}
             >
               Принять в работу
@@ -673,7 +682,7 @@ export function SupportAllPage() {
       </Box>
       <SupportGeneralDialog
         isOpen={isDialogOpen}
-        request={selectedRequest}
+        request={selectedOrder}
         disabled={false}
         onClose={handleDialogClose}
       />
