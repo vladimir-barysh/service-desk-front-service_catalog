@@ -9,6 +9,8 @@ type TaskUpdateRequest = components['schemas']['TaskUpdateDTO'];
 export const taskApi = {
   getAll: (): Promise<TaskResponse[]> => api.get('/api/ordertask').then(res => res.data),
   getById: (id: number): Promise<TaskResponse> => api.get(`/api/ordertask/${id}`).then(res => res.data),
+  getByExecutorId: (executorId: number): Promise<TaskResponse[]> =>
+    api.get(`/api/ordertask/to-executor?executorId=${executorId}`).then(res => res.data),
   create: (data: TaskCreateRequest): Promise<TaskResponse> =>
     api.post('/api/ordertask', data).then(res => res.data),
   update: (id: number, data: TaskUpdateRequest): Promise<TaskResponse> =>

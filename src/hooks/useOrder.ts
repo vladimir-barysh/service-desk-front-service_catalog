@@ -7,20 +7,47 @@ type OrderResponse = components['schemas']['OrderResponseDTO'];
 type OrderCreateRequest = components['schemas']['OrderCreateRequestDTO'];
 type OrderUpdateRequest = components['schemas']['OrderUpdateDTO'];
 
+interface UseOrdersProps {
+  enabled?: boolean;
+  staleTime?: number;
+  refetchOnMount?: boolean | 'always';
+  refetchOnWindowFocus?: boolean;
+}
+
 // Получение всех заявок
-export const useOrders = () => useQuery<OrderResponse[]>({
-  queryKey: ['orders'],
-  queryFn: orderApi.getAll,
-});
+export const useOrders = ({
+  enabled = true,
+  staleTime = 5 * 60 * 1000,
+  refetchOnMount = 'always',
+  refetchOnWindowFocus = true
+}: UseOrdersProps = {}) =>
+  useQuery<OrderResponse[]>({
+    queryKey: ['orders'],
+    queryFn: orderApi.getAll,
+    enabled,
+    staleTime,
+    refetchOnMount,
+    refetchOnWindowFocus
+  });
 
 // Получение всех заявок для конкретного инициатора
-export const useOrdersByInitiator = (initiatorId: number) => {
-  return useQuery<OrderResponse[]>({
+export const useOrdersByInitiator = (
+  initiatorId: number,
+  {
+    enabled = !!initiatorId,
+    staleTime = 5 * 60 * 1000,
+    refetchOnMount = 'always',
+    refetchOnWindowFocus = true
+  }: UseOrdersProps = {}
+) => 
+  useQuery<OrderResponse[]>({
     queryKey: ['currInitiatorOrders', 'initiator', initiatorId],
     queryFn: () => orderApi.getByInitiatorId(initiatorId),
-    enabled: !!initiatorId,
+    enabled,
+    staleTime,
+    refetchOnMount,
+    refetchOnWindowFocus
   });
-};
 
 // Создание заявки
 export const useCreateOrder = createCRUDMutation<OrderCreateRequest, OrderResponse>({

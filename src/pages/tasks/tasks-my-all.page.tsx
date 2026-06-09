@@ -20,7 +20,7 @@ import * as XLSX from 'xlsx';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { components } from '../../types/api';
-import { useTasks, useUpdateTask } from '../../hooks/useTask';
+import { useTasks, useTasksByExecutor, useUpdateTask } from '../../hooks/useTask';
 import { useUsers } from '../../hooks/useUser';
 import { useOrders } from '../../hooks/useOrder';
 import { useStates } from '../../hooks/useState';
@@ -31,7 +31,6 @@ type User = components['schemas']['UserResponseDTO'];
 
 
 export function TasksMyAllPage() {
-  const currExecutorId = 1;
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
@@ -48,9 +47,18 @@ export function TasksMyAllPage() {
   const [searchParams] = useSearchParams();
   const urlStatus = searchParams.get('status');
 
+  /*
+    ВРЕМЕННОЕ РЕШЕНИЕ
+    Если true, то будут грузится все задачи, всех исполнителей
+    Если false, то будут грузится задачи только пользователя с айди 1 в качестве исполнителя
+    В будущем это заменить на проверку роли пользователя
+  */
+  const ADMIN_SWITCH = true;
+  const currExecutorId = 1;
+
+  const { data: tasks = [] } = ADMIN_SWITCH ? useTasks() : useTasksByExecutor(currExecutorId);
   const { mutate: updateTaskMutate } = useUpdateTask();
 
-  const { data: tasks = [] } = useTasks();
   const { data: users = [] } = useUsers();
   const { data: orders = [] } = useOrders();
   const { data: states = [] } = useStates();
@@ -605,16 +613,18 @@ export function TasksMyAllPage() {
               В Excel
             </Button>
           </Grid2>
-          <Grid2 size="auto" alignContent="center">
-            <MantineProvider theme={{ cursorType: 'pointer' }}>
-              <Checkbox
-                checked={hideAll}
-                onChange={(event) => setHideAll(event.currentTarget.checked)}
-                label="Только мои задачи"
-                size="md"
-              />
-            </MantineProvider>
-          </Grid2>
+          {ADMIN_SWITCH && (
+            <Grid2 size="auto" alignContent="center">
+              <MantineProvider theme={{ cursorType: 'pointer' }}>
+                <Checkbox
+                  checked={hideAll}
+                  onChange={(event) => setHideAll(event.currentTarget.checked)}
+                  label="Только мои задачи"
+                  size="md"
+                />
+              </MantineProvider>
+            </Grid2>
+          )}
           <Grid2 size="auto" alignContent="center">
             <MantineProvider theme={{ cursorType: 'pointer' }}>
               <Checkbox
