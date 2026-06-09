@@ -1,68 +1,34 @@
 import { useMemo } from "react";
-import { Menu, MenuItem, Sidebar, SubMenu } from 'react-pro-sidebar';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Badge, Box, Typography} from '@mui/material';
+import { Menu, MenuItem, Sidebar } from 'react-pro-sidebar';
+import { Link, useLocation } from 'react-router-dom';
+import { Badge, Box } from '@mui/material';
 import {
-  ModeEdit, TaskAlt, ChecklistRtl,
-  Reorder, Groups, Folder,
-  LanOutlined, Storage, SettingsSuggest,
+  LanOutlined,
   HomeOutlined, InfoOutlined, PersonOutlined,
   ViewListOutlined, EngineeringOutlined,
   SupportAgentOutlined
 } from '@mui/icons-material'
 import '../styles/sidebar.scss';
-import { stat } from "fs";
-import {
-  Drawer, List, ListItem, ListItemButton, ListItemIcon,
-  ListItemText, ListSubheader, Divider
-} from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import PeopleIcon from '@mui/icons-material/People';
-import SettingsIcon from '@mui/icons-material/Settings';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import { alignProperty } from "@mui/material/styles/cssUtils";
 
-import { useQuery } from '@tanstack/react-query';
-import { getOrders } from '../api/services/orderService';
-import { getTasks } from '../api/services/taskService';
-import { OrderTask } from "../api";
+import { useOrders } from '../hooks/useOrder';
+import { useTasks } from "../hooks/useTask";
 import { components } from '../types/api';
 type Order = components['schemas']['OrderResponseDTO'];
+type OrderTask = components['schemas']['TaskResponseDTO'];
 
 const activeColor = '#455980ff';
 const submenuColor = '#32415c';
 const submenuColor1 = '#2c3951';
 const backgroundColor = '#3b4c6c';
 const color = '#909fbbff';
-const sectionTitleColor = "#c0d0f0";
-const currentUser = {
-  name: "Воронин Владимир Владимирович",
-  role: "Старший специалист",
-  avatarUrl: null, // или "https://..." если есть фото
-  initials: "ВА"   // или генерировать автоматически
-};
+
+const currExecutorId = 1;
 
 function useRequestCounts() {
 
-  const {
-      data: orders = [],
-      isLoading,
-      error,
-  } = useQuery({
-      queryKey: ['orders'],
-      queryFn: getOrders,
-  });
+  const { data: orders = [] } = useOrders();
 
-  const {
-    data: tasks = [],
-  } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: getTasks,
-    enabled: true,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
+  const { data: tasks = [] } = useTasks();
 
   return useMemo(() => {
 
@@ -71,7 +37,7 @@ function useRequestCounts() {
     const nAgreedCount = orders.filter((item: Order) => item.orderStateName === 'Не согласовано').length;
     const nConfirmedCount = orders.filter((item: Order) => item.orderStateName === 'Возобновлена').length;
     const onControlCount = orders.filter((item: Order) => item.orderTypeName === 'ЗНТ' && item.orderStateName !== 'Закрыта').length;
-    const exeCount = tasks.filter((item: OrderTask) => item.taskState?.name !== 'Закрыта').length;
+    const exeCount = tasks.filter((item: OrderTask) => item.taskStateName !== 'Закрыта' && item.executorId === currExecutorId).length;
     return {
       newCount,
       allCount,

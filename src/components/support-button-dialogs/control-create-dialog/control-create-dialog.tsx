@@ -38,11 +38,11 @@ export function ControlDialog({ open, onClose, onConfirm, request }: ControlDial
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{style: { minHeight: '500px'}}}>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ style: { minHeight: '500px' } }}>
       <DialogTitle>Поставить заявку <strong>{request?.nomer}</strong> на контроль</DialogTitle>
-      
+
       <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>          
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
           <Box>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
               Срок возврата техники *
@@ -53,7 +53,7 @@ export function ControlDialog({ open, onClose, onConfirm, request }: ControlDial
               valueFormat="DD.MM.YYYY HH:mm"
               withSeconds={false}
               clearable
-              onPointerEnterCapture={undefined} 
+              onPointerEnterCapture={undefined}
               onPointerLeaveCapture={undefined}
               locale='ru'
               size="sm"
@@ -63,7 +63,7 @@ export function ControlDialog({ open, onClose, onConfirm, request }: ControlDial
               Заявка будет переведена в статус «На контроле»
             </Typography>
           </Box>
-          
+
           <TextField
             label="Выданная техника"
             value={equipment}
@@ -81,8 +81,8 @@ export function ControlDialog({ open, onClose, onConfirm, request }: ControlDial
         <Button onClick={handleClose} color="inherit">
           Отмена
         </Button>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           color="primary"
           onClick={handleConfirm}
           disabled={!equipment.trim() || !returnDate}

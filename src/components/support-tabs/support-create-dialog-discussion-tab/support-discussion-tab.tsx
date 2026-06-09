@@ -36,7 +36,7 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
   useEffect(() => {
     if(request?.nomer) {
       const requestMsgs = seed.filter(
-        msg => msg.idRequest === String(request.nomer)
+        msg => msg.idRequest === request.nomer
       );
       setItems(requestMsgs);
     }
@@ -55,7 +55,7 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
       author: "Христорождественская В.А.", // текущий пользователь
       createdAt: new Date().toISOString(),
       text,
-      idRequest: String(request?.nomer),
+      idRequest: request?.nomer,
     };
     setItems(prev => [...prev, next]);
     setDraft("");

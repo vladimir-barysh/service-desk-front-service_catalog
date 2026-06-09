@@ -5,8 +5,8 @@ import { NewTaskDialog } from '../../newTask-dialog/newTask-dialog';
 import { showNotification } from '../../../context';
 import dayjs from 'dayjs';
 
-import { useTasks, useUpdateTask } from '../../../hooks/useTaskMutations';
-import { useStates } from '../../../hooks/useStateMutations';
+import { useTasks, useUpdateTask } from '../../../hooks/useTask';
+import { useStates } from '../../../hooks/useState';
 
 import { components } from '../../../types/api';
 import { Info, InfoOutlined } from '@mui/icons-material';

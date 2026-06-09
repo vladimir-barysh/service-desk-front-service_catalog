@@ -19,8 +19,8 @@ import {
 import { TextInputField } from '../text-input-field';
 
 import { components } from '../../types/api';
-import { useUsers } from '../../hooks/useUserMutations';
-import { useUpdateTask } from '../../hooks/useTaskMutations';
+import { useUsers } from '../../hooks/useUser';
+import { useUpdateTask } from '../../hooks/useTask';
 import dayjs from 'dayjs';
 import { showNotification } from '../../context';
 import { Close } from '@mui/icons-material';

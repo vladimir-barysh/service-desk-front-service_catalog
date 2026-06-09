@@ -3,7 +3,7 @@ export type Message = {
   author: string;
   createdAt: string;
   text: string;
-  idRequest?: string;
+  idRequest?: number;
 };
 
 export const seed: Message[] = [
@@ -12,13 +12,13 @@ export const seed: Message[] = [
     author: "Петров Петр Петрович",
     createdAt: "2024-11-05T08:30:00+03:00",
     text: "Прошу уточнить ....",
-    idRequest: "000011"
+    idRequest: 1
   },
   {
     id: "2",
     author: "Иванов Иван Иванович",
     createdAt: "2024-11-05T10:30:00+03:00",
     text: "уточняю...",
-    idRequest: "000011"
+    idRequest: 1
   },
 ];

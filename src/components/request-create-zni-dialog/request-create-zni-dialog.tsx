@@ -15,13 +15,16 @@ import { Input, Text, CloseButton } from '@mantine/core';
 import { styled } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { Service } from '../../api/models';
 import { TextInputField } from '../text-input-field';
-import { OrderCreateDTO } from '../../api/dtos';
-import { useCreateOrder } from '../../api';
 import { showNotification } from './../../context';
 import dayjs from 'dayjs';
 import { DateTimePicker, DateValue } from '@mantine/dates';
+
+import { useCreateOrder } from '../../hooks/useOrder';
+
+import { components } from '../../types/api';
+type Service = components['schemas']['ServResponseDTO'];
+type OrderCreateDTO = components['schemas']['OrderCreateRequestDTO'];
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -45,7 +48,7 @@ const FileListContainer = styled(Paper)(({ theme }) => ({
 
 export const RequestCreateZNIDialog = (props: {
   isOpen: boolean;
-  onClose: any;
+  onClose: () => void;
 }) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [chosen, setChosen] = React.useState<Service | null>(null);
@@ -150,7 +153,7 @@ export const RequestCreateZNIDialog = (props: {
       <ChooseServiceCreateDialog
         isOpen={isCreateDialogOpen}
         onClose={onCreateDialogClose}
-        onSelect={(service: any) => {
+        onSelect={(service: (Service | null)) => {
           setChosen(service);
         }}
       />

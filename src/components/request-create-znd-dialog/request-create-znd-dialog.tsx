@@ -6,8 +6,6 @@ import {
   Button, Grid2,
   IconButton,
   TextField, InputAdornment,
-  FormControl, MenuItem, Select,
-  SelectChangeEvent,
   Autocomplete,
 } from '@mui/material';
 import {
@@ -18,7 +16,6 @@ import {
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mantine/dates';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { Podr, Service, User } from '../../api/models';
 
 import {
   roles, rolesDataClass
@@ -32,16 +29,21 @@ import {
 } from 'mantine-react-table';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { TextInputField } from '../text-input-field';
-import { useQuery } from '@tanstack/react-query';
-import { OrderCreateDTO } from '../../api/dtos';
-import { getUsers } from '../../api/services/userService';
-import { useCreateOrder } from '../../api';
 import { showNotification } from './../../context';
-import { getPodrs } from '../../api/services/podrService';
+
+import { usePodrs } from '../../hooks/usePodr';
+import { useUsers } from '../../hooks/useUser';
+import { useCreateOrder } from '../../hooks/useOrder';
+
+import { components } from '../../types/api';
+type Service = components['schemas']['ServResponseDTO'];
+type User = components['schemas']['UserResponseDTO'];
+type Podr = components['schemas']['PodrResponseDTO'];
+type OrderCreateDTO = components['schemas']['OrderCreateRequestDTO'];
 
 export const RequestCreateZNDDialog = (props: {
   isOpen: boolean;
-  onClose: any;
+  onClose: () => void;
 }) => {
   const labelStyle = {
     margin: '0px 0px -15px 0px',
@@ -56,21 +58,6 @@ export const RequestCreateZNDDialog = (props: {
   const [toDate, setToDate] = useState<Date | null>(null);
 
   const [selected, setSelected] = useState<User | null>(null);
-
-  /*const [search, setSearch] = useState('');
-  const shouldFilterOptions = !employees.some(
-    (item) => item.mainName?.toLowerCase() === search.toLowerCase().trim(),
-  );
-  const filteredEmployees = shouldFilterOptions
-    ? employees.filter((item) =>
-      item.mainName?.toLowerCase().includes(search.toLowerCase().trim()),
-    )
-    : employees;
-  const employeeOptions = employees.map((emp) => ({
-    value: emp.mainName || '',
-    label: emp.mainName || '',
-  }));*/
-
   const [checked, setChecked] = useState(false);
 
   const [reqType, setReqType] = useState<string>('');
@@ -99,20 +86,8 @@ export const RequestCreateZNDDialog = (props: {
 
   }, [checked, sDate, toDate]);
 
-  const {
-    data: users = [],
-  } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-    staleTime: Infinity
-  });
-
-  const {
-    data: podrs = [],
-  } = useQuery({
-    queryKey: ['podrs'],
-    queryFn: getPodrs
-  })
+  const { data: users = [] } = useUsers();
+  const { data: podrs = [] } = usePodrs();
 
   const podrSelected = useMemo(() => {
     if (!selected?.podrId) return null;

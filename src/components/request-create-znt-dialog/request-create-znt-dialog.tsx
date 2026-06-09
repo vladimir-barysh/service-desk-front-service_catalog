@@ -19,13 +19,16 @@ import { DateTimePicker, DateValue } from '@mantine/dates';
 import { styled } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
 import { ChooseServiceCreateDialog } from '../itservice-choose';
-import { Service, User } from '../../api/models';
 import { TextInputField } from '../text-input-field';
-import { OrderCreateDTO } from '../../api/dtos';
-import { useCreateOrder } from '../../api/hooks';
 import { showNotification } from './../../context';
-import { useQuery } from '@tanstack/react-query';
-import { getUsers } from '../../api';
+
+import { useUsers } from '../../hooks/useUser';
+import { useCreateOrder } from '../../hooks/useOrder';
+
+import { components } from '../../types/api';
+type OrderCreateDTO = components['schemas']['OrderCreateRequestDTO'];
+type Service = components['schemas']['ServResponseDTO'];
+type User = components['schemas']['UserResponseDTO'];
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -49,7 +52,7 @@ const FileListContainer = styled(Paper)(({ theme }) => ({
 
 export const RequestCreateZNTDialog = (props: {
   isOpen: boolean;
-  onClose: any;
+  onClose: () => void;
 }) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [chosen, setChosen] = React.useState<Service | null>(null);
@@ -63,13 +66,7 @@ export const RequestCreateZNTDialog = (props: {
 
   const { mutate: createOrderMutation, isPending } = useCreateOrder();
 
-  const {
-      data: users = [],
-    } = useQuery({
-      queryKey: ['users'],
-      queryFn: getUsers,
-      staleTime: Infinity
-    });
+  const { data: users = [] } = useUsers();
 
   const isFormValid = useMemo(() => {
     return (
@@ -195,7 +192,7 @@ export const RequestCreateZNTDialog = (props: {
       <ChooseServiceCreateDialog
         isOpen={isCreateDialogOpen}
         onClose={onCreateDialogClose}
-        onSelect={(service: any) => {
+        onSelect={(service: (Service | null)) => {
           setChosen(service);
         }}
       />
