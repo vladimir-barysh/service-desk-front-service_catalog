@@ -8,8 +8,8 @@ import Button from '@mui/material/Button';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
-  SupportGeneralDialog, RequestCreateDialog,
-  formatFIO, ControlDialog,
+  SupportGeneralDialog,
+  formatFIO,
   PostponeDialog, RequestCreateZNODialog,
   RequestCreateZNDDialog, RequestCreateZNIDialog,
   RequestCreateZNTDialog
@@ -17,24 +17,24 @@ import {
 import SplitButton from '../../components/split-button/split-button.component';
 import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
-import { useQuery } from '@tanstack/react-query';
-import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrder';
-import { getOrderStates, getUsers } from '../../api'; // пока оставляем старые, но можно заменить позже
-import { components } from '../../types/api';
 import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
+
+import { components } from '../../types/api';
+import { useUsers } from '../../hooks/useUser';
+import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrder';
+import { useStates } from '../../hooks/useStateMutations';
 
 export function SupportAllPage() {
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
   
   type Order = components['schemas']['OrderResponseDTO'];
-  type User = components['schemas']['UserResponseDTO'];
+  type OrderUpdateDTO = components['schemas']['OrderUpdateDTO'];
 
   const currUser = "Воронин Владимир Владимирович";
 
@@ -42,31 +42,17 @@ export function SupportAllPage() {
   const [searchParams] = useSearchParams();
   const urlStatus = searchParams.get('status') || null;
 
-  const { data: orders = [], isLoading, error } = useOrders();
+  const { data: orders = [] } = useOrders();
+  const { data: orderStates = [] } = useStates();
+  const { data: users = [] } = useUsers();
 
-  // Получение всех статусов заявок
-  const { data: orderStates } = useQuery({
-    queryKey: ['orderstates'],
-    queryFn: getOrderStates,
-  });
-
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-    enabled: true,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  })
-
-  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
+  const { mutate: updateOrderMutate } = useUpdateOrder();
   const updateStatus = useUpdateOrderStatus();
 
   const inWork = orderStates?.find(state => state.name === 'В работе');
   const declined = orderStates?.find(state => state.name === 'Отклонена');
   const onWait = orderStates?.find(state => state.name === 'В ожидании');
 
-  // Функция для получения данных с учетом всех фильтров
   const filteredData = useMemo(() => {
     let result = orders;
 
@@ -263,8 +249,8 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const user = users?.find((item: User) => item.idItUser === row.original.initiatorId) || '';
-          return formatFIO(user.fio1c);
+          const fullName = row.original.initiatorFio || '';
+          return formatFIO(fullName);
         }
       },
       {
@@ -278,8 +264,8 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const user = users?.find((item: User) => item.idItUser === row.original.executorId) || '';
-          return formatFIO(user.fio1c);
+          const fullName = row.original.dispatcherFio || '';
+          return formatFIO(fullName);
         }
       },
       {
@@ -344,9 +330,6 @@ export function SupportAllPage() {
     else if (selected === "Заявка на технику") {
       createZNTDialog();
     }
-    else {
-      setIsCreateDialogOpen(true);
-    }
   }
 
   function createZNDDialog() {
@@ -362,7 +345,6 @@ export function SupportAllPage() {
     setIsCreateDialogZNTOpen(true);
   }
   const onCreateDialogClose = () => {
-    setIsCreateDialogOpen(false);
     setIsCreateDialogZNOOpen(false);
     setIsCreateDialogZNDOpen(false);
     setIsCreateDialogZNIOpen(false);
@@ -394,7 +376,6 @@ export function SupportAllPage() {
   const isRequestOverdue = (request: Order): boolean => {
     if (!request.dateFinishPlan) return false;
 
-    const completedStatuses = ['Закрыта', 'Отклонена'];
     if (request.orderStateId) {
       return false;
     }
@@ -409,10 +390,6 @@ export function SupportAllPage() {
     return desiredDate < today;
   };
 
-  const handleRowClick = (row: MRT_Row<Request>) => {
-    row.getToggleSelectedHandler();
-  };
-
   const handleRowDoubleClick = (row: MRT_Row<Order>) => {
     setSelectedRequest(row.original);
     setIsDialogOpen(true);
@@ -425,7 +402,6 @@ export function SupportAllPage() {
 
   const [selectedRequest, setSelectedRequest] = useState<Order | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [requestType] = useState(0);
 
   const table = useMantineReactTable({
     columns: columns,
@@ -543,7 +519,7 @@ export function SupportAllPage() {
         data: {
           idOrderState: onWait.idOrderState,
           comment: comment
-        } as any,
+        } as OrderUpdateDTO,
       },
     );
   };
@@ -579,31 +555,6 @@ export function SupportAllPage() {
     }
   };
 
-  /*/ Обработчик нажатия кнопки На контроль
-  const handleControlClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length > 0) {
-      openDialog('control', selectedRows[0].original);
-    }
-  };
-
-  // Обработчик подтверждения постановки на контроль
-  const handleControlConfirm = (equipment: string, returnDate: Date | null) => {
-    const request = dialogs.control.request;
-    if (request && returnDate) {
-      console.log('Ставим на контроль:', {
-        request: request.nomer,
-        newStatus: 'На контроле',
-        equipment: equipment,
-        returnDate: returnDate.toISOString()
-      });
-      //
-      // Реальная реализация
-      //
-      closeDialog('control');
-    }
-  };*/
-
   return (
     <div>
       <Box height={50}>
@@ -629,13 +580,6 @@ export function SupportAllPage() {
           onConfirm={handlePostponeConfirm}
           request={dialogs.postpone.order}
         />
-        {/* Диалог на контроль 
-        <ControlDialog
-          open={dialogs.control.open}
-          onClose={() => closeDialog('control')}
-          onConfirm={handleControlConfirm}
-          request={dialogs.control.request}
-        />*/}
         <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
