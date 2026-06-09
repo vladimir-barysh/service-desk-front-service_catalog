@@ -21,9 +21,11 @@ import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
 
 import { components } from '../../types/api';
-import { useUsers } from '../../hooks/useUser';
 import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrder';
 import { useStates } from '../../hooks/useStateMutations';
+
+type Order = components['schemas']['OrderResponseDTO'];
+type OrderUpdateDTO = components['schemas']['OrderUpdateDTO'];
 
 export function SupportAllPage() {
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
@@ -33,9 +35,6 @@ export function SupportAllPage() {
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
   
-  type Order = components['schemas']['OrderResponseDTO'];
-  type OrderUpdateDTO = components['schemas']['OrderUpdateDTO'];
-
   const currUser = "Воронин Владимир Владимирович";
 
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
@@ -44,7 +43,6 @@ export function SupportAllPage() {
 
   const { data: orders = [] } = useOrders();
   const { data: orderStates = [] } = useStates();
-  const { data: users = [] } = useUsers();
 
   const { mutate: updateOrderMutate } = useUpdateOrder();
   const updateStatus = useUpdateOrderStatus();
@@ -293,7 +291,7 @@ export function SupportAllPage() {
         Cell: ({ row }) => row.original.catalogItemName || ''
       },
     ],
-    [urlStatus, users],
+    [urlStatus],
   );
 
   const colorRow = (row: MRT_Row<Order>) => {
@@ -390,7 +388,7 @@ export function SupportAllPage() {
     return desiredDate < today;
   };
 
-  const handleRowDoubleClick = (row: MRT_Row<Order>) => {
+  const handleNomerClick = (row: MRT_Row<Order>) => {
     setSelectedRequest(row.original);
     setIsDialogOpen(true);
   };
@@ -453,7 +451,7 @@ export function SupportAllPage() {
         // Если это не ячейка "nomer", то выделяем строку
         if (cell.column.id === 'nomer') {
           event.stopPropagation();
-          handleRowDoubleClick(row);
+          handleNomerClick(row);
         }
         else {
           row.getToggleSelectedHandler()(event);

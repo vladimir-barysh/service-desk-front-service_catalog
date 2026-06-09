@@ -415,7 +415,7 @@ export function TasksMyAllPage() {
   };
 
   // Обработчик двойного клика
-  const handleRowDoubleClick = (row: MRT_Row<OrderTask>) => {
+  const handleNomerClick = (row: MRT_Row<OrderTask>) => {
     setSelectedOrder(orders?.find((item: Order) => item.idOrder === row.original.orderId) || null);
     setIsDialogOpen(true);
   };
@@ -478,7 +478,7 @@ export function TasksMyAllPage() {
         // Если это не ячейка "nomer", то выделяем строку
         if (cell.column.id === 'orderNomer') {
           event.stopPropagation();
-          handleRowDoubleClick(row);
+          handleNomerClick(row);
         }
         else {
           row.getToggleSelectedHandler()(event);

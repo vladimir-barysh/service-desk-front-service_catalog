@@ -13,6 +13,15 @@ export const useOrders = () => useQuery<OrderResponse[]>({
   queryFn: orderApi.getAll,
 });
 
+// Получение всех заявок для конкретного инициатора
+export const useOrdersByInitiator = (initiatorId: number) => {
+  return useQuery<OrderResponse[]>({
+    queryKey: ['currInitiatorOrders', 'initiator', initiatorId],
+    queryFn: () => orderApi.getByInitiatorId(initiatorId),
+    enabled: !!initiatorId,
+  });
+};
+
 // Создание заявки
 export const useCreateOrder = createCRUDMutation<OrderCreateRequest, OrderResponse>({
   type: 'create',

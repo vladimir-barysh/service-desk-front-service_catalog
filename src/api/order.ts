@@ -8,7 +8,10 @@ type OrderStatusUpdateRequest = components['schemas']['OrderStatusUpdateDTO'];
 
 export const orderApi = {
   getAll: (): Promise<OrderResponse[]> => api.get('/api/order').then(res => res.data),
-  getById: (id: number): Promise<OrderResponse> => api.get(`/api/order/${id}`).then(res => res.data),
+  getById: (id: number): Promise<OrderResponse> => 
+    api.get(`/api/order/${id}`).then(res => res.data),
+  getByInitiatorId: (initiatorId: number): Promise<OrderResponse[]> => 
+    api.get(`/api/order/by-initiator?initiatorId=${initiatorId}`).then(res => res.data),
   create: (data: OrderCreateRequest): Promise<OrderResponse> =>
     api.post('/api/order', data).then(res => res.data),
   update: (id: number, data: OrderUpdateRequest): Promise<OrderResponse> =>

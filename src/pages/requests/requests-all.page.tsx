@@ -1,14 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { User } from '../../api/models';
-import { components } from '../../types/api';
-type Order = components['schemas']['OrderResponseDTO'];
-import { useEffect, useState } from 'react';
-import { Grid2 } from '@mui/material';
-import { Add, Check, Clear, Build, Note, Save, ArrowBack, RoundaboutLeft, RoundedCorner, RouteRounded, ThreeSixty, ThreeSixtyRounded } from '@mui/icons-material';
-import Button from '@mui/material/Button';
-import { Box } from '@mui/material';
+import { Grid2, Box, Button } from '@mui/material';
+import { Add, Check, Clear, ThreeSixty, Mode } from '@mui/icons-material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
@@ -18,13 +12,12 @@ import {
   RequestCreateZNTDialog
 } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
-import { IconPencil } from '@tabler/icons-react';
 import dayjs, { Dayjs } from 'dayjs';
-import { useQuery } from '@tanstack/react-query';
-import { getOrderTypes } from '../../api/services/orderTypeService';
 
-import { getOrders } from '../../api/services/orderService';
-import { getUsers } from '../../api';
+import { components } from '../../types/api';
+import { useOrdersByInitiator } from '../../hooks/useOrder';
+
+type Order = components['schemas']['OrderResponseDTO'];
 
 export function RequestsAllPage() {
   const [requestTypeDialog, setRequestType] = useState('');
@@ -34,54 +27,13 @@ export function RequestsAllPage() {
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
-  const currInitiator = "Борисов Борис Борисович";
 
-  const {
-    data: orders = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['orders'],
-    queryFn: getOrders,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
+  // TODO: Заменить на настоящего пользователя
+  const currInitiator = "Арбузов Александр Александрович";
+  const currInitiatorId = 1;
 
-  const {
-    data: orderTypes = [],
-    isLoading: orderLoad,
-    error: orderError,
-  } = useQuery({
-    queryKey: ['ordertypes'],
-    queryFn: getOrderTypes,
-    staleTime: Infinity
-  });
-
-  const { data: users } = useQuery({
-      queryKey: ['users'],
-      queryFn: getUsers,
-      enabled: true,
-      staleTime: 5 * 60 * 1000,
-      refetchOnMount: 'always',
-      refetchOnWindowFocus: true,
-    })
-
-  const filteredData = useMemo(() => {
-    let result = orders;
-    //Высвечиваем только данные, настоящего пользователя
-    result = result.filter((item: any) => item.initiator === currInitiator);
-
-    if (hideClosed) {
-      result = result.filter((item: any) => item.orderState !== 4);
-    }
-
-    return result;
-  }, [hideClosed, orders]);
-
-  useEffect(() => {
-    setHideClosed(true);
-  }, [location.pathname, location.search]);
+  const { data: currInitiatorOrders = [] } = useOrdersByInitiator(currInitiatorId);
+  console.log(currInitiatorOrders);
 
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
@@ -202,8 +154,8 @@ export function RequestsAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const user = users?.find((item: User) => item.idItUser === row.original.initiatorId) || '';
-          return formatFIO(user.fio1c);
+          const fullName = row.original.initiatorFio || '';
+          return formatFIO(fullName);
         }
       },
       {
@@ -216,8 +168,8 @@ export function RequestsAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const user = users?.find((item: User) => item.idItUser === row.original.dispatcherId) || '';
-          return formatFIO(user.fio1c);
+          const fullName = row.original.dispatcherFio || '';
+          return formatFIO(fullName);
         }
       },
       {
@@ -243,7 +195,7 @@ export function RequestsAllPage() {
         Cell: ({ row }) => row.original.catalogItemName || ''
       },
     ],
-    [users],
+    [],
   );
 
   // Цвет заливки строки
@@ -340,7 +292,6 @@ export function RequestsAllPage() {
     if (!request.dateFinishPlan) return false;
 
     // Если заявка уже завершена не считаем просроченной
-    const completedStatuses = ['Закрыта', 'Отклонена'];
     if (request.orderStateId) {
       return false;
     }
@@ -357,8 +308,14 @@ export function RequestsAllPage() {
     return desiredDate < today;
   };
 
-  // Обработчик двойного клика
-  const handleRowDoubleClick = (row: MRT_Row<Order>) => {
+  const handleEditClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedRequest(selectedRows[0].original);
+    setIsDialogOpen(true);
+  }
+
+  const handleNomerClick = (row: MRT_Row<Order>) => {
     setSelectedRequest(row.original);
     setIsDialogOpen(true);
   };
@@ -368,9 +325,6 @@ export function RequestsAllPage() {
     setIsDialogOpen(false);
     setSelectedRequest(null);
   };
-
-
-
 
   const [selectedRequest, setSelectedRequest] = useState<Order | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -383,7 +337,7 @@ export function RequestsAllPage() {
   // Создание таблицы
   const table = useMantineReactTable({
     columns: columns,
-    data: orders,
+    data: currInitiatorOrders,
     enableBottomToolbar: false,
     enableColumnActions: false,
     enableColumnResizing: false,
@@ -431,7 +385,7 @@ export function RequestsAllPage() {
         // Если это не ячейка "header", то выделяем строку
         if (cell.column.id === 'nomer') {
           event.stopPropagation();
-          handleRowDoubleClick(row);
+          handleNomerClick(row);
         }
         else {
           row.getToggleSelectedHandler()(event);
@@ -500,9 +454,10 @@ export function RequestsAllPage() {
             <Button
               variant="contained"
               color="warning"
-              startIcon={<IconPencil />}
+              startIcon={<Mode />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleEditClick}
             >
               Редактировать заявку
             </Button>
