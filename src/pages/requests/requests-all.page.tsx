@@ -6,7 +6,7 @@ import { Add, Check, Clear, ThreeSixty, Mode } from '@mui/icons-material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
-  SupportGeneralDialog, RequestCreateDialog,
+  SupportGeneralDialog,
   formatFIO, RequestCreateZNODialog,
   RequestCreateZNDDialog, RequestCreateZNIDialog,
   RequestCreateZNTDialog
@@ -25,11 +25,10 @@ export function RequestsAllPage() {
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
 
   // TODO: Заменить на настоящего пользователя
-  const currInitiator = "Арбузов Александр Александрович";
+  //const currInitiator = "Арбузов Александр Александрович";
   const currInitiatorId = 1;
 
   const { data: currInitiatorOrders = [] } = useOrdersByInitiator(currInitiatorId);
@@ -237,9 +236,6 @@ export function RequestsAllPage() {
     else if (selected === "Заявка на технику") {
       createZNTDialog();
     }
-    else {
-      setIsCreateDialogOpen(true);
-    }
   }
   function createZNDDialog() {
     setIsCreateDialogZNDOpen(true);
@@ -254,7 +250,6 @@ export function RequestsAllPage() {
     setIsCreateDialogZNTOpen(true);
   }
   const onCreateDialogClose = () => {
-    setIsCreateDialogOpen(false);
     setIsCreateDialogZNOOpen(false);
     setIsCreateDialogZNDOpen(false);
     setIsCreateDialogZNIOpen(false);
@@ -408,11 +403,6 @@ export function RequestsAllPage() {
   return (
     <div>
       <Box height={50}>
-        <RequestCreateDialog
-          isOpen={isCreateDialogOpen}
-          requestName={requestType.toString()}
-          onClose={onCreateDialogClose}
-        />
         <RequestCreateZNODialog
           isOpen={isCreateDialogZNOOpen}
           onClose={onCreateDialogClose}

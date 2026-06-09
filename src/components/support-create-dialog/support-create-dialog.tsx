@@ -113,7 +113,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
   const checkMessages = () => {
     if (!request?.nomer) return;
     const messagesForThisRequest = seed.filter(
-      message => message.idRequest === String(request.nomer)
+      message => message.idRequest === request.nomer
     );
     setHasMessages(messagesForThisRequest.length > 0);
   };
