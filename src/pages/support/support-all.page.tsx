@@ -496,6 +496,8 @@ export function SupportAllPage() {
     if (order.idOrder == null || inWork?.idOrderState == null) return;
 
     updateStatus.mutate({ id: order.idOrder, statusId: inWork.idOrderState });
+
+    setSelectedOrder(null);
   };
 
   const handleDeclineClick = () => {

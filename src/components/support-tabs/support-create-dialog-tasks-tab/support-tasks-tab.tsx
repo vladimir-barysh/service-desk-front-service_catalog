@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Button, Typography, Paper, IconButton, Grid2 } from '@mui/material';
-import { RedirectTaskDialog, PostponeTaskDialog, formatFIO } from '../../../components';
+import { RedirectTaskDialog, PostponeTaskDialog, formatFIO, CloseDeclineOrderTaskDialog } from '../../../components';
 import { NewTaskDialog } from '../../newTask-dialog/newTask-dialog';
 import { showNotification } from '../../../context';
 import dayjs from 'dayjs';
@@ -9,7 +9,7 @@ import { useTasks, useUpdateTask } from '../../../hooks/useTask';
 import { useStates } from '../../../hooks/useState';
 
 import { components } from '../../../types/api';
-import { Info, InfoOutlined } from '@mui/icons-material';
+import { InfoOutlined } from '@mui/icons-material';
 type OrderTask = components['schemas']['TaskResponseDTO'];
 type Order = components['schemas']['OrderResponseDTO'];
 
@@ -348,10 +348,12 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
 export function SupportTasksTab({ order }: SupportTasksTabProps) {
   // Состояния компонентов
   const [selectedNode, setSelectedNode] = useState<OrderTask | null>(null);
-  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
+
   const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
   const [subTaskDialogOpen, setSubTaskDialogOpen] = useState(false);
   const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
+  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
 
   const { data: tasks = [] } = useTasks();
   const { mutate: updateTaskMutate } = useUpdateTask();
@@ -383,22 +385,9 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
   };
 
   const handleCloseClick = () => {
-    if (!selectedNode) {
-      showNotification({
-        title: 'Не указана задача',
-        color: 'orange',
-      });
-      return;
+    if (selectedNode) {
+      setCloseDialogOpen(true);
     }
-    const newState = states.find(state => state.name === 'Закрыта');
-    updateTaskMutate(
-      {
-        id: selectedNode.idOrderTask,
-        data: {
-          idTaskState: newState?.idOrderState
-        },
-      },
-    );
   };
 
   const handleNewTaskClose = () => {
@@ -416,6 +405,10 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
   const handlePostponeClose = () => {
     setPostponeDialogOpen(false);
   };
+
+  const handleCloseClose = () => {
+    setCloseDialogOpen(false);
+  }
 
   return (
     <div>
@@ -460,7 +453,7 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
             variant="contained"
             color="inherit"
             size="small"
-            sx={{ flex: '1 1 auto', minWidth: '120px'  }}
+            sx={{ flex: '1 1 auto', minWidth: '120px' }}
             onClick={handleRedirectClick}
             disabled={!selectedNode}
           >
@@ -483,7 +476,7 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
             sx={{
               flex: '1 1 auto',
               minWidth: '120px', backgroundColor: 'rgb(255, 101, 91)'
-            }} 
+            }}
             onClick={handleCloseClick}
             disabled={!selectedNode}
           >
@@ -570,6 +563,13 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
         currTask={selectedNode}
         open={postponeDialogOpen}
         onClose={handlePostponeClose}
+      />
+
+      <CloseDeclineOrderTaskDialog
+        task={selectedNode}
+        closeOrDecline='close'
+        open={closeDialogOpen}
+        onClose={handleCloseClose}
       />
     </div>
   );

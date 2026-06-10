@@ -12,7 +12,7 @@ import {
   formatFIO, SupportGeneralDialog, RequestCreateZNODialog,
   RequestCreateZNDDialog, RequestCreateZNTDialog,
   RequestCreateZNIDialog,
-  PostponeTaskDialog
+  PostponeTaskDialog, CloseDeclineOrderTaskDialog
 } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import { showNotification } from '../../context';
@@ -35,11 +35,15 @@ export function TasksMyAllPage() {
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [hideAll, setHideAll] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedTask, setSelectedTask] = useState<OrderTask | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // фильтр по статусу
@@ -427,6 +431,42 @@ export function TasksMyAllPage() {
     updateTaskMutate({ id: task.idOrderTask, data: { idTaskState: inWork.idOrderState } });
   };
 
+  const handleDeclineClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setDeclineDialogOpen(true);
+  };
+
+  const handleDeclineClose = () => {
+    setSelectedTask(null);
+    setDeclineDialogOpen(false);
+  };
+
+  const handlePostponeClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setPostponeDialogOpen(true);
+  };
+
+  const handlePostponeClose = () => {
+    setSelectedTask(null);
+    setPostponeDialogOpen(false);
+  };
+
+  const handleCloseClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setCloseDialogOpen(true);
+  };
+
+  const handleCloseClose = () => {
+    setSelectedTask(null);
+    setCloseDialogOpen(false);
+  };
+
   // Обработчик двойного клика
   const handleNomerClick = (row: MRT_Row<OrderTask>) => {
     setSelectedOrder(orders?.find((item: Order) => item.idOrder === row.original.orderId) || null);
@@ -551,8 +591,8 @@ export function TasksMyAllPage() {
               color="inherit"
               startIcon={<Build />}
               size={'small'}
-              onClick={handleAcceptClick}
               disabled={hasSelectedRows || !isNewTask()}
+              onClick={handleAcceptClick}
             >
               Принять в работу
             </Button>
@@ -564,6 +604,7 @@ export function TasksMyAllPage() {
               startIcon={<Clear />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleDeclineClick}
             >
               Отклонить задачу
             </Button>
@@ -575,6 +616,7 @@ export function TasksMyAllPage() {
               startIcon={<Note />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handlePostponeClick}
             >
               Отложить задачу
             </Button>
@@ -586,6 +628,7 @@ export function TasksMyAllPage() {
               startIcon={<Check />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleCloseClick}
             >
               Закрыть задачу
             </Button>
@@ -646,6 +689,26 @@ export function TasksMyAllPage() {
         request={selectedOrder}
         disabled={true}
         onClose={handleDialogClose}
+      />
+
+      <PostponeTaskDialog
+        currTask={selectedTask}
+        open={postponeDialogOpen}
+        onClose={handlePostponeClose}
+      />
+
+      <CloseDeclineOrderTaskDialog
+        task={selectedTask}
+        closeOrDecline='decline'
+        open={declineDialogOpen}
+        onClose={handleDeclineClose}
+      />
+
+      <CloseDeclineOrderTaskDialog
+        task={selectedTask}
+        closeOrDecline='close'
+        open={closeDialogOpen}
+        onClose={handleCloseClose}
       />
 
     </div>

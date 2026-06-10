@@ -71,7 +71,15 @@ export const TextInputField = ({
         disabled={disabled}
         InputProps={{
           endAdornment: (
-            <InputAdornment position="end">
+            <InputAdornment 
+              position="end"
+              sx={{
+                position: 'absolute',
+                alignSelf: 'flex-start',
+                top: 4,
+                right: 12
+              }}
+            >
               <IconButton
                 size="small"
                 onClick={handleOpen}
@@ -91,8 +99,9 @@ export const TextInputField = ({
           {
             pointerEvents: disabled ? 'none' : 'auto',
             '& .MuiInputBase-root': {
+              position: 'relative',
               height: `${21 + 20 * rows}px`,
-              padding: '0px 14px 0px 14px',
+              padding: '0px 30px 0px 14px',
             },
 
             '& .MuiInputBase-input': {
@@ -108,7 +117,7 @@ export const TextInputField = ({
       />
 
       {/* Диалог для полноценного редактирования */}
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="xl" fullWidth>
 
         <DialogContent>
           <Grid2 container alignItems="center" justifyContent="space-between">
@@ -130,8 +139,8 @@ export const TextInputField = ({
             <TextField
               fullWidth
               multiline
-              minRows={10}
-              maxRows={10}
+              minRows={30}
+              maxRows={30}
               value={tempValue}
               onChange={(e) => setTempValue(e.target.value)}
               placeholder={placeholder}
