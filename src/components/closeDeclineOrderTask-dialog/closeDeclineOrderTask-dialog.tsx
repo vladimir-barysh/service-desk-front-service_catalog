@@ -53,7 +53,6 @@ export function CloseDeclineOrderTaskDialog({ order, task, closeOrDecline, open,
 
   const [resultText, setResultText] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
-  const [custom, setCustom] = useState('');
 
   const { mutate: updateTaskMutate } = useUpdateTask();
   const { data: states = [] } = useStates();
@@ -105,7 +104,7 @@ export function CloseDeclineOrderTaskDialog({ order, task, closeOrDecline, open,
   // Обработчик закрытия
   const handleClose = () => {
     setResultText('');
-    setSelected('');
+    setSelected(null);
     onClose();
   };
 
@@ -156,22 +155,22 @@ export function CloseDeclineOrderTaskDialog({ order, task, closeOrDecline, open,
               />
             </Grid2>
           </Grid2>
-          
-          {selected === 'Своя причина' || selected === 'Свой результат' && (
-          <Grid2
-            container
-            spacing={1}
-            direction="column"
-            margin="0px 0px 10px 0px"
-          >
-            <Grid2 size="auto">
-              <TextInputField
-                value={resultText}
-                onChange={(e) => setResultText(e.target.value)}
-                rows={15}
-              />
+
+          {(selected === 'Своя причина' || selected === 'Свой результат') && (
+            <Grid2
+              container
+              spacing={1}
+              direction="column"
+              margin="0px 0px 10px 0px"
+            >
+              <Grid2 size="auto">
+                <TextInputField
+                  value={resultText}
+                  onChange={(e) => setResultText(e.target.value)}
+                  rows={15}
+                />
+              </Grid2>
             </Grid2>
-          </Grid2>
           )}
         </Box>
       </DialogContent >

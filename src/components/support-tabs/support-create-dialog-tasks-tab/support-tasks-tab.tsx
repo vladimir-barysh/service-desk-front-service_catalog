@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Button, Typography, Paper, IconButton, Grid2 } from '@mui/material';
-import { RedirectTaskDialog, PostponeTaskDialog, formatFIO, CloseDeclineOrderTaskDialog } from '../../../components';
+import { RedirectTaskDialog, PostponeOrderTaskDialog, formatFIO, CloseDeclineOrderTaskDialog } from '../../../components';
 import { NewTaskDialog } from '../../newTask-dialog/newTask-dialog';
 import { showNotification } from '../../../context';
 import dayjs from 'dayjs';
@@ -559,8 +559,8 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
         onClose={handleRedirectClose}
       />
 
-      <PostponeTaskDialog
-        currTask={selectedNode}
+      <PostponeOrderTaskDialog
+        task={selectedNode}
         open={postponeDialogOpen}
         onClose={handlePostponeClose}
       />

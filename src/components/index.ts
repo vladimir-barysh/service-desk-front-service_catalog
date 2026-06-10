@@ -7,7 +7,7 @@ export * from './itcatalog-create-dialog';
 export * from './itservices-create-dialog';
 export * from './support-create-dialog';
 export * from './redirectTask-dialog';
-export * from './postponeTask-dialog';
+export * from './postponeOrderTask-dialog';
 export * from './closeDeclineOrderTask-dialog';
 export * from './support-hooks';
 export * from './support-button-dialogs';

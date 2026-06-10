@@ -8,7 +8,8 @@ import {
   TextField,
   Box,
   Grid2,
-  IconButton
+  IconButton,
+  Autocomplete
 } from '@mui/material';
 import dayjs from 'dayjs';
 import { DateTimePicker, DateValue } from '@mantine/dates';
@@ -21,17 +22,28 @@ import { useStates } from '../../hooks/useState';
 import { components } from '../../types/api';
 import { showNotification } from '../../context';
 type OrderTask = components['schemas']['TaskResponseDTO'];
+type Order = components['schemas']['OrderResponseDTO'];
 
-interface PostponeTaskDialogProps {
-  currTask: OrderTask | null;
+const reasons = [
+  'Своя причина',
+  'Ожидание ответа пользователя',
+  'Ожидание поставки оборудования',
+  'Технические работы',
+  'Требуется согласование',
+];
+
+interface PostponeOrderTaskDialogProps {
+  task?: OrderTask | null;
+  order?: Order | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDialogProps) {
+export function PostponeOrderTaskDialog({ task, order, open, onClose }: PostponeOrderTaskDialogProps) {
 
   const [datePostpone, setDatePostpone] = useState('');
   const [reason, setReason] = useState('');
+  const [selected, setSelected] = useState<string | null>(null);
 
   const { mutate: updateTaskMutate } = useUpdateTask();
   const { data: states = [] } = useStates();
@@ -39,9 +51,10 @@ export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDial
   const isFormValid = useMemo(() => {
     return (
       datePostpone !== '' &&
-      reason !== ''
+      selected !== null &&
+      (selected === 'Своя причина' ? reason !== '' : true)
     );
-  }, [datePostpone, reason]);
+  }, [datePostpone, selected, reason]);
 
   const safeToIso = (value: any): string => {
     if (!value) return '';
@@ -58,7 +71,7 @@ export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDial
       });
       return;
     }
-    if (!currTask) {
+    if (!task) {
       showNotification({
         title: 'Не указана задача',
         color: 'orange',
@@ -68,11 +81,11 @@ export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDial
     const newState = states.find(state => state.name === 'В ожидании');
     updateTaskMutate(
       {
-        id: currTask.idOrderTask,
+        id: task.idOrderTask,
         data: {
           idTaskState: newState?.idOrderState,
           datePostpone: datePostpone,
-          description: `${currTask?.description}\nЗАЯВКА ОТЛОЖЕНА\nПричина: ${reason}`,
+          description: `${task?.description}\nЗАДАЧА ОТЛОЖЕНА\nПричина: ${selected === 'Своя причина' ? reason : selected}`,
         },
       },
     );
@@ -83,6 +96,7 @@ export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDial
   const handleClose = () => {
     setDatePostpone('');
     setReason('');
+    setSelected(null);
     onClose();
   };
 
@@ -92,10 +106,15 @@ export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDial
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth PaperProps={{
+      sx: {
+        overflow: 'visible',
+      },
+    }}>
 
-      <DialogContent sx={{ minHeight: '50vh', }}>
+      <DialogContent >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+
           <Grid2
             container
             spacing={0}
@@ -105,7 +124,7 @@ export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDial
           >
             <Grid2 size="auto">
               <Box fontSize="20px" fontWeight="700">
-                Отложить заявку
+                Отложить {task === null ? 'заявку' : 'задачу'}
               </Box>
             </Grid2>
 
@@ -118,49 +137,75 @@ export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDial
 
           <Grid2
             container
-            spacing={1}
+            spacing={0}
             direction="column"
-            margin="0px 0px 10px 0px"
+            margin="0px 0px 5px 0px"
+            size={4}
           >
             <Grid2 size="auto">
               <Text fw={600}>Отложить до</Text>
             </Grid2>
-            <Grid2 size="auto"></Grid2>
-            <DateTimePicker
-              placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
-              valueFormat="DD.MM.YYYY HH:mm"
-              withSeconds={false}
-              onPointerEnterCapture={undefined}
-              onPointerLeaveCapture={undefined}
-              clearable
-              locale='ru'
-              value={datePostpone ? dayjs(datePostpone).toDate() : null}
-              onChange={(newDatePostpone) => handleDateChange(newDatePostpone)}
-              minDate={new Date()}
-              excludeDate={(date) => {
-                return date.getDay() === 0 || date.getDay() === 6;
-              }}
-            />
+            <Grid2 size="auto">
+              <DateTimePicker
+                w='100%'
+                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
+                valueFormat="DD.MM.YYYY HH:mm"
+                withSeconds={false}
+                onPointerEnterCapture={undefined}
+                onPointerLeaveCapture={undefined}
+                clearable
+                locale='ru'
+                value={datePostpone ? dayjs(datePostpone).toDate() : null}
+                onChange={(newDatePostpone) => handleDateChange(newDatePostpone)}
+                minDate={new Date()}
+                excludeDate={(date) => {
+                  return date.getDay() === 0 || date.getDay() === 6;
+                }}
+              />
+            </Grid2>
           </Grid2>
 
-          {/* Поле "Причина" */}
           <Grid2
             container
-            spacing={1}
+            spacing={0}
             direction="column"
-            margin="0px 0px 10px 0px"
+            margin="0px 0px 0px 0px"
           >
             <Grid2 size="auto">
               <Text fw={600}>Причина</Text>
             </Grid2>
-            <Grid2 size="auto">
-              <TextInputField
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={3}
+            <Grid2>
+              <Autocomplete
+                size="small"
+                options={reasons}
+                value={selected}
+                onChange={(_, value) => setSelected(value)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder={'Выберите причину'}
+                  />
+                )}
               />
             </Grid2>
           </Grid2>
+
+          {selected === 'Своя причина' && (
+            <Grid2
+              container
+              spacing={1}
+              direction="column"
+              margin="0px 0px 10px 0px"
+            >
+              <Grid2 size="auto">
+                <TextInputField
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={15}
+                />
+              </Grid2>
+            </Grid2>
+          )}
         </Box>
       </DialogContent >
 
@@ -176,7 +221,7 @@ export function PostponeTaskDialog({ currTask, open, onClose }: PostponeTaskDial
         <Grid2 size={3}>
           <Button
             variant="contained"
-            color="success"
+            color='warning'
             size={'small'}
             fullWidth={true}
             disabled={!isFormValid}

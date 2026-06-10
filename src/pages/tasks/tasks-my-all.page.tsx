@@ -12,7 +12,7 @@ import {
   formatFIO, SupportGeneralDialog, RequestCreateZNODialog,
   RequestCreateZNDDialog, RequestCreateZNTDialog,
   RequestCreateZNIDialog,
-  PostponeTaskDialog, CloseDeclineOrderTaskDialog
+  PostponeOrderTaskDialog, CloseDeclineOrderTaskDialog
 } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import { showNotification } from '../../context';
@@ -691,8 +691,8 @@ export function TasksMyAllPage() {
         onClose={handleDialogClose}
       />
 
-      <PostponeTaskDialog
-        currTask={selectedTask}
+      <PostponeOrderTaskDialog
+        task={selectedTask}
         open={postponeDialogOpen}
         onClose={handlePostponeClose}
       />
