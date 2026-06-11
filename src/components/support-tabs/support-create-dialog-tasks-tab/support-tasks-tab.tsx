@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { Box, Button, Typography, Paper, IconButton, Grid2 } from '@mui/material';
-import { RedirectTaskDialog, PostponeOrderTaskDialog, formatFIO, CloseDeclineOrderTaskDialog } from '../../../components';
-import { NewTaskDialog } from '../../newTask-dialog/newTask-dialog';
-import { showNotification } from '../../../context';
+import { InfoOutlined } from '@mui/icons-material';
+import { 
+  formatFIO, TASK_STATES, 
+  RedirectTaskDialog, PostponeOrderTaskDialog, 
+  CloseDeclineOrderTaskDialog, NewTaskDialog,
+  TaskInfoDialog
+} from '../../../components';
 import dayjs from 'dayjs';
 
-import { useTasks, useUpdateTask } from '../../../hooks/useTask';
-import { useStates } from '../../../hooks/useState';
+import { useTasks } from '../../../hooks/useTask';
 
 import { components } from '../../../types/api';
-import { InfoOutlined } from '@mui/icons-material';
 type OrderTask = components['schemas']['TaskResponseDTO'];
 type Order = components['schemas']['OrderResponseDTO'];
 
-// Пропсы для компонентов
 interface BlockSchemaProps {
   data: OrderTask[];
   selectedNode: OrderTask | null;
@@ -32,13 +33,21 @@ const newTextFocus = 'rgb(0, 187, 6)';
 const newDate = 'rgba(255, 255, 255, 0.75)';
 const newDateFocus = 'rgba(0, 187, 6, 0.75)';
 
-const onWaitTask = 'rgb(255, 136, 0)';
-const onWaitFocus = 'rgb(255, 207, 153)';
-const onWaitHover = 'rgb(233, 124, 0)';
-const onWaitText = 'rgb(255, 255, 255)';
-const onWaitTextFocus = 'rgb(214, 114, 0)';
-const onWaitDate = 'rgba(255,255,255,0.75)';
-const onWaitDateFocus = 'rgba(214, 114, 0, 0.75)';
+const inWorkTask = 'rgb(0, 89, 255)';
+const inWorkFocus = 'rgb(130, 174, 255)';
+const inWorkHover = 'rgb(0, 79, 226)';
+const inWorkText = 'rgb(255, 255, 255)';
+const inWorkTextFocus = 'rgb(0, 69, 197)';
+const inWorkDate = 'rgba(255, 255, 255, 0.75)';
+const inWorkDateFocus = 'rgba(0, 69, 197, 0.75)';
+
+const pendingTask = 'rgb(255, 136, 0)';
+const pendingFocus = 'rgb(255, 207, 153)';
+const pendingHover = 'rgb(233, 124, 0)';
+const pendingText = 'rgb(255, 255, 255)';
+const pendingTextFocus = 'rgb(214, 114, 0)';
+const pendingDate = 'rgba(255,255,255,0.75)';
+const pendingDateFocus = 'rgba(214, 114, 0, 0.75)';
 
 const closedTask = 'rgb(231, 170, 166)';
 const closedFocus = 'rgb(255, 222, 219)';
@@ -48,19 +57,25 @@ const closedTextFocus = 'rgb(185, 137, 134)';
 const closedDate = 'rgba(107, 107, 107, 0.75)';
 const closedDateFocus = 'rgba(185, 137, 134, 0.75)';
 
-// Функция для блок схемы
 const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => {
+
+  const { data: tasks = [] } = useTasks();
+
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [infoTask, setInfoTask] = useState<OrderTask | null>(null);
 
   const blockColor = (block: OrderTask) => {
     const state = block.taskStateName;
 
     if (selectedNode?.idOrderTask === block.idOrderTask) {
       switch (state) {
-        case 'Новая':
+        case TASK_STATES.NEW:
           return newFocus;
-        case 'В ожидании':
-          return onWaitFocus;
-        case 'Закрыта':
+        case TASK_STATES.IN_WORK:
+          return inWorkFocus;
+        case TASK_STATES.PENDING:
+          return pendingFocus;
+        case TASK_STATES.CLOSED:
           return closedFocus;
         default:
           return 'hsla(0, 88%, 72%, 1.00)';
@@ -68,11 +83,13 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
     }
 
     switch (state) {
-      case 'Новая':
+      case TASK_STATES.NEW:
         return newTask;
-      case 'В ожидании':
-        return onWaitTask;
-      case 'Закрыта':
+      case TASK_STATES.IN_WORK:
+        return inWorkTask;
+      case TASK_STATES.PENDING:
+        return pendingTask;
+      case TASK_STATES.CLOSED:
         return closedTask;
       default:
         return 'hsla(0, 88%, 72%, 1.00)';
@@ -88,11 +105,13 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
     const state = block.taskStateName;
 
     switch (state) {
-      case 'Новая':
+      case TASK_STATES.NEW:
         return newHover;
-      case 'В ожидании':
-        return onWaitHover;
-      case 'Закрыта':
+      case TASK_STATES.IN_WORK:
+        return inWorkHover;
+      case TASK_STATES.PENDING:
+        return pendingHover;
+      case TASK_STATES.CLOSED:
         return closedHover;
       default:
         return 'hsla(0, 88%, 72%, 1.00)';
@@ -103,11 +122,13 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
     const state = block.taskStateName;
     if (selectedNode?.idOrderTask === block.idOrderTask) {
       switch (state) {
-        case 'Новая':
+        case TASK_STATES.NEW:
           return newTextFocus;
-        case 'В ожидании':
-          return onWaitTextFocus;
-        case 'Закрыта':
+        case TASK_STATES.IN_WORK:
+          return inWorkTextFocus;
+        case TASK_STATES.PENDING:
+          return pendingTextFocus;
+        case TASK_STATES.CLOSED:
           return closedTextFocus;
         default:
           return 'hsla(0, 88%, 72%, 1.00)';
@@ -115,11 +136,13 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
     }
 
     switch (state) {
-      case 'Новая':
+      case TASK_STATES.NEW:
         return newText;
-      case 'В ожидании':
-        return onWaitText;
-      case 'Закрыта':
+      case TASK_STATES.IN_WORK:
+        return inWorkText;
+      case TASK_STATES.PENDING:
+        return pendingText;
+      case TASK_STATES.CLOSED:
         return closedText;
       default:
         return 'hsla(0, 88%, 72%, 1.00)';
@@ -131,11 +154,13 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
 
     if (selectedNode?.idOrderTask === block.idOrderTask) {
       switch (state) {
-        case 'Новая':
+        case TASK_STATES.NEW:
           return newDateFocus;
-        case 'В ожидании':
-          return onWaitDateFocus;
-        case 'Закрыта':
+        case TASK_STATES.IN_WORK:
+          return inWorkDateFocus;
+        case TASK_STATES.PENDING:
+          return pendingDateFocus;
+        case TASK_STATES.CLOSED:
           return closedDateFocus;
         default:
           return 'hsla(0, 88%, 72%, 1.00)';
@@ -143,27 +168,27 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
     }
 
     switch (state) {
-      case 'Новая':
+      case TASK_STATES.NEW:
         return newDate;
-      case 'В ожидании':
-        return onWaitDate;
-      case 'Закрыта':
+      case TASK_STATES.IN_WORK:
+        return inWorkDate;
+      case TASK_STATES.PENDING:
+        return pendingDate;
+      case TASK_STATES.CLOSED:
         return closedDate;
       default:
         return 'hsla(0, 88%, 72%, 1.00)';
     }
   };
 
-  const { data: tasks = [] } = useTasks();
-
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-
-  const handleInfoClick = (e: React.MouseEvent) => {
+  const handleInfoClick = (e: React.MouseEvent, task: OrderTask) => {
     e.stopPropagation();
+    setInfoTask(task);
     setIsInfoOpen(true);
   }
 
   const handleInfoClose = () => {
+    setInfoTask(null);
     setIsInfoOpen(false);
   }
 
@@ -229,7 +254,7 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
               backgroundColor: hoverColor(node),
               boxShadow: selectedNode?.idOrderTask === node.idOrderTask ? 'inset 0 0px 5px rgba(0,0,0,0.5)' : '0 0px 15px rgba(0,0,0,0.3)',
             },
-            margin: `0px 0px -20px ${indent}px `,
+            margin: `0px 0px -20px ${indent}px`,
             zIndex: 1,
 
           }}
@@ -237,20 +262,20 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
           <Grid2 container flexDirection='row' justifyContent='space-between'>
             <Grid2 container flexDirection='column'>
               <Typography
-                variant="body1"
+                variant='body1'
                 sx={{
                   color: textColor(node),
-                  textDecoration: node.taskStateName === 'Закрыта' ? 'line-through' : 'none',
+                  textDecoration: node.taskStateName === TASK_STATES.CLOSED ? 'line-through' : 'none',
                 }}
               >
                 {formatFIO(node.executorFio || '')}
               </Typography>
 
               <Typography
-                variant="body2"
+                variant='body2'
                 sx={{
                   color: dateColor(node),
-                  textDecoration: node.taskStateName === 'Закрыта' ? 'line-through' : 'none',
+                  textDecoration: node.taskStateName === TASK_STATES.CLOSED ? 'line-through' : 'none',
                 }}
               >
                 {dayjs(node.dateCreated).format(
@@ -262,7 +287,7 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
               sx={{
                 color: textColor(node)
               }}
-              onClick={handleInfoClick}
+              onClick={(e) => handleInfoClick(e, node)}
             >
               <InfoOutlined />
             </IconButton>
@@ -335,8 +360,8 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
           .map(node => renderNode(node))}
       </Box>
 
-      <NewTaskDialog
-        currOrder={null}
+      <TaskInfoDialog
+        task={infoTask}
         open={isInfoOpen}
         onClose={handleInfoClose}
       />
@@ -344,9 +369,8 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
   );
 };
 
-// Основная функция
 export function SupportTasksTab({ order }: SupportTasksTabProps) {
-  // Состояния компонентов
+
   const [selectedNode, setSelectedNode] = useState<OrderTask | null>(null);
 
   const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
@@ -356,8 +380,6 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
 
   const { data: tasks = [] } = useTasks();
-  const { mutate: updateTaskMutate } = useUpdateTask();
-  const { data: states = [] } = useStates();
 
   let orderTasks = tasks;
   orderTasks = orderTasks.filter((item: OrderTask) => (item.orderId === order?.idOrder));
@@ -484,7 +506,6 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
           </Button>
         </Box>
 
-        {/* Блок-схема */}
         <Box
           sx={{
             height: '49vh',
@@ -505,7 +526,6 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
           />
         </Box>
 
-        {/* Обозначения */}
         <Box
           display="flex"
           justifyContent="flex-start"
@@ -524,7 +544,14 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
           <Paper sx={{
             width: 14,
             height: 14,
-            backgroundColor: onWaitTask,
+            backgroundColor: inWorkTask,
+            borderRadius: '2px',
+          }} />
+          <Typography>- в работе</Typography>
+          <Paper sx={{
+            width: 14,
+            height: 14,
+            backgroundColor: pendingTask,
             borderRadius: '2px',
           }} />
           <Typography>- в ожидании</Typography>
@@ -537,8 +564,6 @@ export function SupportTasksTab({ order }: SupportTasksTabProps) {
           <Typography>- закрыта</Typography>
         </Box>
       </Box>
-
-
 
       <NewTaskDialog
         currOrder={order}

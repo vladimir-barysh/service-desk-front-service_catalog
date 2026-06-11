@@ -4,9 +4,7 @@ import {
   InputAdornment,
   IconButton,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
   Button,
   Box, Grid2,
   SxProps
@@ -21,7 +19,7 @@ interface TextInputFieldProps {
   label?: string;
   placeholder?: string;
   disabled?: boolean;
-  readonly?: boolean;
+  readOnly?: boolean;
   variant?: 'outlined' | 'filled' | 'standard';
   rows?: number;
   sx?: SxProps<Theme>;
@@ -33,14 +31,13 @@ export const TextInputField = ({
   label = 'Комментарий',
   placeholder = 'Введите текст...',
   disabled = false,
-  readonly = false,
+  readOnly,
   variant = 'outlined',
   rows = 1,
   sx,
 }: TextInputFieldProps) => {
   const [open, setOpen] = useState(false);
   const [tempValue, setTempValue] = useState(value);
-
   const handleOpen = () => {
     setTempValue(value);
     setOpen(true);
@@ -70,8 +67,9 @@ export const TextInputField = ({
         placeholder={placeholder}
         disabled={disabled}
         InputProps={{
+          readOnly: readOnly,
           endAdornment: (
-            <InputAdornment 
+            <InputAdornment
               position="end"
               sx={{
                 position: 'absolute',
@@ -83,7 +81,7 @@ export const TextInputField = ({
               <IconButton
                 size="small"
                 onClick={handleOpen}
-                disabled={disabled}
+                disabled={false}
                 edge="end"
                 aria-label="редактировать комментарий"
               >
@@ -101,7 +99,7 @@ export const TextInputField = ({
             '& .MuiInputBase-root': {
               position: 'relative',
               height: `${21 + 20 * rows}px`,
-              padding: '0px 30px 0px 14px',
+              padding: '0px 40px 0px 14px',
             },
 
             '& .MuiInputBase-input': {
@@ -121,7 +119,9 @@ export const TextInputField = ({
 
         <DialogContent>
           <Grid2 container alignItems="center" justifyContent="space-between">
-            <Grid2></Grid2>
+            <Box fontSize='18px' fontWeight='700'>
+              {readOnly === true ? 'Просмотр текста' : 'Редактирование текста'}
+            </Box>
             <Grid2>
               <IconButton
                 onClick={handleClose}
@@ -148,7 +148,7 @@ export const TextInputField = ({
               autoFocus
               disabled={disabled}
               InputProps={{
-                readOnly: readonly
+                readOnly: readOnly
               }}
               sx={{ mt: 1 }}
             />
@@ -156,15 +156,17 @@ export const TextInputField = ({
         </DialogContent>
 
         <Grid2 size='auto' sx={{ margin: '0px 25px 20px 10px', display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            size="small"
-            disabled={readonly}
-            onClick={handleSave}
-            sx={{ minWidth: '100px' }}
-          >
-            Сохранить
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="contained"
+              size="small"
+              disabled={readOnly}
+              onClick={handleSave}
+              sx={{ minWidth: '100px' }}
+            >
+              Сохранить
+            </Button>
+          )}
           <Button
             variant="contained"
             color="inherit"
@@ -172,7 +174,7 @@ export const TextInputField = ({
             onClick={handleClose}
             sx={{ minWidth: '100px' }}
           >
-            Отмена
+            {readOnly === true ? 'Закрыть' : 'Отмена'}
           </Button>
         </Grid2>
       </Dialog>

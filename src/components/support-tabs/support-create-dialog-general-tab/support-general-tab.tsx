@@ -600,8 +600,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
               <TextInputField
                 value={editedRequest.comment || ''}
                 onChange={handleChange('comment')}
-                disabled={disabled}
-                readonly={!isEditing}
+                readOnly={!isEditing || disabled}
                 sx={textFieldStyle}
               />
             </Grid2>
@@ -850,8 +849,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
               <TextInputField
                 value={editedRequest.description || ''}
                 onChange={handleChange('description')}
-                disabled={disabled}
-                readonly={!isEditing}
+                readOnly={!isEditing || disabled}
                 rows={3}
                 sx={multilineTextFieldStyle}
               />
@@ -878,8 +876,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
               <TextInputField
                 value={editedRequest.resultText || ''}
                 onChange={handleChange('resultText')}
-                disabled={disabled}
-                readonly={!isEditing}
+                readOnly={!isEditing || disabled}
                 rows={3}
                 sx={multilineTextFieldStyle}
               />

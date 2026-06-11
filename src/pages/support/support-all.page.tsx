@@ -60,7 +60,7 @@ export function SupportAllPage() {
     if (urlStatus === 'new') {
       result = result.filter((item: Order) => item.orderStateName === 'Новая');
     }
-    else if (urlStatus === 'nAgreed') {
+    else if (urlStatus === 'nApproved') {
       result = result.filter((item: Order) => item.orderStateName === 'Не согласовано' || item.orderStateName === 'Закрыта');
     }
     else if (urlStatus === 'nConfirmed') {
