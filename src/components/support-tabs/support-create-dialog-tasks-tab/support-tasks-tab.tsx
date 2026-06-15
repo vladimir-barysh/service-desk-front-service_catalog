@@ -321,7 +321,8 @@ const BlockSchema = ({ data, selectedNode, onNodeSelect }: BlockSchemaProps) => 
                 borderTop: '1px solid rgba(0,0,0,0.12)',
                 borderRadius: '5px',
                 backgroundColor: 'rgb(255 255 255)',
-                boxShadow: `inset 0 0px 10px ${blockColor(node)}`
+                boxShadow: `inset 0 0px 10px ${blockColor(node)}`,
+                minWidth: 510
               }}
               onClick={(e) => e.stopPropagation()}
             >

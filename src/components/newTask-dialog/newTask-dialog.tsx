@@ -173,7 +173,7 @@ export function NewTaskDialog({ currOrder, idParent, open, onClose }: NewTaskDia
               padding="0px 0px 0px 0px"
             >
               <Grid2 size='auto'>
-                <Text fw={600}>Удалять родителя *</Text>
+                <Text fw={600}>Закрывать родителя *</Text>
               </Grid2>
               <Radio.Group
                 value={parentClose}
