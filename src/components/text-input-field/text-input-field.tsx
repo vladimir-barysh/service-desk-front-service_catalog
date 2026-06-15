@@ -15,7 +15,7 @@ import { Theme } from '@emotion/react';
 
 interface TextInputFieldProps {
   value: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   label?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -50,7 +50,7 @@ export const TextInputField = ({
       target: { value: tempValue }
     } as React.ChangeEvent<HTMLInputElement>;
 
-    onChange(syntheticEvent);
+    onChange?.(syntheticEvent);
     setOpen(false);
   };
 

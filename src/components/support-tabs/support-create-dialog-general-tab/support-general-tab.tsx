@@ -790,7 +790,7 @@ export function SupportGeneralTab({ request, disabled, onUpdate }: SupportGenera
                 fullWidth
                 size="small"
                 variant="outlined"
-                value={editedRequest.orderSourceName || ''}
+                value={editedRequest.orderSourceName || 'web'}
                 rows={1}
                 disabled={disabled}
                 InputProps={{ readOnly: !isEditing }}

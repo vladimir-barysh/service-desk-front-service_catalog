@@ -1,20 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog, DialogContent,
-  DialogContentText, DialogTitle,
   DialogActions, Box,
   Button, Grid2,
-  IconButton, Typography,
-  TextField, InputAdornment,
-  FormControl, MenuItem, Select,
-  SelectChangeEvent,
+  IconButton,
+  TextField,
   Autocomplete,
 } from '@mui/material';
 import {
-  Input, Textarea,
-  Text, CloseButton,
-  Radio, Group,
-  Checkbox,
+  Text
 } from '@mantine/core';
 import { TextInputField } from '../text-input-field';
 
@@ -43,9 +37,18 @@ export interface Reason {
   reason: string;
 }
 
+const reasons = [
+  'Своя причина',
+  '1',
+  '2',
+  '3',
+  '4',
+];
+
 export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDialogProps) {
 
   const [selectedExecutor, setSelectedExecutor] = useState<User | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const labelStyle = {
     margin: '0px 0px -15px 0px',
@@ -54,19 +57,13 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
   const { data: users = [] } = useUsers();
   const { mutate: updateTaskMutate } = useUpdateTask();
 
-  const reasons: Reason[] = [
-    { id: 1, reason: "Своя причина" },
-    { id: 2, reason: "Первая причина" },
-    { id: 3, reason: "Вторая причина" },
-    { id: 4, reason: "Третья причина" }
-  ]
-
   const isFormValid = useMemo(() => {
     return (
       selectedExecutor !== null &&
-      reason !== ''
+      selected !== null &&
+      (selected === 'Своя причина' ? reason !== '' : true)
     );
-  }, [selectedExecutor, reason]);
+  }, [selectedExecutor, selected, reason]);
 
   const handleSave = () => {
     if (!isFormValid) {
@@ -88,7 +85,7 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
         id: currTask?.idOrderTask,
         data: {
           idExecutor: selectedExecutor?.idItUser,
-          description: `${currTask.description}\nЗАДАЧА ПЕРЕНАПРАВЛЕНА\nДата: ${dayjs(new Date()).format('DD.MM.YYYY HH:mm')}\nПричина: ${reason}`,
+          description: `${currTask.description}\nЗАДАЧА ПЕРЕНАПРАВЛЕНА\nДата: ${dayjs(new Date()).format('DD.MM.YYYY HH:mm')}\nПричина: ${selected === 'Своя причина' ? reason : selected}`,
         },
       },
     );
@@ -99,6 +96,7 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
   const handleClose = () => {
     setReason('');
     setSelectedExecutor(null);
+    setSelected(null);
     onClose();
   };
 
@@ -110,17 +108,8 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
     setSelectedExecutor(selectedObject);
   };
 
-  const handleReasonChange = (event: SelectChangeEvent<number>) => {
-    const selectedId = Number(event.target.value);
-
-    const selectedObject = reasons.find(
-      (item: Reason) => item.id === selectedId
-    ) ?? null;
-    setReason(selectedObject?.reason || '');
-  }
-
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
 
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
@@ -204,38 +193,48 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
             </Grid2>
           </Grid2>
 
-          {/* Поле "Причина" */}
           <Grid2
             container
-            size={6}
-            spacing={2}
-            direction={'column'}
-            alignItems="left"
-            justifyContent="left"
+            spacing={0}
+            direction="column"
             margin="0px 0px 0px 0px"
           >
-            <Grid2 size="auto" sx={labelStyle}>
-              <Text fw={600}>Укажите причину*</Text>
-            </Grid2>
             <Grid2 size="auto">
-              <FormControl fullWidth size="small">
-                <Select
-                  onChange={handleReasonChange}
-                  renderValue={(selected) => {
-                    if (!selected) return <em>Не выбрано</em>;
-                    const r = reasons.find((x: Reason) => x.id === selected);
-                    return r?.reason;
-                  }}
-                >
-                  {reasons.map((item: Reason) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.reason}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Text fw={600}>Причина</Text>
+            </Grid2>
+            <Grid2>
+              <Autocomplete
+                size="small"
+                options={reasons}
+                value={selected}
+                onChange={(_, value) => setSelected(value)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder={'Выберите причину'}
+                  />
+                )}
+              />
             </Grid2>
           </Grid2>
+
+          {selected === 'Своя причина' && (
+            <Grid2
+              container
+              spacing={1}
+              direction="column"
+              margin="0px 0px 10px 0px"
+            >
+              <Grid2 size="auto">
+                <TextInputField
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={15}
+                />
+              </Grid2>
+            </Grid2>
+          )}
+
 
         </Box>
       </DialogContent>
