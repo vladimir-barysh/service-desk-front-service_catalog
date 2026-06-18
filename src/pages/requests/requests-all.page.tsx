@@ -32,7 +32,6 @@ export function RequestsAllPage() {
   const currInitiatorId = 1;
 
   const { data: currInitiatorOrders = [] } = useOrdersByInitiator(currInitiatorId);
-  console.log(currInitiatorOrders);
 
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [

@@ -1,70 +1,68 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  Dialog, DialogContent,
-  DialogActions, Box,
-  Button, Grid2,
-  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
   TextField,
-  Autocomplete,
+  Box,
+  Grid2,
+  IconButton,
+  Autocomplete
 } from '@mui/material';
-import {
-  Text
-} from '@mantine/core';
-import { TextInputField } from '../text-input-field';
-
-import { components } from '../../types/api';
-import { useUsers } from '../../hooks/useUser';
-import { useUpdateTask } from '../../hooks/useTask';
 import dayjs from 'dayjs';
-import { showNotification } from '../../context';
+import { DateTimePicker, DateValue } from '@mantine/dates';
+import { TextInputField } from '../text-input-field';
+import { Text } from '@mantine/core';
 import { Close } from '@mui/icons-material';
-type User = components['schemas']['UserResponseDTO'];
+
+import { useUpdateTask } from '../../hooks/useTask';
+import { useStates } from '../../hooks/useState';
+import { components } from '../../types/api';
+import { showNotification } from '../../context';
 type OrderTask = components['schemas']['TaskResponseDTO'];
-interface RedirectTaskDialogProps {
-  currTask: OrderTask | null;
+type Order = components['schemas']['OrderResponseDTO'];
+
+const reasons = [
+  'Своя причина',
+  'Ожидание ответа пользователя',
+  'Ожидание поставки оборудования',
+  'Технические работы',
+  'Требуется согласование',
+];
+
+interface PostponeOrderTaskDialogProps {
+  task?: OrderTask | null;
+  order?: Order | null;
   open: boolean;
   onClose: () => void;
 }
 
-export interface RedirectData {
-  from: string;
-  to: number;
-  reason: string;
-}
+export function PostponeOrderTaskDialog({ task, order, open, onClose }: PostponeOrderTaskDialogProps) {
 
-export interface Reason {
-  id: number;
-  reason: string;
-}
-
-const reasons = [
-  'Своя причина',
-  '1',
-  '2',
-  '3',
-  '4',
-];
-
-export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDialogProps) {
-
-  const [selectedExecutor, setSelectedExecutor] = useState<User | null>(null);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [datePostpone, setDatePostpone] = useState('');
   const [reason, setReason] = useState('');
-  const labelStyle = {
-    margin: '0px 0px -15px 0px',
-  };
+  const [selected, setSelected] = useState<string | null>(null);
 
-  const { data: users = [] } = useUsers();
   const { mutate: updateTaskMutate } = useUpdateTask();
+  const { data: states = [] } = useStates();
 
   const isFormValid = useMemo(() => {
     return (
-      selectedExecutor !== null &&
+      datePostpone !== '' &&
       selected !== null &&
       (selected === 'Своя причина' ? reason !== '' : true)
     );
-  }, [selectedExecutor, selected, reason]);
+  }, [datePostpone, selected, reason]);
 
+  const safeToIso = (value: any): string => {
+    if (!value) return '';
+    const d = dayjs(value);
+    return d.isValid() ? d.toISOString().split('.')[0] + 'Z' : '';
+  };
+
+  // Обработчик сохранения
   const handleSave = () => {
     if (!isFormValid) {
       showNotification({
@@ -73,46 +71,50 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
       });
       return;
     }
-    if (!currTask) {
+    if (!task) {
       showNotification({
-        title: 'Задача не выбрана',
+        title: 'Не указана задача',
         color: 'orange',
       });
       return;
     }
+    const newState = states.find(state => state.name === 'В ожидании');
     updateTaskMutate(
       {
-        id: currTask?.idOrderTask,
+        id: task.idOrderTask,
         data: {
-          idExecutor: selectedExecutor?.idItUser,
-          description: `${currTask.description}\nЗАДАЧА ПЕРЕНАПРАВЛЕНА\nДата: ${dayjs(new Date()).format('DD.MM.YYYY HH:mm')}\nПричина: ${selected === 'Своя причина' ? reason : selected}`,
+          idTaskState: newState?.idOrderState,
+          datePostpone: datePostpone,
+          description: `${task?.description}\nЗАДАЧА ОТЛОЖЕНА\nПричина: ${selected === 'Своя причина' ? reason : selected}`,
         },
       },
     );
     handleClose();
   };
 
-  // Сброс формы при закрытии
+  // Обработчик закрытия
   const handleClose = () => {
+    setDatePostpone('');
     setReason('');
-    setSelectedExecutor(null);
     setSelected(null);
     onClose();
   };
 
-  const handleExecutorChange = (id: number | null) => {
-
-    const selectedObject = users.find(
-      (item: User) => item.idItUser === id
-    ) ?? null;
-    setSelectedExecutor(selectedObject);
+  const handleDateChange = (newDate: DateValue) => {
+    const temp = newDate ? dayjs(newDate) : '';
+    setDatePostpone(safeToIso(temp));
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth PaperProps={{
+      sx: {
+        overflow: 'visible',
+      },
+    }}>
 
-      <DialogContent>
+      <DialogContent >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+
           <Grid2
             container
             spacing={0}
@@ -122,7 +124,7 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
           >
             <Grid2 size="auto">
               <Box fontSize="20px" fontWeight="700">
-                Перенаправить задачу
+                Отложить {task === null ? 'заявку' : 'задачу'}
               </Box>
             </Grid2>
 
@@ -135,60 +137,30 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
 
           <Grid2
             container
-            size={6}
-            spacing={2}
-            direction={'column'}
-            alignItems="left"
-            justifyContent="left"
-            margin="0px 0px 0px 0px"
+            spacing={0}
+            direction="column"
+            margin="0px 0px 5px 0px"
+            size={4}
           >
-            <Grid2 size="auto" sx={labelStyle}>
-              <Text fw={600}>От кого*</Text>
+            <Grid2 size="auto">
+              <Text fw={600}>Отложить до</Text>
             </Grid2>
             <Grid2 size="auto">
-              <TextField
-                value={currTask?.executorFio}
-                fullWidth
-                size="small"
-                variant="outlined"
-                InputProps={{
-                  readOnly: true
+              <DateTimePicker
+                w='100%'
+                placeholder="ДД.MM.ГГГГ ЧЧ:ММ"
+                valueFormat="DD.MM.YYYY HH:mm"
+                withSeconds={false}
+                onPointerEnterCapture={undefined}
+                onPointerLeaveCapture={undefined}
+                clearable
+                locale='ru'
+                value={datePostpone ? dayjs(datePostpone).toDate() : null}
+                onChange={(newDatePostpone) => handleDateChange(newDatePostpone)}
+                minDate={new Date()}
+                excludeDate={(date) => {
+                  return date.getDay() === 0 || date.getDay() === 6;
                 }}
-              />
-            </Grid2>
-          </Grid2>
-
-          {/* Поле "На кого" */}
-          <Grid2
-            container
-            size={6}
-            spacing={2}
-            direction={'column'}
-            alignItems="left"
-            justifyContent="left"
-            margin="0px 0px 0px 0px"
-          >
-            <Grid2 size="auto" sx={labelStyle}>
-              <Text fw={600}>На кого*</Text>
-            </Grid2>
-            <Grid2 size="auto">
-              <Autocomplete
-                fullWidth
-                size="small"
-                options={users}
-                value={
-                  users.find((x: User) => x.idItUser === selectedExecutor?.idItUser) || null
-                }
-                onChange={(_, newValue) => {
-                  handleExecutorChange(newValue?.idItUser || null);
-                }}
-                getOptionLabel={(option: User) => option.fio1c || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Не выбран"
-                  />
-                )}
               />
             </Grid2>
           </Grid2>
@@ -234,28 +206,28 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
               </Grid2>
             </Grid2>
           )}
-
-
         </Box>
-      </DialogContent>
+      </DialogContent >
 
       <DialogActions
         sx={{
-          margin: '0px 15px 15px 0px',
+          margin: '0px 15px 10px 0px',
           display: 'flex',
           gap: 1,
           justifyContent: 'flex-end',
-        }}>
+          alignItems: 'bottom'
+        }}
+      >
         <Grid2 size={3}>
           <Button
             variant="contained"
-            color="success"
+            color='warning'
             size={'small'}
             fullWidth={true}
             disabled={!isFormValid}
             onClick={handleSave}
           >
-            Сохранить
+            Отложить
           </Button>
         </Grid2>
         <Grid2 size={3}>
@@ -266,10 +238,10 @@ export function RedirectTaskDialog({ currTask, open, onClose }: RedirectTaskDial
             fullWidth={true}
             onClick={handleClose}
           >
-            Отмена
+            Назад
           </Button>
         </Grid2>
       </DialogActions>
-    </Dialog>
+    </Dialog >
   );
 }

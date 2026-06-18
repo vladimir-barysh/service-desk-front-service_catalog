@@ -19,17 +19,34 @@ export const useTasks = ({
   enabled = true,
   staleTime = 5 * 60 * 1000,
   refetchOnMount = 'always',
-  refetchOnWindowFocus = true,
-}: UseTasksProps = {}) => 
+  refetchOnWindowFocus = true
+}: UseTasksProps = {}) =>
   useQuery<TaskResponse[]>({
-  queryKey: ['tasks'],
-  queryFn: taskApi.getAll,
+    queryKey: ['tasks'],
+    queryFn: taskApi.getAll,
+    enabled,
+    staleTime,
+    refetchOnMount,
+    refetchOnWindowFocus
+  });
 
-  enabled,
-  staleTime,
-  refetchOnMount,
-  refetchOnWindowFocus,
-});
+export const useTasksByExecutor = (
+  executorId: number,
+  {
+    enabled = !!executorId,
+    staleTime = 5 * 60 * 1000,
+    refetchOnMount = 'always',
+    refetchOnWindowFocus = true,
+  }: UseTasksProps = {}
+) =>
+  useQuery<TaskResponse[]>({
+    queryKey: ['currExecutorOrders', 'executor', executorId],
+    queryFn: () => taskApi.getByExecutorId(executorId),
+    enabled,
+    staleTime,
+    refetchOnMount,
+    refetchOnWindowFocus
+  });
 
 // Создание задачи
 export const useCreateTask = createCRUDMutation<TaskCreateRequest, TaskResponse>({

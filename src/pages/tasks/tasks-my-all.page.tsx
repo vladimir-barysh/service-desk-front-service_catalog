@@ -9,10 +9,11 @@ import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
-  formatFIO, SupportGeneralDialog, RequestCreateZNODialog,
+  formatFIO, TASK_STATES, 
+  SupportGeneralDialog, RequestCreateZNODialog,
   RequestCreateZNDDialog, RequestCreateZNTDialog,
-  RequestCreateZNIDialog,
-  PostponeTaskDialog
+  RequestCreateZNIDialog, PostponeOrderTaskDialog,
+  CloseDeclineOrderTaskDialog
 } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import { showNotification } from '../../context';
@@ -20,7 +21,7 @@ import * as XLSX from 'xlsx';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { components } from '../../types/api';
-import { useTasks, useUpdateTask } from '../../hooks/useTask';
+import { useTasks, useTasksByExecutor, useUpdateTask } from '../../hooks/useTask';
 import { useUsers } from '../../hooks/useUser';
 import { useOrders } from '../../hooks/useOrder';
 import { useStates } from '../../hooks/useState';
@@ -31,16 +32,19 @@ type User = components['schemas']['UserResponseDTO'];
 
 
 export function TasksMyAllPage() {
-  const currExecutorId = 1;
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [hideClosed, setHideClosed] = useState(true);
   const [hideAll, setHideAll] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedTask, setSelectedTask] = useState<OrderTask | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // фильтр по статусу
@@ -48,9 +52,18 @@ export function TasksMyAllPage() {
   const [searchParams] = useSearchParams();
   const urlStatus = searchParams.get('status');
 
+  /*
+    ВРЕМЕННОЕ РЕШЕНИЕ
+    Если true, то будут грузится все задачи, всех исполнителей
+    Если false, то будут грузится задачи только пользователя с айди 1 в качестве исполнителя
+    В будущем это заменить на проверку роли пользователя
+  */
+  const ADMIN_SWITCH = true;
+  const currExecutorId = 1;
+
+  const { data: tasks = [] } = ADMIN_SWITCH ? useTasks() : useTasksByExecutor(currExecutorId);
   const { mutate: updateTaskMutate } = useUpdateTask();
 
-  const { data: tasks = [] } = useTasks();
   const { data: users = [] } = useUsers();
   const { data: orders = [] } = useOrders();
   const { data: states = [] } = useStates();
@@ -59,19 +72,20 @@ export function TasksMyAllPage() {
     let result = tasks;
 
     // Фильтр по статусу из URL
-    if (urlStatus === 'onAgree') {
-      result = result.filter((item: OrderTask) => (item.taskStateName === 'На согласовании' || item.taskStateName === 'Закрыта'));
+    if (urlStatus === 'pendingApproval') {
+      // Добавить логику проверки, что задача на согласовании у текущего пользователя
+      result = result.filter((item: OrderTask) => (item.taskStateName === TASK_STATES.PENDING_APPROVAL || item.taskStateName === TASK_STATES.CLOSED));
     }
     else if (urlStatus) {
       result = result.filter((item: OrderTask) => item.taskStateName === urlStatus);
     }
 
     if (hideClosed) {
-      result = result.filter((item: OrderTask) => item.taskStateName !== 'Закрыта');
+      result = result.filter((item: OrderTask) => item.taskStateName !== TASK_STATES.CLOSED);
     }
 
     if (hideAll) {
-      result = result.filter((item: OrderTask) => item.executorId === currExecutorId || item.taskStateName === 'Закрыта');
+      result = result.filter((item: OrderTask) => item.executorId === currExecutorId || item.taskStateName === TASK_STATES.CLOSED);
     }
 
     return result;
@@ -335,7 +349,7 @@ export function TasksMyAllPage() {
     let year = parseInt(parts[2], 10);
 
     if (year < 100) {
-      year += 2000; // 24 → 2024
+      year += 2000;
     }
 
     if (isNaN(day) || isNaN(month) || isNaN(year)) {
@@ -350,7 +364,7 @@ export function TasksMyAllPage() {
     if (!task.dateFinishPlan) return false;
 
     // Если заявка уже завершена не считаем просроченной
-    //const completedStatuses = ['Закрыта', 'Отклонена'];
+    //const completedStatuses = [TASK_STATES.CLOSED, TASK_STATES.REJECTED];
 
     if (task.taskStateName) {
       return false;
@@ -403,12 +417,10 @@ export function TasksMyAllPage() {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
     const task = selectedRows[0].original;
-    return task.taskStateName === 'Новая' ? true : false;
+    return (task.taskStateName === TASK_STATES.NEW || task.taskStateName === TASK_STATES.PENDING || task.taskStateName === TASK_STATES.REJECTED) ? true : false;
   }
 
-  const inWork = states?.find(state => state.name === 'В работе');
-  const declined = states?.find(state => state.name === 'Отклонена');
-  const onWait = states?.find(state => state.name === 'В ожидании');
+  const inWork = states?.find(state => state.name === TASK_STATES.IN_WORK);
 
   const handleAcceptClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
@@ -419,19 +431,52 @@ export function TasksMyAllPage() {
     updateTaskMutate({ id: task.idOrderTask, data: { idTaskState: inWork.idOrderState } });
   };
 
-  // Обработчик двойного клика
+  const handleDeclineClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setDeclineDialogOpen(true);
+  };
+
+  const handleDeclineClose = () => {
+    setSelectedTask(null);
+    setDeclineDialogOpen(false);
+  };
+
+  const handlePostponeClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setPostponeDialogOpen(true);
+  };
+
+  const handlePostponeClose = () => {
+    setSelectedTask(null);
+    setPostponeDialogOpen(false);
+  };
+
+  const handleCloseClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setCloseDialogOpen(true);
+  };
+
+  const handleCloseClose = () => {
+    setSelectedTask(null);
+    setCloseDialogOpen(false);
+  };
+
   const handleNomerClick = (row: MRT_Row<OrderTask>) => {
     setSelectedOrder(orders?.find((item: Order) => item.idOrder === row.original.orderId) || null);
     setIsDialogOpen(true);
   };
 
-  // Обработчик закрытия диалога
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedOrder(null);
   };
 
-  // Создание таблицы
   const table = useMantineReactTable({
     columns: columns,
     data: filteredData,
@@ -494,7 +539,7 @@ export function TasksMyAllPage() {
         borderLeft: '1px solid #dde7ee !important',
         color: isTaskOverdue(row.original) ? '#d32f2f' : 'inherit',
         cursor: 'pointer',
-        fontWeight: row.original.taskStateName === 'Новая' ? 'bold' : 'normal',
+        fontWeight: row.original.taskStateName === TASK_STATES.NEW ? 'bold' : 'normal',
       }
     }),
     onColumnFiltersChange: handleFiltersChange,
@@ -543,8 +588,8 @@ export function TasksMyAllPage() {
               color="inherit"
               startIcon={<Build />}
               size={'small'}
-              onClick={handleAcceptClick}
               disabled={hasSelectedRows || !isNewTask()}
+              onClick={handleAcceptClick}
             >
               Принять в работу
             </Button>
@@ -556,6 +601,7 @@ export function TasksMyAllPage() {
               startIcon={<Clear />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleDeclineClick}
             >
               Отклонить задачу
             </Button>
@@ -567,6 +613,7 @@ export function TasksMyAllPage() {
               startIcon={<Note />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handlePostponeClick}
             >
               Отложить задачу
             </Button>
@@ -578,10 +625,14 @@ export function TasksMyAllPage() {
               startIcon={<Check />}
               size={'small'}
               disabled={hasSelectedRows}
+              onClick={handleCloseClick}
             >
               Закрыть задачу
             </Button>
           </Grid2>
+
+          {/** Если нужно будет - включить*/}
+          {false && (
           <Grid2 size="auto">
             <Button
               variant="contained"
@@ -592,6 +643,7 @@ export function TasksMyAllPage() {
               На контроль
             </Button>
           </Grid2>
+          )}
 
           <Grid2 size="auto">
             <Button
@@ -605,16 +657,18 @@ export function TasksMyAllPage() {
               В Excel
             </Button>
           </Grid2>
-          <Grid2 size="auto" alignContent="center">
-            <MantineProvider theme={{ cursorType: 'pointer' }}>
-              <Checkbox
-                checked={hideAll}
-                onChange={(event) => setHideAll(event.currentTarget.checked)}
-                label="Только мои задачи"
-                size="md"
-              />
-            </MantineProvider>
-          </Grid2>
+          {ADMIN_SWITCH && (
+            <Grid2 size="auto" alignContent="center">
+              <MantineProvider theme={{ cursorType: 'pointer' }}>
+                <Checkbox
+                  checked={hideAll}
+                  onChange={(event) => setHideAll(event.currentTarget.checked)}
+                  label="Только мои задачи"
+                  size="md"
+                />
+              </MantineProvider>
+            </Grid2>
+          )}
           <Grid2 size="auto" alignContent="center">
             <MantineProvider theme={{ cursorType: 'pointer' }}>
               <Checkbox
@@ -636,6 +690,26 @@ export function TasksMyAllPage() {
         request={selectedOrder}
         disabled={true}
         onClose={handleDialogClose}
+      />
+
+      <PostponeOrderTaskDialog
+        task={selectedTask}
+        open={postponeDialogOpen}
+        onClose={handlePostponeClose}
+      />
+
+      <CloseDeclineOrderTaskDialog
+        task={selectedTask}
+        closeOrDecline='decline'
+        open={declineDialogOpen}
+        onClose={handleDeclineClose}
+      />
+
+      <CloseDeclineOrderTaskDialog
+        task={selectedTask}
+        closeOrDecline='close'
+        open={closeDialogOpen}
+        onClose={handleCloseClose}
       />
 
     </div>

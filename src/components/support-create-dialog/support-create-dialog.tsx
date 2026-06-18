@@ -131,13 +131,13 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
     
     setHasTasks(approves.length > 0);
   };
-
+  
   useEffect(() => {
     checkFiles();
     checkMessages();
     checkTasks();
     checkApproves();
-  }, [request]);
+  }, [request, tasks]);
 
   const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
 
@@ -191,7 +191,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
         fullWidth
       >
         <DialogContent sx={{ minHeight: '60vh', minWidth: '75vh', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
 
             <Box fontSize='18px' fontWeight='700'>
               {request?.orderTypeName} №{request?.nomer}

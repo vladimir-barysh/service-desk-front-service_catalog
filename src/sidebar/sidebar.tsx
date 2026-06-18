@@ -9,6 +9,7 @@ import {
   SupportAgentOutlined
 } from '@mui/icons-material'
 import '../styles/sidebar.scss';
+import { TASK_STATES } from "../components";
 
 import { useOrders } from '../hooks/useOrder';
 import { useTasks } from "../hooks/useTask";
@@ -32,16 +33,16 @@ function useRequestCounts() {
 
   return useMemo(() => {
 
-    const newCount = orders.filter((item: Order) => item.orderStateName === 'Новая').length;
-    const allCount = orders.filter((item: Order) => item.orderStateName !== 'Закрыта').length;
-    const nAgreedCount = orders.filter((item: Order) => item.orderStateName === 'Не согласовано').length;
-    const nConfirmedCount = orders.filter((item: Order) => item.orderStateName === 'Возобновлена').length;
-    const onControlCount = orders.filter((item: Order) => item.orderTypeName === 'ЗНТ' && item.orderStateName !== 'Закрыта').length;
-    const exeCount = tasks.filter((item: OrderTask) => item.taskStateName !== 'Закрыта' && item.executorId === currExecutorId).length;
+    const newCount = orders.filter((item: Order) => item.orderStateName === TASK_STATES.NEW).length;
+    const allCount = orders.filter((item: Order) => item.orderStateName !== TASK_STATES.CLOSED).length;
+    const nApprovedCount = orders.filter((item: Order) => item.orderStateName === TASK_STATES.NOT_APPROVED).length;
+    const nConfirmedCount = orders.filter((item: Order) => item.orderStateName === TASK_STATES.RENEWED).length;
+    const onControlCount = orders.filter((item: Order) => item.orderTypeName === 'ЗНТ' && item.orderStateName !== TASK_STATES.CLOSED).length;
+    const exeCount = tasks.filter((item: OrderTask) => item.taskStateName !== TASK_STATES.CLOSED && item.executorId === currExecutorId).length;
     return {
       newCount,
       allCount,
-      nAgreedCount,
+      nApprovedCount,
       nConfirmedCount,
       onControlCount,
       exeCount
@@ -58,14 +59,14 @@ export function LeftSidebar() {
   const isTasksAll = location.pathname === '/tasks/all'
   const isNewActive = isSupportAll && status === 'new';
   const isAllActive = isSupportAll && !status;
-  const isNAgreedActive = isSupportAll && status === 'nAgreed';
+  const isNApprovedActive = isSupportAll && status === 'nApproved';
   const isNConfirmedActive = isSupportAll && status === 'nConfirmed';
   const isOnControlActive = isSupportAll && status === 'onControl';
   const isOnExecution = isTasksAll && !status;
-  const isOnAgree = isTasksAll && status === 'onAgree';
+  const PendingApproval = isTasksAll && status === 'pendingApproval';
   const isMeActive = isTasksAll && status === 'mine';
 
-  const { newCount, allCount, nAgreedCount, nConfirmedCount, onControlCount,
+  const { newCount, allCount, nApprovedCount, nConfirmedCount, onControlCount,
     exeCount
   } = useRequestCounts();
 
@@ -218,9 +219,9 @@ export function LeftSidebar() {
           <MenuItem
             {...menuItemCommon}
             icon={<SupportAgentOutlined />}
-            component={<Link to={'/support/all?status=nAgreed'} />}
-            active={isNAgreedActive}
-            suffix={<Badge badgeContent={nAgreedCount} color="primary"></Badge>}
+            component={<Link to={'/support/all?status=nApproved'} />}
+            active={isNApprovedActive}
+            suffix={<Badge badgeContent={nApprovedCount} color="primary"></Badge>}
           >
             Заявки (не согласованные)
           </MenuItem>
@@ -281,8 +282,8 @@ export function LeftSidebar() {
           <MenuItem
             {...menuItemCommon}
             icon={<ViewListOutlined />}
-            component={<Link to={'/tasks/all?status=onAgree'} />}
-            active={isOnAgree}
+            component={<Link to={'/tasks/all?status=pendingApproval'} />}
+            active={PendingApproval}
           >
             Задачи на согласование
           </MenuItem>

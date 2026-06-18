@@ -6,11 +6,14 @@ export * from './table-as-list';
 export * from './itcatalog-create-dialog';
 export * from './itservices-create-dialog';
 export * from './support-create-dialog';
-export * from './redirectTask-dialog'
-export * from './postponeTask-dialog'
+export * from './redirectTask-dialog';
+export * from './postponeOrderTask-dialog';
+export * from './closeDeclineOrderTask-dialog';
+export * from './newTask-dialog';
+export * from './task-info-dialog';
 export * from './support-hooks';
 export * from './support-button-dialogs';
-export * from './usefulFuncs';
+export * from './usefulFuncsAndConsts';
 export * from './request-create-znd-dialog';
 export * from './request-create-zni-dialog';
 export * from './request-create-zno-dialog';
