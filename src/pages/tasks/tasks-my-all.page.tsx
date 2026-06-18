@@ -73,6 +73,7 @@ export function TasksMyAllPage() {
 
     // Фильтр по статусу из URL
     if (urlStatus === 'pendingApproval') {
+      // Добавить логику проверки, что задача на согласовании у текущего пользователя
       result = result.filter((item: OrderTask) => (item.taskStateName === TASK_STATES.PENDING_APPROVAL || item.taskStateName === TASK_STATES.CLOSED));
     }
     else if (urlStatus) {
@@ -420,8 +421,6 @@ export function TasksMyAllPage() {
   }
 
   const inWork = states?.find(state => state.name === TASK_STATES.IN_WORK);
-  const relected = states?.find(state => state.name === TASK_STATES.REJECTED);
-  const pending = states?.find(state => state.name === TASK_STATES.PENDING);
 
   const handleAcceptClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
@@ -631,6 +630,9 @@ export function TasksMyAllPage() {
               Закрыть задачу
             </Button>
           </Grid2>
+
+          {/** Если нужно будет - включить*/}
+          {false && (
           <Grid2 size="auto">
             <Button
               variant="contained"
@@ -641,6 +643,7 @@ export function TasksMyAllPage() {
               На контроль
             </Button>
           </Grid2>
+          )}
 
           <Grid2 size="auto">
             <Button
