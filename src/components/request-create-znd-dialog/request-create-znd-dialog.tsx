@@ -31,14 +31,12 @@ import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import { TextInputField } from '../text-input-field';
 import { showNotification } from './../../context';
 
-import { usePodrs } from '../../hooks/usePodr';
 import { useUsers } from '../../hooks/useUser';
 import { useCreateOrder } from '../../hooks/useOrder';
 
 import { components } from '../../types/api';
 type Service = components['schemas']['ServResponseDTO'];
 type User = components['schemas']['UserResponseDTO'];
-type Podr = components['schemas']['PodrResponseDTO'];
 type OrderCreateDTO = components['schemas']['OrderCreateRequestDTO'];
 
 export const RequestCreateZNDDialog = (props: {
@@ -87,12 +85,6 @@ export const RequestCreateZNDDialog = (props: {
   }, [checked, sDate, toDate]);
 
   const { data: users = [] } = useUsers();
-  const { data: podrs = [] } = usePodrs();
-
-  const podrSelected = useMemo(() => {
-    if (!selected?.podrId) return null;
-    return podrs.find((p: Podr) => p.idPodr === selected?.podrId);
-  }, [podrs, selected]);
 
   const { mutate: createOrderMutation } = useCreateOrder();
 
@@ -175,7 +167,6 @@ export const RequestCreateZNDDialog = (props: {
     const dto: OrderCreateDTO = {
       name: name,
       idService: chosen.idService,
-      idCatItem: 1,
       idInitiator: 1,
       idOrderType: 1,
       description: description,
@@ -518,7 +509,7 @@ export const RequestCreateZNDDialog = (props: {
               </Grid2>
               <Grid2 size="auto">
                 <TextField
-                  value={podrSelected?.name || ''}
+                  value={selected?.podrName || ''}
                   fullWidth
                   size="small"
                   variant="outlined"

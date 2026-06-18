@@ -1,3 +1,5 @@
+import dayjs, { Dayjs } from "dayjs";
+
 export const formatFIO = (fullName: string): string => {
   if (!fullName) return '';
 
@@ -11,6 +13,11 @@ export const formatFIO = (fullName: string): string => {
   return `${lastName} ${firstName}.${middleName ? middleName + '.' : ''}`;
 };
 
+export const safeToIso = (value: Dayjs): string => {
+  if (!value) return '';
+  const d = dayjs(value);
+  return d.isValid() ? d.toISOString().split('.')[0] + 'Z' : '';
+};
 
 /*
   Константы состояний заявки/задачи

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -17,10 +16,13 @@ import { TextInputField } from '../text-input-field';
 import { Text } from '@mantine/core';
 import { Close } from '@mui/icons-material';
 
+import { TASK_STATES, safeToIso } from '../usefulFuncsAndConsts';
+
 import { useUpdateTask } from '../../hooks/useTask';
 import { useStates } from '../../hooks/useState';
 import { components } from '../../types/api';
 import { showNotification } from '../../context';
+import { useUpdateOrder } from '../../hooks/useOrder';
 type OrderTask = components['schemas']['TaskResponseDTO'];
 type Order = components['schemas']['OrderResponseDTO'];
 
@@ -42,10 +44,11 @@ interface PostponeOrderTaskDialogProps {
 export function PostponeOrderTaskDialog({ task, order, open, onClose }: PostponeOrderTaskDialogProps) {
 
   const [datePostpone, setDatePostpone] = useState('');
-  const [reason, setReason] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
 
   const { mutate: updateTaskMutate } = useUpdateTask();
+  const { mutate: updateOrderMutate} = useUpdateOrder();
   const { data: states = [] } = useStates();
 
   const isFormValid = useMemo(() => {
@@ -56,13 +59,6 @@ export function PostponeOrderTaskDialog({ task, order, open, onClose }: Postpone
     );
   }, [datePostpone, selected, reason]);
 
-  const safeToIso = (value: any): string => {
-    if (!value) return '';
-    const d = dayjs(value);
-    return d.isValid() ? d.toISOString().split('.')[0] + 'Z' : '';
-  };
-
-  // Обработчик сохранения
   const handleSave = () => {
     if (!isFormValid) {
       showNotification({
@@ -71,24 +67,39 @@ export function PostponeOrderTaskDialog({ task, order, open, onClose }: Postpone
       });
       return;
     }
-    if (!task) {
+    if (order) {
+      const newState = states.find(state => state.name === TASK_STATES.PENDING);
+      updateOrderMutate(
+        {
+          id: order?.idOrder,
+          data: {
+            idOrderState: newState?.idOrderState,
+            datePostpone: datePostpone,
+            description: `${order?.description}\nЗАЯВКА ОТЛОЖЕНА (${dayjs(new Date).format('DD.MM.YYYY HH:mm')})\nПричина: ${selected === 'Своя причина' ? reason : selected}`
+          } 
+        }        
+      );
+    }
+    else if (task) {
+      const newState = states.find(state => state.name === TASK_STATES.PENDING);
+      updateTaskMutate(
+        {
+          id: task.idOrderTask,
+          data: {
+            idTaskState: newState?.idOrderState,
+            datePostpone: datePostpone,
+            description: `${task?.description}\nЗАДАЧА ОТЛОЖЕНА (${dayjs(new Date).format('DD.MM.YYYY HH:mm')})\nПричина: ${selected === 'Своя причина' ? reason : selected}`,
+          },
+        },
+      );
+    }
+    else {
       showNotification({
-        title: 'Не указана задача',
+        title: 'Не указан объект откладывания',
         color: 'orange',
       });
       return;
     }
-    const newState = states.find(state => state.name === 'В ожидании');
-    updateTaskMutate(
-      {
-        id: task.idOrderTask,
-        data: {
-          idTaskState: newState?.idOrderState,
-          datePostpone: datePostpone,
-          description: `${task?.description}\nЗАДАЧА ОТЛОЖЕНА\nПричина: ${selected === 'Своя причина' ? reason : selected}`,
-        },
-      },
-    );
     handleClose();
   };
 
@@ -101,8 +112,8 @@ export function PostponeOrderTaskDialog({ task, order, open, onClose }: Postpone
   };
 
   const handleDateChange = (newDate: DateValue) => {
-    const temp = newDate ? dayjs(newDate) : '';
-    setDatePostpone(safeToIso(temp));
+    setDatePostpone(newDate ? safeToIso(dayjs(newDate)) : '');
+    console.log(order);
   };
 
   return (
@@ -124,7 +135,7 @@ export function PostponeOrderTaskDialog({ task, order, open, onClose }: Postpone
           >
             <Grid2 size="auto">
               <Box fontSize="20px" fontWeight="700">
-                Отложить {task === null ? 'заявку' : 'задачу'}
+                Отложить {order ? 'заявку' : 'задачу'}
               </Box>
             </Grid2>
 

@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable } from 'mantine-react-table';
+import { MantineReactTable, type MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, useMantineReactTable } from 'mantine-react-table';
 import { Grid2, Box, Button } from '@mui/material';
 import { Add, Check, Clear, ThreeSixty, Mode } from '@mui/icons-material';
 import { MantineProvider, Checkbox } from '@mantine/core';
@@ -9,29 +9,64 @@ import {
   SupportGeneralDialog,
   formatFIO, RequestCreateZNODialog,
   RequestCreateZNDDialog, RequestCreateZNIDialog,
-  RequestCreateZNTDialog
+  RequestCreateZNTDialog,
+  TASK_STATES
 } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { components } from '../../types/api';
-import { useOrdersByInitiator } from '../../hooks/useOrder';
+import { useOrdersByInitiator, useUpdateOrderStatus } from '../../hooks/useOrder';
+import { useStates } from '../../hooks/useState';
 
 type Order = components['schemas']['OrderResponseDTO'];
 
 export function RequestsAllPage() {
-  const [requestTypeDialog, setRequestType] = useState('');
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
+
   const [hideClosed, setHideClosed] = useState(true);
+
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [rowSelection, setRowSelection] = useState({});
 
   // TODO: Заменить на настоящего пользователя
   //const currInitiator = "Арбузов Александр Александрович";
   const currInitiatorId = 1;
 
   const { data: currInitiatorOrders = [] } = useOrdersByInitiator(currInitiatorId);
+
+  const { data: orderStates = [] } = useStates();
+  const updateStatus = useUpdateOrderStatus();
+
+  const cancelByInitiator = orderStates?.find(state => state.name === TASK_STATES.CANCELLED_BY_INITIATOR);
+  const pendingConfirmation = orderStates?.find(state => state.name === TASK_STATES.PENDING_CONFIRMATION);
+  const closed = orderStates?.find(state => state.name === TASK_STATES.CLOSED);
+
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
+  
+  const filteredData = useMemo(() => {
+    let result = currInitiatorOrders;
+
+    if (hideClosed) {
+      result = result.filter((item: Order) => item.orderStateName !== 'Закрыта');
+    }
+
+    return result;
+  }, [hideClosed, currInitiatorOrders]);
+
+  useEffect(() => {
+    setColumnFilters([]);
+  }, []);
+
+  const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
+    const next = typeof updater === 'function' ? updater(columnFilters) : updater;
+    setColumnFilters(next);
+  };
+
 
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
@@ -203,11 +238,11 @@ export function RequestsAllPage() {
     }
 
     // Получаем тип заявки из данных строки
-    const requestType = row.original.orderTypeName;
+    const orderType = row.original.orderTypeName;
 
 
     // Цвета для разных типов заявок
-    switch (requestType) {
+    switch (orderType) {
       case 'ЗНО':
         return 'rgba(76, 175, 80, 0.1)';
       case 'ЗНД':
@@ -222,7 +257,7 @@ export function RequestsAllPage() {
   };
 
   const onRequestTypeSelect = (selected: string) => {
-    setRequestType(selected);
+
     if (selected === "Заявка на обслуживание") {
       createZNODialog();
     }
@@ -254,10 +289,6 @@ export function RequestsAllPage() {
     setIsCreateDialogZNIOpen(false);
     setIsCreateDialogZNTOpen(false);
   }
-  useEffect(() => {
-    console.debug('111' + requestTypeDialog);
-  }, [requestTypeDialog]
-  );
 
   // Парсер даты
   function parseDate(dateString: string): Date | null {
@@ -282,14 +313,14 @@ export function RequestsAllPage() {
   }
 
   // Функция для проверки просрочки заявки
-  const isRequestOverdue = (request: Order): boolean => {
-    if (!request.dateFinishPlan) return false;
+  const isRequestOverdue = (order: Order): boolean => {
+    if (!order.dateFinishPlan) return false;
 
     // Если заявка уже завершена не считаем просроченной
-    if (request.orderStateId) {
+    if (order.orderStateId) {
       return false;
     }
-    const temp = dayjs(request.dateFinishPlan).toString();
+    const temp = dayjs(order.dateFinishPlan).toString();
     const desiredDate = parseDate(temp.split(' ')[0]);
 
     // Если дата не распарсилась не считаем просроченной
@@ -302,36 +333,61 @@ export function RequestsAllPage() {
     return desiredDate < today;
   };
 
+  const handleCancelClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    if (order.idOrder == null || cancelByInitiator?.idOrderState == null) return;
+
+    updateStatus.mutate({ id: order.idOrder, statusId: cancelByInitiator.idOrderState });
+
+    setSelectedOrder(null);
+  };
+
   const handleEditClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
-    setSelectedRequest(selectedRows[0].original);
+    setSelectedOrder(selectedRows[0].original);
     setIsDialogOpen(true);
-  }
+  };
+
+  const handleConfirmClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    if (order.idOrder == null || closed?.idOrderState == null) return;
+
+    updateStatus.mutate({ id: order.idOrder, statusId: closed.idOrderState });
+
+    setSelectedOrder(null);
+  };
+  // TODO: Доделать возобновление заявки
+  const handleRenewClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    if (order.idOrder == null || pendingConfirmation?.idOrderState == null) return;
+
+    updateStatus.mutate({ id: order.idOrder, statusId: pendingConfirmation.idOrderState });
+
+    setSelectedOrder(null);
+  };
 
   const handleNomerClick = (row: MRT_Row<Order>) => {
-    setSelectedRequest(row.original);
+    setSelectedOrder(row.original);
     setIsDialogOpen(true);
   };
 
   // Обработчик закрытия диалога
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    setSelectedRequest(null);
+    setSelectedOrder(null);
   };
-
-  const [selectedRequest, setSelectedRequest] = useState<Order | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [requestType] = useState(0);
-
-  useEffect(() => {
-    console.debug('111' + requestType);
-  }, [requestType]);
 
   // Создание таблицы
   const table = useMantineReactTable({
     columns: columns,
-    data: currInitiatorOrders,
+    data: filteredData,
     enableBottomToolbar: false,
     enableColumnActions: false,
     enableColumnResizing: false,
@@ -393,31 +449,50 @@ export function RequestsAllPage() {
         fontWeight: row.original.orderStateName === 'Новая' ? 'bold' : 'normal',
       }
     }),
+    onColumnFiltersChange: handleFiltersChange,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      columnFilters,
+      rowSelection,
+    },
   });
 
   // Доступность кнопок по нажатию на строку таблицы
   const selectedRowsCount = table.getSelectedRowModel().rows.length;
   const hasSelectedRows = !(selectedRowsCount > 0);
 
+  const showCancelButton = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return order.orderStateName === TASK_STATES.NEW ? true : false
+  }
+
+  const showEditButton = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return order.orderStateName === TASK_STATES.NEW ? true : false
+  }
+
+  const showConfirmButton = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return order.orderStateName === TASK_STATES.PENDING_CONFIRMATION ? true : false;
+  }
+
+  const showRenewButton = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return order.orderStateName === TASK_STATES.PENDING_CONFIRMATION ? true : false;
+  }
+
   return (
     <div>
       <Box height={50}>
-        <RequestCreateZNODialog
-          isOpen={isCreateDialogZNOOpen}
-          onClose={onCreateDialogClose}
-        />
-        <RequestCreateZNDDialog
-          isOpen={isCreateDialogZNDOpen}
-          onClose={onCreateDialogClose}
-        />
-        <RequestCreateZNIDialog
-          isOpen={isCreateDialogZNIOpen}
-          onClose={onCreateDialogClose}
-        />
-        <RequestCreateZNTDialog
-          isOpen={isCreateDialogZNTOpen}
-          onClose={onCreateDialogClose}
-        />
+
         <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
@@ -434,7 +509,8 @@ export function RequestsAllPage() {
               color="error"
               startIcon={<Clear />}
               size={'small'}
-              disabled={hasSelectedRows}
+              disabled={hasSelectedRows || !showCancelButton()}
+              onClick={handleCancelClick}
             >
               Отменить заявку
             </Button>
@@ -445,7 +521,7 @@ export function RequestsAllPage() {
               color="warning"
               startIcon={<Mode />}
               size={'small'}
-              disabled={hasSelectedRows}
+              disabled={hasSelectedRows || !showEditButton()}
               onClick={handleEditClick}
             >
               Редактировать заявку
@@ -457,7 +533,8 @@ export function RequestsAllPage() {
               color="success"
               startIcon={<Check />}
               size={'small'}
-              disabled={hasSelectedRows}
+              disabled={hasSelectedRows || !showConfirmButton()}
+              onClick={handleConfirmClick}
             >
               Подтвердить заявку
             </Button>
@@ -468,7 +545,8 @@ export function RequestsAllPage() {
               color="inherit"
               startIcon={<ThreeSixty />}
               size={'small'}
-              disabled={hasSelectedRows}
+              disabled={hasSelectedRows || !showRenewButton()}
+              onClick={handleRenewClick}
             >
               Возобновить заявку
             </Button>
@@ -491,9 +569,26 @@ export function RequestsAllPage() {
 
       <SupportGeneralDialog
         isOpen={isDialogOpen}
-        request={selectedRequest}
+        order={selectedOrder}
         disabled={false}
         onClose={handleDialogClose}
+      />
+
+      <RequestCreateZNODialog
+        isOpen={isCreateDialogZNOOpen}
+        onClose={onCreateDialogClose}
+      />
+      <RequestCreateZNDDialog
+        isOpen={isCreateDialogZNDOpen}
+        onClose={onCreateDialogClose}
+      />
+      <RequestCreateZNIDialog
+        isOpen={isCreateDialogZNIOpen}
+        onClose={onCreateDialogClose}
+      />
+      <RequestCreateZNTDialog
+        isOpen={isCreateDialogZNTOpen}
+        onClose={onCreateDialogClose}
       />
     </div>
   );

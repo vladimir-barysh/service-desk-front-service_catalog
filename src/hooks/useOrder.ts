@@ -41,7 +41,7 @@ export const useOrdersByInitiator = (
   }: UseOrdersProps = {}
 ) => 
   useQuery<OrderResponse[]>({
-    queryKey: ['currInitiatorOrders', 'initiator', initiatorId],
+    queryKey: ['orders', 'initiator', initiatorId],
     queryFn: () => orderApi.getByInitiatorId(initiatorId),
     enabled,
     staleTime,

@@ -287,10 +287,10 @@ export function TasksMyAllPage() {
     }
 
     // Получаем тип заявки из данных строки
-    const requestType = row.original.orderTypeName;
+    const orderType = row.original.orderTypeName;
 
     // Цвета для разных типов заявок
-    switch (requestType) {
+    switch (orderType) {
       case 'ЗНО':
         return 'rgba(76, 175, 80, 0.1)';
       case 'ЗНД':
@@ -687,7 +687,7 @@ export function TasksMyAllPage() {
 
       <SupportGeneralDialog
         isOpen={isDialogOpen}
-        request={selectedOrder}
+        order={selectedOrder}
         disabled={true}
         onClose={handleDialogClose}
       />

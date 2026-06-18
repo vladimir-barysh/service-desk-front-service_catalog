@@ -12,7 +12,7 @@ export * from './closeDeclineOrderTask-dialog';
 export * from './newTask-dialog';
 export * from './task-info-dialog';
 export * from './support-hooks';
-export * from './support-button-dialogs';
+export * from './control-create-dialog';
 export * from './usefulFuncsAndConsts';
 export * from './request-create-znd-dialog';
 export * from './request-create-zni-dialog';

@@ -20,33 +20,29 @@ import {
   SupportGeneralTab, SupportApproveTab, SupportDiscussionTab,
   SupportFilesTab, SupportHistoryTab, SupportTasksTab
 } from '../support-tabs';
-import { useQuery} from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { getTasks } from '../../api/services/taskService';
 import { components } from '../../types/api';
 import { useUpdateOrder } from '../../hooks/useOrder';
 import { useTasks } from '../../hooks/useTask';
 import { useApprovesByOrder } from '../../hooks/useApprove';
+import { safeToIso } from '../usefulFuncsAndConsts';
 
 type Order = components['schemas']['OrderResponseDTO'];
-type OrderTask = components['schemas']['TaskResponseDTO'];
-
 interface SupportGeneralDialogProps {
   isOpen: boolean;
-  request: Order | null;
+  order: Order | null;
   disabled: boolean;
   onClose: () => void;
 }
 
-export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: SupportGeneralDialogProps) {
+export function SupportGeneralDialog({ isOpen, order, disabled, onClose }: SupportGeneralDialogProps) {
   const [value, setValue] = useState('1');
   const [hasFiles, setHasFiles] = useState(false);
   const [hasMessages, setHasMessages] = useState(false);
-  const [hasTasks, setHasTasks] = useState(false);
-  const [hasApproves, setHasApproves] = useState(false);
+  
 
   // Состояния для каждого таба
-  const [generalData, setGeneralData] = useState(request);
+  const [generalData, setGeneralData] = useState(order);
   const [filesData, setFilesData] = useState<any[]>([]);
   const [discussionData, setDiscussionData] = useState<any[]>([]);
 
@@ -62,14 +58,18 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
     setHasChanges(generalChanged || filesChanged || discussionChanged);
   }, [generalChanged, filesChanged, discussionChanged]);
 
-  const [editableRequest, setEditableRequest] = useState<Order | null>(request);
+  const [editableRequest, setEditableRequest] = useState<Order | null>(order);
   const isEditing = !editableRequest?.orderStateName?.includes('Закрыта');              // флаг режима редактирования
 
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
   const { data: tasks = [] } = useTasks();
-  const { data: approves = [], isLoading: approvesLoading, error: approvesError } = useApprovesByOrder(request?.idOrder ?? 0);
-    
+  const { data: approves = [], isLoading: approvesLoading, error: approvesError } = useApprovesByOrder(order?.idOrder ?? 0);
+  
+  //Проверка на наличие согласования, задач, 
+  const hasTasks = tasks.some(t => t.orderNomer === order?.nomer);
+  const hasApproves = approves.length > 0;
+
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
   };
@@ -103,60 +103,40 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
 
   // Функция для проверки файлов по ID заявки
   const checkFiles = () => {
-    if (!request?.nomer) return;
+    if (!order?.nomer) return;
     const filesForThisRequest = uploadedFiles.filter(
-     file => file.idRequest === request.nomer
+     file => file.idRequest === order.nomer
     );
     setHasFiles(filesForThisRequest.length > 0);
   };
 
   const checkMessages = () => {
-    if (!request?.nomer) return;
+    if (!order?.nomer) return;
     const messagesForThisRequest = seed.filter(
-      message => message.idRequest === request.nomer
+      message => message.idRequest === order.nomer
     );
     setHasMessages(messagesForThisRequest.length > 0);
-  };
-
-  const checkTasks = () => {
-    if (!request?.nomer) return;
-    const tasksForThisOrder = tasks.filter(
-      (task: OrderTask) => task.orderNomer === request.nomer
-    );
-    setHasTasks(tasksForThisOrder.length > 0);
-  };
-
-  const checkApproves = () => {
-    if (!request?.nomer) return;
-    
-    setHasTasks(approves.length > 0);
   };
   
   useEffect(() => {
     checkFiles();
     checkMessages();
-    checkTasks();
-    checkApproves();
-  }, [request, tasks]);
+  }, [order, tasks, approves]);
 
-  const { mutate: updateOrderMutate, isPending } = useUpdateOrder();
+  const { mutate: updateOrderMutate } = useUpdateOrder();
 
   const handleSave = async () => {
     if (!generalData?.idOrder) return;
-    const safeToIso = (value: any): string => {
-      if (!value) return '';
-      const d = dayjs(value);
-      return d.isValid() ? d.toISOString().split('.')[0] + 'Z' : '';
-    };
+    
     updateOrderMutate(
       {
         id: generalData.idOrder,
         data: {
           name: generalData?.name,
           description: generalData?.description,
-          dateFinishPlan: safeToIso(generalData?.dateFinishPlan),
-          datePostpone: safeToIso(generalData?.datePostpone),
-          dateTechReturn: safeToIso(generalData?.dateTechReturn),
+          dateFinishPlan: safeToIso(dayjs(generalData?.dateFinishPlan)),
+          datePostpone: safeToIso(dayjs(generalData?.datePostpone)),
+          dateTechReturn: safeToIso(dayjs(generalData?.dateTechReturn)),
           idOrderType: generalData?.orderTypeId,
           idService: generalData?.serviceId,
           idOrderPriority: generalData?.orderPriorityId,
@@ -172,8 +152,8 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
   };
 
   const handleCancel = () => {
-    setEditableRequest(request); // Возвращаем оригинальные данные
-    setGeneralData(request);
+    setEditableRequest(order); // Возвращаем оригинальные данные
+    setGeneralData(order);
     setFilesData([]);
     setDiscussionData([]);
     setGeneralChanged(false);
@@ -194,7 +174,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
 
             <Box fontSize='18px' fontWeight='700'>
-              {request?.orderTypeName} №{request?.nomer}
+              {order?.orderTypeName} №{order?.nomer}
             </Box>
 
             <TabContext value={value}>
@@ -227,7 +207,7 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
             <TabPanel value="1" sx={{ padding: "0px", flexGrow: 1 }}>
               <SupportGeneralTab
                 isOpen={true}
-                request={request}
+                order={order}
                 disabled={disabled}
                 onUpdate={(data, hasChanges) => {
                   setGeneralData(data);
@@ -236,16 +216,16 @@ export function SupportGeneralDialog({ isOpen, request, disabled, onClose }: Sup
               />
             </TabPanel>
             <TabPanel value="2" sx={{ padding: "0px" }}>
-              <SupportFilesTab order={request} />
+              <SupportFilesTab order={order} />
             </TabPanel>
             <TabPanel value="3" sx={{ padding: "0px" }}>
-              <SupportApproveTab order={request} />
+              <SupportApproveTab order={order} />
             </TabPanel>
             <TabPanel value="4" sx={{ padding: "0px" }}>
-              <SupportTasksTab order={request} />
+              <SupportTasksTab order={order} />
             </TabPanel>
             <TabPanel value="5" sx={{ padding: "0px" }}>
-              <SupportDiscussionTab request={request} />
+              <SupportDiscussionTab order={order} />
             </TabPanel>
             <TabPanel value="6" sx={{ padding: "0px" }}>
               <SupportHistoryTab />

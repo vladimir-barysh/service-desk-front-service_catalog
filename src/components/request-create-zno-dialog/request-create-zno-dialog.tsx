@@ -72,9 +72,10 @@ export const RequestCreateZNODialog = (props: {
   const isFormValid = useMemo(() => {
     return (
       chosen !== null &&
-      problemDescription.trim() !== ''
+      problemDescription.trim() !== '' &&
+      (isOtherUser ? (initiatorId ? true : false) : true)
     );
-  }, [chosen, problemDescription]);
+  }, [chosen, problemDescription, isOtherUser, initiatorId]);
 
   function CreateDialog() {
     setIsCreateDialogOpen(true);
@@ -113,8 +114,6 @@ export const RequestCreateZNODialog = (props: {
     const dto: OrderCreateDTO = {
       name: chosen.fullname,
       idService: chosen.idService,
-      // TODO: исправить ХАРД КОД - услуга н1
-      idCatItem: 1,
       // TODO: исправить единицу на пользователя, который создает заявку
       idInitiator: isOtherUser && initiatorId !== null ? initiatorId : 1,
       idOrderType: 3,

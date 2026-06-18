@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -11,18 +10,17 @@ import {
   IconButton,
   Autocomplete
 } from '@mui/material';
-import dayjs from 'dayjs';
-import { DateTimePicker, DateValue } from '@mantine/dates';
 import { TextInputField } from '../text-input-field';
 import { Text } from '@mantine/core';
 import { Close } from '@mui/icons-material';
 import { showNotification } from '../../context';
 
 import { useUpdateTask } from '../../hooks/useTask';
+import { useUpdateOrder } from '../../hooks/useOrder';
 import { useStates } from '../../hooks/useState';
 import { components } from '../../types/api';
+import { TASK_STATES } from '../usefulFuncsAndConsts';
 type OrderTask = components['schemas']['TaskResponseDTO'];
-type OrderState = components['schemas']['OrderStateResponseDTO'];
 type Order = components['schemas']['OrderResponseDTO'];
 
 interface CloseDeclineOrderTaskDialogProps {
@@ -54,6 +52,7 @@ export function CloseDeclineOrderTaskDialog({ order, task, closeOrDecline, open,
   const [resultText, setResultText] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
 
+  const { mutate: updateOrderMutate } = useUpdateOrder();
   const { mutate: updateTaskMutate } = useUpdateTask();
   const { data: states = [] } = useStates();
 
@@ -64,14 +63,11 @@ export function CloseDeclineOrderTaskDialog({ order, task, closeOrDecline, open,
     );
   }, [selected, resultText]);
 
-  const safeToIso = (value: any): string => {
-    if (!value) return '';
-    const d = dayjs(value);
-    return d.isValid() ? d.toISOString().split('.')[0] + 'Z' : '';
-  };
-
   // Обработчик сохранения
   const handleSave = () => {
+
+    const newState = states.find(state => state.name === (closeOrDecline === 'close' ? TASK_STATES.CLOSED : TASK_STATES.REJECTED));
+    
     if (!isFormValid) {
       showNotification({
         title: 'Заполните обязательные все поля',
@@ -79,25 +75,39 @@ export function CloseDeclineOrderTaskDialog({ order, task, closeOrDecline, open,
       });
       return;
     }
-    if (!task) {
+    if (order) {
+      updateOrderMutate(
+        {
+          id: order.idOrder,
+          data: {
+            idOrderState: newState?.idOrderState,
+            resultText: `${order ? 'Заявка' : 'Задача'} ${closeOrDecline === 'close' ? 'закрыта' : 'отклонена'} по причине:
+${selected === 'Своя причина' || selected === 'Свой результат' ? resultText : selected}`,
+          }
+        }
+      )
+    }
+    else if (task) {
+      
+      updateTaskMutate(
+        {
+          id: task.idOrderTask,
+          data: {
+            idTaskState: newState?.idOrderState,
+            resultText: `${order ? 'Заявка' : 'Задача'} ${closeOrDecline === 'close' ? 'закрыта' : 'отклонена'} по причине:
+${selected === 'Своя причина' || selected === 'Свой результат' ? resultText : selected}`,
+          },
+        },
+      );
+
+    }
+    else {
       showNotification({
-        title: 'Не указана задача',
+        title: 'Не указан объект',
         color: 'orange',
       });
       return;
     }
-
-    const newState = states.find(state => state.name === (closeOrDecline === 'close' ? 'Закрыта' : 'Отклонена'));
-
-    updateTaskMutate(
-      {
-        id: task.idOrderTask,
-        data: {
-          idTaskState: newState?.idOrderState,
-          resultText: selected === 'Своя причина' || selected === 'Свой результат' ? resultText : selected,
-        },
-      },
-    );
     handleClose();
   };
 
@@ -122,7 +132,7 @@ export function CloseDeclineOrderTaskDialog({ order, task, closeOrDecline, open,
           >
             <Grid2 size="auto">
               <Box fontSize="20px" fontWeight="700">
-                {closeOrDecline === 'close' ? 'Закрыть' : 'Отклонить'} {task === null ? 'заявку' : 'задачу'}
+                {closeOrDecline === 'close' ? 'Закрыть' : 'Отклонить'} {order ? 'заявку' : 'задачу'}
               </Box>
             </Grid2>
 
@@ -138,7 +148,7 @@ export function CloseDeclineOrderTaskDialog({ order, task, closeOrDecline, open,
             direction="column"
             margin="0px 0px 10px 0px">
             <Grid2 size="auto">
-              <Text fw={600}>{closeOrDecline === 'close' ? `Результат выполнения ${task === null ? 'заявки' : 'задачи'}` : 'Причина'} </Text>
+              <Text fw={600}>{closeOrDecline === 'close' ? `Результат выполнения ${order ? 'заявки' : 'задачи'}` : 'Причина'} </Text>
             </Grid2>
             <Grid2>
               <Autocomplete

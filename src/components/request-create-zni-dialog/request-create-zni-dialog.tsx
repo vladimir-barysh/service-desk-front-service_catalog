@@ -97,8 +97,6 @@ export const RequestCreateZNIDialog = (props: {
       name: chosen?.fullname || 'Заголовок ЗНИ',
       // TODO: исправить хард код
       idService: chosen?.idService || 1,
-      // TODO: исправить ХАРД КОД - услуга н1 и инициатор
-      idCatItem: 1,
       idInitiator: 1,
       idOrderType: 2,
       description: problemDescription,

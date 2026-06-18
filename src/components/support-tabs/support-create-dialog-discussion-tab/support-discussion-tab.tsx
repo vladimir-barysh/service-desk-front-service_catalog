@@ -15,10 +15,10 @@ function formatDT(iso: string) {
 }
 
 interface SupportGeneralFirstTabProps {
-  request: Order | null;
+  order: Order | null;
 }
 
-export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
+export function SupportDiscussionTab({ order }: SupportGeneralFirstTabProps) {
   // список сообщений
   const [items, setItems] = useState<Message[]>(seed);
   // draft нового сообщения
@@ -34,16 +34,16 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
   const selected = useMemo(() => items.find(m => m.id === selectedId) || null, [items, selectedId]);
 
   useEffect(() => {
-    if(request?.nomer) {
-      const requestMsgs = seed.filter(
-        msg => msg.idRequest === request.nomer
+    if(order?.nomer) {
+      const orderMsgs = seed.filter(
+        msg => msg.idRequest === order.nomer
       );
-      setItems(requestMsgs);
+      setItems(orderMsgs);
     }
     else{
       setItems([]);
     }
-  }, [request?.nomer]);
+  }, [order?.nomer]);
 
   // Добавить сообщение
   const addMessage = () => {
@@ -55,7 +55,7 @@ export function SupportDiscussionTab({ request }: SupportGeneralFirstTabProps) {
       author: "Христорождественская В.А.", // текущий пользователь
       createdAt: new Date().toISOString(),
       text,
-      idRequest: request?.nomer,
+      idRequest: order?.nomer,
     };
     setItems(prev => [...prev, next]);
     setDraft("");

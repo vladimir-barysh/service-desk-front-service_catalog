@@ -9,29 +9,33 @@ import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
   SupportGeneralDialog,
+  RequestCreateZNODialog, RequestCreateZNDDialog, 
+  RequestCreateZNIDialog, RequestCreateZNTDialog,
+  PostponeOrderTaskDialog, CloseDeclineOrderTaskDialog,
   formatFIO,
-  PostponeDialog, RequestCreateZNODialog,
-  RequestCreateZNDDialog, RequestCreateZNIDialog,
-  RequestCreateZNTDialog
+  TASK_STATES,
 } from '../../components';
 import SplitButton from '../../components/split-button/split-button.component';
-import { useDialogs } from '../../components/support-hooks/use-dialog-state';
 import dayjs, { Dayjs } from 'dayjs';
 import * as XLSX from 'xlsx';
 import { showNotification } from '../../context';
 
 import { components } from '../../types/api';
-import { useOrders, useUpdateOrder, useUpdateOrderStatus } from '../../hooks/useOrder';
+import { useOrders, useUpdateOrderStatus } from '../../hooks/useOrder';
 import { useStates } from '../../hooks/useState';
 
 type Order = components['schemas']['OrderResponseDTO'];
-type OrderUpdateDTO = components['schemas']['OrderUpdateDTO'];
 
 export function SupportAllPage() {
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
+
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+
   const [hideClosed, setHideClosed] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
 
@@ -47,12 +51,10 @@ export function SupportAllPage() {
   const { data: orders = [] } = useOrders();
   const { data: orderStates = [] } = useStates();
 
-  const { mutate: updateOrderMutate } = useUpdateOrder();
   const updateStatus = useUpdateOrderStatus();
 
-  const inWork = orderStates?.find(state => state.name === 'В работе');
-  const declined = orderStates?.find(state => state.name === 'Отклонена');
-  const onWait = orderStates?.find(state => state.name === 'В ожидании');
+  const inWork = orderStates?.find(state => state.name === TASK_STATES.IN_WORK);
+  const pendingConfirmation = orderStates?.find(state => state.name === TASK_STATES.PENDING_CONFIRMATION);
 
   const filteredData = useMemo(() => {
     let result = orders;
@@ -302,9 +304,9 @@ export function SupportAllPage() {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
-    const requestType = row.original.orderTypeName;
+    const orderType = row.original.orderTypeName;
 
-    switch (requestType) {
+    switch (orderType) {
       case 'ЗНО':
         return 'rgba(76, 175, 80, 0.1)';
       case 'ЗНД':
@@ -374,13 +376,13 @@ export function SupportAllPage() {
     return new Date(year, month, day);
   }
 
-  const isRequestOverdue = (request: Order): boolean => {
-    if (!request.dateFinishPlan) return false;
+  const isRequestOverdue = (order: Order): boolean => {
+    if (!order.dateFinishPlan) return false;
 
-    if (request.orderStateId) {
+    if (order.orderStateId) {
       return false;
     }
-    const temp = dayjs(request.dateFinishPlan).toString();
+    const temp = dayjs(order.dateFinishPlan).toString();
     const desiredDate = parseDate(temp.split(' ')[0]);
 
     if (!desiredDate) return false;
@@ -395,14 +397,7 @@ export function SupportAllPage() {
     setSelectedOrder(row.original);
     setIsDialogOpen(true);
   };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setSelectedOrder(null);
-  };
-
   
-
   const table = useMantineReactTable({
     columns: columns,
     data: filteredData,
@@ -478,15 +473,33 @@ export function SupportAllPage() {
   const selectedRowsCount = table.getSelectedRowModel().rows.length;
   const hasSelectedRows = !(selectedRowsCount > 0);
 
-  const isNewOrder = () => {
+  const showAcceptButton = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
     const order = selectedRows[0].original;
-    return order.orderStateName === 'Новая' ? true : false;
+    return order.orderStateName === TASK_STATES.NEW ? true : false;
   }
 
-  // Хуки для управления диалогами
-  const { dialogs, openDialog, closeDialog } = useDialogs();
+  const showDeclineButton = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return (order.orderStateName !== TASK_STATES.REJECTED && order.orderStateName !== TASK_STATES.CLOSED) ? true : false
+  }
+
+  const showCloseButton = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return order.orderStateName !== TASK_STATES.NEW ? true : false
+  }
+
+  const showConfirmButton = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return order.orderStateName === TASK_STATES.PENDING_CONFIRMATION ? true : false;
+  }
 
   // Обработчики нажатия кнопок
   const handleAcceptClick = () => {
@@ -503,34 +516,53 @@ export function SupportAllPage() {
   const handleDeclineClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    if (order.idOrder == null || declined?.idOrderState == null) return;
+    setSelectedOrder(selectedRows[0].original);
+    setDeclineDialogOpen(true);
+  };
 
-    updateStatus.mutate({ id: order.idOrder, statusId: declined.idOrderState });
-
+  const handleDeclineClose = () => {
+    setSelectedOrder(null);
+    setDeclineDialogOpen(false);
   };
 
   const handlePostponeClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length > 0) {
-      openDialog('postpone', selectedRows[0].original);
-    }
+    if (selectedRows.length === 0) return;
+    setSelectedOrder(selectedRows[0].original);
+    setPostponeDialogOpen(true);
   };
 
-  // Обработчик подтверждения откладывания
-  const handlePostponeConfirm = (comment: string) => {
-    const order = dialogs.postpone.order;
-    if (order?.idOrder == null || onWait?.idOrderState == null) return;
+  const handlePostponeClose = () => {
+    setSelectedOrder(null);
+    setPostponeDialogOpen(false);
+  };
 
-    updateOrderMutate(
-      {
-        id: order.idOrder,
-        data: {
-          idOrderState: onWait.idOrderState,
-          comment: comment
-        } as OrderUpdateDTO,
-      },
-    );
+  const handleCloseClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedOrder(selectedRows[0].original);
+    setCloseDialogOpen(true);
+  };
+
+  const handleCloseClose = () => {
+    setSelectedOrder(null);
+    setCloseDialogOpen(false);
+  };
+
+  const handleConfirmClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    if (order.idOrder == null || pendingConfirmation?.idOrderState == null) return;
+
+    updateStatus.mutate({ id: order.idOrder, statusId: pendingConfirmation.idOrderState });
+
+    setSelectedOrder(null);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setSelectedOrder(null);
   };
 
   const exportToExcel = () => {
@@ -567,28 +599,7 @@ export function SupportAllPage() {
   return (
     <div>
       <Box height={50}>
-        <RequestCreateZNODialog
-          isOpen={isCreateDialogZNOOpen}
-          onClose={onCreateDialogClose}
-        />
-        <RequestCreateZNDDialog
-          isOpen={isCreateDialogZNDOpen}
-          onClose={onCreateDialogClose}
-        />
-        <RequestCreateZNIDialog
-          isOpen={isCreateDialogZNIOpen}
-          onClose={onCreateDialogClose}
-        />
-        <RequestCreateZNTDialog
-          isOpen={isCreateDialogZNTOpen}
-          onClose={onCreateDialogClose}
-        />
-        <PostponeDialog
-          open={dialogs.postpone.open}
-          onClose={() => closeDialog('postpone')}
-          onConfirm={handlePostponeConfirm}
-          request={dialogs.postpone.order}
-        />
+        
         <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
@@ -605,7 +616,7 @@ export function SupportAllPage() {
               color="inherit"
               startIcon={<Build />}
               size={'small'}
-              disabled={hasSelectedRows || !isNewOrder()}
+              disabled={hasSelectedRows || !showAcceptButton()}
               onClick={handleAcceptClick}
             >
               Принять в работу
@@ -617,7 +628,7 @@ export function SupportAllPage() {
               color="error"
               startIcon={<Clear />}
               size={'small'}
-              disabled={hasSelectedRows}
+              disabled={hasSelectedRows || !showDeclineButton()}
               onClick={handleDeclineClick}
             >
               Отклонить заявку
@@ -641,7 +652,8 @@ export function SupportAllPage() {
               color="success"
               startIcon={<Check />}
               size={'small'}
-              disabled={hasSelectedRows}
+              disabled={hasSelectedRows || !showCloseButton()}
+              onClick={handleCloseClick}
             >
               Закрыть заявку
             </Button>
@@ -651,7 +663,8 @@ export function SupportAllPage() {
               variant="contained"
               color="inherit"
               size={'small'}
-              disabled={hasSelectedRows}
+              disabled={ hasSelectedRows || !showConfirmButton() }
+              onClick={handleConfirmClick}
             >
               Подтвердить заявку
             </Button>
@@ -682,11 +695,46 @@ export function SupportAllPage() {
         </Grid2>
         <MantineReactTable key={tableKey} table={table} />
       </Box>
+
       <SupportGeneralDialog
         isOpen={isDialogOpen}
-        request={selectedOrder}
+        order={selectedOrder}
         disabled={false}
         onClose={handleDialogClose}
+      />
+
+      <RequestCreateZNODialog
+        isOpen={isCreateDialogZNOOpen}
+        onClose={onCreateDialogClose}
+      />
+      <RequestCreateZNDDialog
+        isOpen={isCreateDialogZNDOpen}
+        onClose={onCreateDialogClose}
+      />
+      <RequestCreateZNIDialog
+        isOpen={isCreateDialogZNIOpen}
+        onClose={onCreateDialogClose}
+      />
+      <RequestCreateZNTDialog
+        isOpen={isCreateDialogZNTOpen}
+        onClose={onCreateDialogClose}
+      />
+      <CloseDeclineOrderTaskDialog
+        order={selectedOrder}
+        closeOrDecline='decline'
+        open={declineDialogOpen}
+        onClose={handleDeclineClose}
+      />
+      <PostponeOrderTaskDialog
+        order={selectedOrder}
+        open={postponeDialogOpen}
+        onClose={handlePostponeClose}
+      />
+      <CloseDeclineOrderTaskDialog
+        order={selectedOrder}
+        closeOrDecline='close'
+        open={closeDialogOpen}
+        onClose={handleCloseClose}
       />
     </div>
   );
