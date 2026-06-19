@@ -149,7 +149,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
     (selectedApprove.idApproveState === approvedId || selectedApprove.idApproveState === notApprovedId);
   const isAlreadyStarted = selectedApprove?.idApproveState === inProgressId;
   // TODO: Получить информацию о текущем пользователе из контекста
-  const currentUserApprove = selectedApproveUsers.find(u => u.userId === 1);
+  const currentUserApprove = selectedApproveUsers.find(u => u.userId === 2);
   const canVote = currentUserApprove && currentUserApprove.idApproveUserState === inProgressId && isAlreadyStarted
 
   // Обёртка для кнопок панели
@@ -168,7 +168,7 @@ export function SupportApproveTab({ order }: SupportApproveTabProps) {
   if (error) return <Box p={2} color="error.main">Ошибка загрузки: {error.message}</Box>;
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ mt: 2, minHeight: '57vh' }}>
 
       {/* Панель кнопок */}
       <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>

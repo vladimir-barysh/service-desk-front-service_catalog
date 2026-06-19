@@ -6,6 +6,7 @@ import {
   DialogActions,
   Button,
   TextField,
+  Grid2,
 } from '@mui/material';
 
 interface CommentDialogProps {
@@ -54,15 +55,36 @@ export const CommentDialog = ({
           sx={{ mt: 1 }}
         />
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Отмена</Button>
-        <Button
-          variant="contained"
-          onClick={handleConfirm}
-          disabled={required && !comment.trim()}
-        >
-          Подтвердить
-        </Button>
+      <DialogActions sx={{
+        margin: '0px 15px 15px 0px',
+        display: 'flex',
+        gap: 1,
+        justifyContent: 'flex-end',
+      }}
+      >
+        <Grid2 size={3}>
+          <Button
+            variant="contained"
+            color="success"
+            size={'small'}
+            fullWidth={true}
+            onClick={handleConfirm}
+            disabled={required && !comment.trim()}
+          >
+            Сохранить
+          </Button>
+        </Grid2>
+        <Grid2 size={3}>
+          <Button
+            variant="contained"
+            color="inherit"
+            size={'small'}
+            fullWidth={true}
+            onClick={handleClose}
+          >
+            Отмена
+          </Button>
+        </Grid2>
       </DialogActions>
     </Dialog>
   );
