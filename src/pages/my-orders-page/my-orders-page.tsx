@@ -21,7 +21,7 @@ import { useStates } from '../../hooks/useState';
 
 type Order = components['schemas']['OrderResponseDTO'];
 
-export function RequestsAllPage() {
+export function MyOrdersPage() {
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);

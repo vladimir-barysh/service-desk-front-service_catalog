@@ -1,6 +1,6 @@
 import { Box, createTheme, ThemeProvider } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { HomePage, LoginPage, RequestsAllPage, 
+import { HomePage, LoginPage, MyOrdersPage, 
   ServicesCatalogTreePage, ServicesCatalogItCatalogPage, ServicesCatalogItServicesPage, 
   ServicesCatalogHistoryPage, DirectoryGroupsPage, DirectoryWorktypesPage,
   SupportAllPage, ManualPage, SchedulePage,
@@ -30,7 +30,7 @@ export const Content = () => {
               <Routes>
                 <Route path="*" element={<HomePage />} />
                 <Route path="login" element={<LoginPage />} />
-                <Route path="/requests/all" element={<RequestsAllPage />} />
+                <Route path="/requests/all" element={<MyOrdersPage />} />
                 <Route path="/support/all" element={<SupportAllPage />} />
                 <Route path="/tasks/all" element={<TasksMyAllPage />} />
                 <Route path="/services_catalog/tree" element={<ServicesCatalogTreePage />} />

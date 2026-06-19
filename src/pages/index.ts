@@ -1,6 +1,6 @@
 export * from './login';
 export * from './home';
-export * from './requests';
+export * from './my-orders-page';
 export * from './support';
 export * from './tasks';
 export * from './admin';
