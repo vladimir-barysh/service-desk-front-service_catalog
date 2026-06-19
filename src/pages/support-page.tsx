@@ -1,87 +1,136 @@
 import { useMemo, useEffect, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { MantineReactTable, type MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, useMantineReactTable } from 'mantine-react-table';
-import { Grid2, Box, Button } from '@mui/material';
-import { Add, Check, Clear, ThreeSixty, Mode } from '@mui/icons-material';
+import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
+import { useSearchParams } from 'react-router-dom';
+import { Grid2, Box } from '@mui/material';
+import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
+import Button from '@mui/material/Button';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
   SupportGeneralDialog,
-  formatFIO, RequestCreateZNODialog,
-  RequestCreateZNDDialog, RequestCreateZNIDialog,
-  RequestCreateZNTDialog,
-  TASK_STATES
-} from '../../components';
-import SplitButton from '../../components/split-button/split-button.component';
+  RequestCreateZNODialog, RequestCreateZNDDialog, 
+  RequestCreateZNIDialog, RequestCreateZNTDialog,
+  PostponeOrderTaskDialog, CloseDeclineOrderTaskDialog,
+  formatFIO,
+  TASK_STATES,
+} from '../components';
+import SplitButton from '../components/split-button/split-button.component';
 import dayjs, { Dayjs } from 'dayjs';
+import * as XLSX from 'xlsx';
+import { showNotification } from '../context';
 
-import { components } from '../../types/api';
-import { useOrdersByInitiator, useUpdateOrderStatus } from '../../hooks/useOrder';
-import { useStates } from '../../hooks/useState';
+import { components } from '../types/api';
+import { useOrders, useUpdateOrderStatus } from '../hooks/useOrder';
+import { useStates } from '../hooks/useState';
 
 type Order = components['schemas']['OrderResponseDTO'];
 
-export function MyOrdersPage() {
+export function SupportPage() {
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
 
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+
   const [hideClosed, setHideClosed] = useState(true);
+  const [rowSelection, setRowSelection] = useState({});
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [rowSelection, setRowSelection] = useState({});
 
-  // TODO: Заменить на настоящего пользователя
-  //const currInitiator = "Арбузов Александр Александрович";
-  const currInitiatorId = 1;
-
-  const { data: currInitiatorOrders = [] } = useOrdersByInitiator(currInitiatorId);
-
-  const { data: orderStates = [] } = useStates();
-  const updateStatus = useUpdateOrderStatus();
-
-  const cancelByInitiator = orderStates?.find(state => state.name === TASK_STATES.CANCELLED_BY_INITIATOR);
-  const pendingConfirmation = orderStates?.find(state => state.name === TASK_STATES.PENDING_CONFIRMATION);
-  const closed = orderStates?.find(state => state.name === TASK_STATES.CLOSED);
+  const currUser = "Арбузов Александр Александрович";
 
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
-  
-  const filteredData = useMemo(() => {
-    let result = currInitiatorOrders;
+  const [searchParams] = useSearchParams();
+  const urlStatus = searchParams.get('status') || null;
 
+  const { data: orders = [] } = useOrders();
+  const { data: orderStates = [] } = useStates();
+
+  const updateStatus = useUpdateOrderStatus();
+
+  const inWork = orderStates?.find(state => state.name === TASK_STATES.IN_WORK);
+  const pendingConfirmation = orderStates?.find(state => state.name === TASK_STATES.PENDING_CONFIRMATION);
+
+  const filteredData = useMemo(() => {
+    let result = orders;
+
+    if (urlStatus === 'new') {
+      result = result.filter((item: Order) => item.orderStateName === TASK_STATES.NEW);
+    }
+    else if (urlStatus === 'nApproved') {
+      result = result.filter((item: Order) => item.orderStateName === TASK_STATES.NOT_APPROVED || item.orderStateName === TASK_STATES.CLOSED);
+    }
+    else if (urlStatus === 'nConfirmed') {
+      result = result.filter((item: Order) => item.orderStateName === TASK_STATES.RENEWED || item.orderStateName === TASK_STATES.CLOSED);
+    }
+    else if (urlStatus === 'onControl') {
+      result = result.filter((item: Order) => item.dateTechReturn !== null || item.orderStateName === TASK_STATES.CLOSED);
+    }
+    else if (urlStatus === 'mine') {
+      result = result.filter((item: Order) => item.dispatcherFio === currUser);
+    }
     if (hideClosed) {
-      result = result.filter((item: Order) => item.orderStateName !== 'Закрыта');
+      result = result.filter((item: Order) => item.orderStateName !== TASK_STATES.CLOSED);
     }
 
     return result;
-  }, [hideClosed, currInitiatorOrders]);
+  }, [urlStatus, hideClosed, orders]);
 
   useEffect(() => {
-    setColumnFilters([]);
-  }, []);
+      setColumnFilters([]);
+  }, [urlStatus]);
 
   const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
+    if (urlStatus === 'new') {
+      return;
+    }
     const next = typeof updater === 'function' ? updater(columnFilters) : updater;
     setColumnFilters(next);
   };
 
+  useEffect(() => {
+    setColumnFilters((prev) => {
+      const withoutStatus = prev.filter(f => f.id !== 'state');
+
+      if (!urlStatus || urlStatus === 'new') {
+        return withoutStatus;
+      }
+
+      return [
+        ...withoutStatus,
+        { id: 'state', value: urlStatus }
+      ];
+    });
+  }, [urlStatus]);
+
+  useEffect(() => {
+    setHideClosed(true);
+    //table.setRowSelection({});
+  }, [location.pathname, location.search]);
+
+  const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
   const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
       {
+        id: 'nomer',
         header: '№ заявки',
-        accessorKey: 'nomer',
+        accessorFn: (row) => row.nomer,
         maxSize: 80,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        enableResizing: false,
+        enableResizing: false
       },
       {
+        id: 'dateCreated',
         header: 'Дата регистрации',
-        accessorKey: 'dateCreated',
+        accessorFn: (row) => row.dateCreated,
         type: 'string',
         maxSize: 130,
         enableResizing: false,
@@ -101,9 +150,13 @@ export function MyOrdersPage() {
         },
       },
       {
-        header: 'Желаемый срок',
-        accessorKey: 'dateFinishPlan',
-        type: 'string',
+        id: 'desiredDate',
+        header: urlStatus === 'onControl' ? 'Дата возврата' : 'Желаемый срок',
+        accessorFn: (row) =>
+          urlStatus === 'onControl'
+            ? row.dateTechReturn
+            : row.dateFinishPlan,
+        type: 'Date',
         maxSize: 120,
         enableResizing: false,
         mantineFilterTextInputProps: {
@@ -122,8 +175,9 @@ export function MyOrdersPage() {
         },
       },
       {
+        id: 'dateFinishFact',
         header: 'Дата решения',
-        accessorKey: 'dateFinishFact',
+        accessorFn: (row) => row.dateFinishFact,
         type: 'string',
         maxSize: 100,
         enableResizing: false,
@@ -143,19 +197,28 @@ export function MyOrdersPage() {
         },
       },
       {
+        id: 'orderState',
         header: 'Статус',
-        accessorKey: 'orderState',
+        accessorFn: (row) => row.orderStateName,
         type: 'string',
         maxSize: 130,
         enableResizing: false,
+        enableColumnFilter: urlStatus !== 'new',
         mantineFilterTextInputProps: {
+          disabled: urlStatus === 'new',
+          readOnly: urlStatus === 'new',
           placeholder: 'Фильтр',
+        },
+        mantineFilterSelectProps: {
+          disabled: urlStatus === 'new',
+          readOnly: urlStatus === 'new',
         },
         Cell: ({ row }) => row.original.orderStateName || 'Статуса нет'
       },
       {
+        id: 'name',
         header: 'Заголовок',
-        accessorKey: 'name',
+        accessorFn: (row) => row.name,
         type: 'string',
         maxSize: 190,
         enableResizing: false,
@@ -164,8 +227,9 @@ export function MyOrdersPage() {
         },
       },
       {
+        id: 'orderType',
         header: 'Тип',
-        accessorKey: 'orderType',
+        accessorFn: (row) => row.orderTypeName,
         type: 'string',
         maxSize: 50,
         enableResizing: false,
@@ -178,8 +242,9 @@ export function MyOrdersPage() {
         Cell: ({ row }) => row.original.orderTypeName || ''
       },
       {
+        id: 'initiator',
         header: 'Инициатор',
-        accessorKey: 'initiator',
+        accessorFn: (row) => row.initiatorId,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -192,8 +257,9 @@ export function MyOrdersPage() {
         }
       },
       {
+        id: 'executor',
         header: 'Пользователь',
-        accessorKey: 'dispatcher',
+        accessorFn: (row) => row.executorId,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -206,8 +272,9 @@ export function MyOrdersPage() {
         }
       },
       {
+        id: 'service',
         header: 'IT-сервис (модуль)',
-        accessorKey: 'service',
+        accessorFn: (row) => row.serviceFullname,
         type: 'string',
         maxSize: 160,
         enableResizing: false,
@@ -217,8 +284,9 @@ export function MyOrdersPage() {
         Cell: ({ row }) => row.original.serviceFullname || ''
       },
       {
+        id: 'catitem',
         header: 'Услуга',
-        accessorKey: 'catalogItem',
+        accessorFn: (row) => row.catalogItemName,
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -228,20 +296,16 @@ export function MyOrdersPage() {
         Cell: ({ row }) => row.original.catalogItemName || ''
       },
     ],
-    [],
+    [urlStatus],
   );
 
-  // Цвет заливки строки
   const colorRow = (row: MRT_Row<Order>) => {
     if (row.getIsSelected()) {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
-    // Получаем тип заявки из данных строки
     const orderType = row.original.orderTypeName;
 
-
-    // Цвета для разных типов заявок
     switch (orderType) {
       case 'ЗНО':
         return 'rgba(76, 175, 80, 0.1)';
@@ -257,7 +321,6 @@ export function MyOrdersPage() {
   };
 
   const onRequestTypeSelect = (selected: string) => {
-
     if (selected === "Заявка на обслуживание") {
       createZNODialog();
     }
@@ -271,6 +334,7 @@ export function MyOrdersPage() {
       createZNTDialog();
     }
   }
+
   function createZNDDialog() {
     setIsCreateDialogZNDOpen(true);
   }
@@ -312,79 +376,28 @@ export function MyOrdersPage() {
     return new Date(year, month, day);
   }
 
-  // Функция для проверки просрочки заявки
   const isRequestOverdue = (order: Order): boolean => {
     if (!order.dateFinishPlan) return false;
 
-    // Если заявка уже завершена не считаем просроченной
     if (order.orderStateId) {
       return false;
     }
     const temp = dayjs(order.dateFinishPlan).toString();
     const desiredDate = parseDate(temp.split(' ')[0]);
 
-    // Если дата не распарсилась не считаем просроченной
     if (!desiredDate) return false;
 
-    // Сравниваем с текущей датой (без времени)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     return desiredDate < today;
   };
 
-  const handleCancelClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    if (order.idOrder == null || cancelByInitiator?.idOrderState == null) return;
-
-    updateStatus.mutate({ id: order.idOrder, statusId: cancelByInitiator.idOrderState });
-
-    setSelectedOrder(null);
-  };
-
-  const handleEditClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    setSelectedOrder(selectedRows[0].original);
-    setIsDialogOpen(true);
-  };
-
-  const handleConfirmClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    if (order.idOrder == null || closed?.idOrderState == null) return;
-
-    updateStatus.mutate({ id: order.idOrder, statusId: closed.idOrderState });
-
-    setSelectedOrder(null);
-  };
-  // TODO: Доделать возобновление заявки
-  const handleRenewClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    if (order.idOrder == null || pendingConfirmation?.idOrderState == null) return;
-
-    updateStatus.mutate({ id: order.idOrder, statusId: pendingConfirmation.idOrderState });
-
-    setSelectedOrder(null);
-  };
-
   const handleNomerClick = (row: MRT_Row<Order>) => {
     setSelectedOrder(row.original);
     setIsDialogOpen(true);
   };
-
-  // Обработчик закрытия диалога
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setSelectedOrder(null);
-  };
-
-  // Создание таблицы
+  
   const table = useMantineReactTable({
     columns: columns,
     data: filteredData,
@@ -417,7 +430,7 @@ export function MyOrdersPage() {
     mantineTableContainerProps: {
       sx: {
         minHeight: 150,
-        maxHeight: 850
+        maxHeight: 850,
       }
     },
     mantineTableHeadCellProps: {
@@ -432,7 +445,7 @@ export function MyOrdersPage() {
     },
     mantineTableBodyCellProps: ({ row, cell }) => ({
       onClick: (event) => {
-        // Если это не ячейка "header", то выделяем строку
+        // Если это не ячейка "nomer", то выделяем строку
         if (cell.column.id === 'nomer') {
           event.stopPropagation();
           handleNomerClick(row);
@@ -457,22 +470,28 @@ export function MyOrdersPage() {
     },
   });
 
-  // Доступность кнопок по нажатию на строку таблицы
   const selectedRowsCount = table.getSelectedRowModel().rows.length;
   const hasSelectedRows = !(selectedRowsCount > 0);
 
-  const showCancelButton = () => {
+  const showAcceptButton = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
     const order = selectedRows[0].original;
-    return order.orderStateName === TASK_STATES.NEW ? true : false
+    return order.orderStateName === TASK_STATES.NEW ? true : false;
   }
 
-  const showEditButton = () => {
+  const showDeclineButton = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
     const order = selectedRows[0].original;
-    return order.orderStateName === TASK_STATES.NEW ? true : false
+    return (order.orderStateName !== TASK_STATES.REJECTED && order.orderStateName !== TASK_STATES.CLOSED) ? true : false
+  }
+
+  const showCloseButton = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    return order.orderStateName !== TASK_STATES.NEW ? true : false
   }
 
   const showConfirmButton = () => {
@@ -482,18 +501,106 @@ export function MyOrdersPage() {
     return order.orderStateName === TASK_STATES.PENDING_CONFIRMATION ? true : false;
   }
 
-  const showRenewButton = () => {
+  // Обработчики нажатия кнопок
+  const handleAcceptClick = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
     const order = selectedRows[0].original;
-    return order.orderStateName === TASK_STATES.PENDING_CONFIRMATION ? true : false;
-  }
+    if (order.idOrder == null || inWork?.idOrderState == null) return;
+
+    updateStatus.mutate({ id: order.idOrder, statusId: inWork.idOrderState });
+
+    setSelectedOrder(null);
+  };
+
+  const handleDeclineClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedOrder(selectedRows[0].original);
+    setDeclineDialogOpen(true);
+  };
+
+  const handleDeclineClose = () => {
+    setSelectedOrder(null);
+    setDeclineDialogOpen(false);
+  };
+
+  const handlePostponeClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedOrder(selectedRows[0].original);
+    setPostponeDialogOpen(true);
+  };
+
+  const handlePostponeClose = () => {
+    setSelectedOrder(null);
+    setPostponeDialogOpen(false);
+  };
+
+  const handleCloseClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedOrder(selectedRows[0].original);
+    setCloseDialogOpen(true);
+  };
+
+  const handleCloseClose = () => {
+    setSelectedOrder(null);
+    setCloseDialogOpen(false);
+  };
+
+  const handleConfirmClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const order = selectedRows[0].original;
+    if (order.idOrder == null || pendingConfirmation?.idOrderState == null) return;
+
+    updateStatus.mutate({ id: order.idOrder, statusId: pendingConfirmation.idOrderState });
+
+    setSelectedOrder(null);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setSelectedOrder(null);
+  };
+
+  const exportToExcel = () => {
+    try {
+      const exportData = filteredData.map((order: Order) => ({
+        '№ заявки': order.nomer || '',
+        'Дата регистрации': order.dateCreated ? dayjs(order.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
+        'Желаемый срок': order.dateFinishPlan ? dayjs(order.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
+        'Дата решения': order.dateFinishFact ? dayjs(order.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
+        'Статус': order.orderStateName || '',
+        'Заголовок': order.name || '',
+        'Тип запроса': order.orderTypeName || '',
+        'Инициатор': order.initiatorId || '',
+        'Пользователь': order.dispatcherFio || '',
+        'IT-сервис/модуль': order.serviceFullname || '',
+        'Услуга': order.catalogItemName || '',
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Заявки');
+
+      const filename = `zayavki_${new Date().toLocaleDateString()}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+
+      showNotification({ title: `Файл ${filename} сохранен`, message: '', color: 'green' });
+    }
+    catch (error) {
+      showNotification({ title: 'Ошибка', message: 'Не удалось сохранить файл', color: 'red' });
+    }
+  };
 
   return (
     <div>
       <Box height={50}>
-
-        <Grid2 container spacing={2} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
+        
+        <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
               buttonText={'Создать заявку'}
@@ -506,25 +613,37 @@ export function MyOrdersPage() {
           <Grid2 size="auto">
             <Button
               variant="contained"
+              color="inherit"
+              startIcon={<Build />}
+              size={'small'}
+              disabled={hasSelectedRows || !showAcceptButton()}
+              onClick={handleAcceptClick}
+            >
+              Принять в работу
+            </Button>
+          </Grid2>
+          <Grid2 size="auto">
+            <Button
+              variant="contained"
               color="error"
               startIcon={<Clear />}
               size={'small'}
-              disabled={hasSelectedRows || !showCancelButton()}
-              onClick={handleCancelClick}
+              disabled={hasSelectedRows || !showDeclineButton()}
+              onClick={handleDeclineClick}
             >
-              Отменить заявку
+              Отклонить заявку
             </Button>
           </Grid2>
           <Grid2 size="auto">
             <Button
               variant="contained"
               color="warning"
-              startIcon={<Mode />}
+              startIcon={<Note />}
               size={'small'}
-              disabled={hasSelectedRows || !showEditButton()}
-              onClick={handleEditClick}
+              disabled={hasSelectedRows}
+              onClick={handlePostponeClick}
             >
-              Редактировать заявку
+              Отложить заявку
             </Button>
           </Grid2>
           <Grid2 size="auto">
@@ -533,7 +652,18 @@ export function MyOrdersPage() {
               color="success"
               startIcon={<Check />}
               size={'small'}
-              disabled={hasSelectedRows || !showConfirmButton()}
+              disabled={hasSelectedRows || !showCloseButton()}
+              onClick={handleCloseClick}
+            >
+              Закрыть заявку
+            </Button>
+          </Grid2>
+          <Grid2 size="auto">
+            <Button
+              variant="contained"
+              color="inherit"
+              size={'small'}
+              disabled={ hasSelectedRows || !showConfirmButton() }
               onClick={handleConfirmClick}
             >
               Подтвердить заявку
@@ -543,17 +673,18 @@ export function MyOrdersPage() {
             <Button
               variant="contained"
               color="inherit"
-              startIcon={<ThreeSixty />}
+              startIcon={<Save />}
               size={'small'}
-              disabled={hasSelectedRows || !showRenewButton()}
-              onClick={handleRenewClick}
+              fullWidth={true}
+              onClick={exportToExcel}
             >
-              Возобновить заявку
+              В Excel
             </Button>
           </Grid2>
           <Grid2 size="auto" alignContent="center">
             <MantineProvider theme={{ cursorType: 'pointer' }}>
               <Checkbox
+                disabled={urlStatus === "new" ? true : false}
                 checked={hideClosed}
                 onChange={(event) => setHideClosed(event.currentTarget.checked)}
                 label="Скрыть закрытые заявки"
@@ -562,15 +693,13 @@ export function MyOrdersPage() {
             </MantineProvider>
           </Grid2>
         </Grid2>
-
-        <MantineReactTable table={table} />
-
+        <MantineReactTable key={tableKey} table={table} />
       </Box>
 
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         order={selectedOrder}
-        disabled={selectedOrder?.orderStateName !== TASK_STATES.NEW}
+        disabled={false}
         onClose={handleDialogClose}
       />
 
@@ -589,6 +718,23 @@ export function MyOrdersPage() {
       <RequestCreateZNTDialog
         isOpen={isCreateDialogZNTOpen}
         onClose={onCreateDialogClose}
+      />
+      <CloseDeclineOrderTaskDialog
+        order={selectedOrder}
+        closeOrDecline='decline'
+        open={declineDialogOpen}
+        onClose={handleDeclineClose}
+      />
+      <PostponeOrderTaskDialog
+        order={selectedOrder}
+        open={postponeDialogOpen}
+        onClose={handlePostponeClose}
+      />
+      <CloseDeclineOrderTaskDialog
+        order={selectedOrder}
+        closeOrDecline='close'
+        open={closeDialogOpen}
+        onClose={handleCloseClose}
       />
     </div>
   );

@@ -3,10 +3,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HomePage, LoginPage, MyOrdersPage, 
   ServicesCatalogTreePage, ServicesCatalogItCatalogPage, ServicesCatalogItServicesPage, 
   ServicesCatalogHistoryPage, DirectoryGroupsPage, DirectoryWorktypesPage,
-  SupportAllPage, ManualPage, SchedulePage,
+  SupportPage, ManualPage, SchedulePage,
   ProfilePage, WebServicesPage, ItCatalogPage,
   KnowBasePage, NotificationsPage, ReferencePage } from './pages';
-import { TasksMyAllPage } from './pages/tasks/tasks-my-all.page';
+import { TasksPage } from './pages/tasks-page';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { LeftSidebar } from './sidebar/sidebar';
 import { ruRU } from '@mui/material/locale';
@@ -31,8 +31,8 @@ export const Content = () => {
                 <Route path="*" element={<HomePage />} />
                 <Route path="login" element={<LoginPage />} />
                 <Route path="/requests/all" element={<MyOrdersPage />} />
-                <Route path="/support/all" element={<SupportAllPage />} />
-                <Route path="/tasks/all" element={<TasksMyAllPage />} />
+                <Route path="/support/all" element={<SupportPage />} />
+                <Route path="/tasks/all" element={<TasksPage />} />
                 <Route path="/services_catalog/tree" element={<ServicesCatalogTreePage />} />
                 <Route path="/services_catalog/itcatalog" element={<ServicesCatalogItCatalogPage />} />
                 <Route path="/services_catalog/itservices" element={<ServicesCatalogItServicesPage />} />

@@ -2,135 +2,132 @@ import { useMemo, useEffect, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { MantineReactTable, type MRT_ColumnDef, MRT_Row, useMantineReactTable, type MRT_ColumnFiltersState } from 'mantine-react-table';
 import { useSearchParams } from 'react-router-dom';
-import { Grid2, Box } from '@mui/material';
+import { Grid2 } from '@mui/material';
 import { Add, Check, Clear, Build, Note, Save } from '@mui/icons-material';
 import Button from '@mui/material/Button';
+import { Box } from '@mui/material';
 import { MantineProvider, Checkbox } from '@mantine/core';
 import { MRT_Localization_RU } from 'mantine-react-table/locales/ru';
 import {
-  SupportGeneralDialog,
-  RequestCreateZNODialog, RequestCreateZNDDialog, 
-  RequestCreateZNIDialog, RequestCreateZNTDialog,
-  PostponeOrderTaskDialog, CloseDeclineOrderTaskDialog,
-  formatFIO,
-  TASK_STATES,
-} from '../../components';
-import SplitButton from '../../components/split-button/split-button.component';
-import dayjs, { Dayjs } from 'dayjs';
+  formatFIO, TASK_STATES, 
+  SupportGeneralDialog, RequestCreateZNODialog,
+  RequestCreateZNDDialog, RequestCreateZNTDialog,
+  RequestCreateZNIDialog, PostponeOrderTaskDialog,
+  CloseDeclineOrderTaskDialog
+} from '../components';
+import SplitButton from '../components/split-button/split-button.component';
+import { showNotification } from '../context';
 import * as XLSX from 'xlsx';
-import { showNotification } from '../../context';
+import dayjs, { Dayjs } from 'dayjs';
 
-import { components } from '../../types/api';
-import { useOrders, useUpdateOrderStatus } from '../../hooks/useOrder';
-import { useStates } from '../../hooks/useState';
+import { components } from '../types/api';
+import { useTasks, useTasksByExecutor, useUpdateTask } from '../hooks/useTask';
+import { useUsers } from '../hooks/useUser';
+import { useOrders } from '../hooks/useOrder';
+import { useStates } from '../hooks/useState';
 
 type Order = components['schemas']['OrderResponseDTO'];
+type OrderTask = components['schemas']['TaskResponseDTO'];
+type User = components['schemas']['UserResponseDTO'];
 
-export function SupportAllPage() {
+
+export function TasksPage() {
   const [isCreateDialogZNOOpen, setIsCreateDialogZNOOpen] = useState(false);
   const [isCreateDialogZNDOpen, setIsCreateDialogZNDOpen] = useState(false);
   const [isCreateDialogZNIOpen, setIsCreateDialogZNIOpen] = useState(false);
   const [isCreateDialogZNTOpen, setIsCreateDialogZNTOpen] = useState(false);
-
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
-
   const [hideClosed, setHideClosed] = useState(true);
+  const [hideAll, setHideAll] = useState(true);
   const [rowSelection, setRowSelection] = useState({});
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedTask, setSelectedTask] = useState<OrderTask | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const currUser = "Арбузов Александр Александрович";
-
+  // фильтр по статусу
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
   const [searchParams] = useSearchParams();
-  const urlStatus = searchParams.get('status') || null;
+  const urlStatus = searchParams.get('status');
 
+  /*
+    ВРЕМЕННОЕ РЕШЕНИЕ
+    Если true, то будут грузится все задачи, всех исполнителей
+    Если false, то будут грузится задачи только пользователя с айди 1 в качестве исполнителя
+    В будущем это заменить на проверку роли пользователя
+  */
+  const ADMIN_SWITCH = true;
+  const currExecutorId = 1;
+
+  const { data: tasks = [] } = ADMIN_SWITCH ? useTasks() : useTasksByExecutor(currExecutorId);
+  const { mutate: updateTaskMutate } = useUpdateTask();
+
+  const { data: users = [] } = useUsers();
   const { data: orders = [] } = useOrders();
-  const { data: orderStates = [] } = useStates();
-
-  const updateStatus = useUpdateOrderStatus();
-
-  const inWork = orderStates?.find(state => state.name === TASK_STATES.IN_WORK);
-  const pendingConfirmation = orderStates?.find(state => state.name === TASK_STATES.PENDING_CONFIRMATION);
+  const { data: states = [] } = useStates();
 
   const filteredData = useMemo(() => {
-    let result = orders;
+    let result = tasks;
 
-    if (urlStatus === 'new') {
-      result = result.filter((item: Order) => item.orderStateName === 'Новая');
+    // Фильтр по статусу из URL
+    if (urlStatus === 'pendingApproval') {
+      result = result.filter((item: OrderTask) => (item.taskStateName === TASK_STATES.PENDING_APPROVAL || item.taskStateName === TASK_STATES.CLOSED) && item.executorId === currExecutorId);
     }
-    else if (urlStatus === 'nApproved') {
-      result = result.filter((item: Order) => item.orderStateName === 'Не согласовано' || item.orderStateName === 'Закрыта');
+    else if (urlStatus) {
+      result = result.filter((item: OrderTask) => item.taskStateName === urlStatus);
     }
-    else if (urlStatus === 'nConfirmed') {
-      result = result.filter((item: Order) => item.orderStateName === 'Возобновлена' || item.orderStateName === 'Закрыта');
-    }
-    else if (urlStatus === 'onControl') {
-      result = result.filter((item: Order) => item.dateTechReturn !== null || item.orderStateName === 'Закрыта');
-    }
-    else if (urlStatus === 'mine') {
-      result = result.filter((item: Order) => item.dispatcherFio === currUser);
-    }
+
     if (hideClosed) {
-      result = result.filter((item: Order) => item.orderStateName !== 'Закрыта');
+      result = result.filter((item: OrderTask) => item.taskStateName !== TASK_STATES.CLOSED);
+    }
+
+    if (hideAll) {
+      result = result.filter((item: OrderTask) => item.executorId === currExecutorId || item.taskStateName === TASK_STATES.CLOSED);
     }
 
     return result;
-  }, [urlStatus, hideClosed, orders]);
-
-  useEffect(() => {
-      setColumnFilters([]);
-  }, [urlStatus]);
+  }, [urlStatus, hideClosed, hideAll, currExecutorId, tasks]);
 
   const handleFiltersChange = (updater: MRT_ColumnFiltersState | ((old: MRT_ColumnFiltersState) => MRT_ColumnFiltersState)) => {
-    if (urlStatus === 'new') {
-      return;
-    }
     const next = typeof updater === 'function' ? updater(columnFilters) : updater;
     setColumnFilters(next);
   };
 
+  // Эффект для синхронизации URL параметров с состоянием фильтров
   useEffect(() => {
-    setColumnFilters((prev) => {
-      const withoutStatus = prev.filter(f => f.id !== 'state');
-
-      if (!urlStatus || urlStatus === 'new') {
-        return withoutStatus;
-      }
-
-      return [
-        ...withoutStatus,
-        { id: 'state', value: urlStatus }
-      ];
-    });
+    if (urlStatus === 'onAgree' || urlStatus === 'onExecution') {
+      setColumnFilters([]);
+    } else if (urlStatus) {
+      setColumnFilters([{ id: 'status', value: urlStatus }]);
+    } else {
+      setColumnFilters([]);
+    }
   }, [urlStatus]);
 
   useEffect(() => {
     setHideClosed(true);
-    //table.setRowSelection({});
+    table.setRowSelection({});
   }, [location.pathname, location.search]);
 
   const tableKey = urlStatus ? `locked-${urlStatus}` : `hideClosed-${hideClosed}`;
 
-  const columns = useMemo<MRT_ColumnDef<Order>[]>(
+  const columns = useMemo<MRT_ColumnDef<OrderTask>[]>(
     () => [
       {
-        id: 'nomer',
         header: '№ заявки',
-        accessorFn: (row) => row.nomer,
+        accessorKey: 'orderNomer',
         maxSize: 80,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        enableResizing: false
+        enableResizing: false,
+        Cell: ({ row }) => row.original.orderNomer,
       },
       {
-        id: 'dateCreated',
         header: 'Дата регистрации',
-        accessorFn: (row) => row.dateCreated,
+        accessorKey: 'dateCreated',
         type: 'string',
         maxSize: 130,
         enableResizing: false,
@@ -150,12 +147,8 @@ export function SupportAllPage() {
         },
       },
       {
-        id: 'desiredDate',
-        header: urlStatus === 'onControl' ? 'Дата возврата' : 'Желаемый срок',
-        accessorFn: (row) =>
-          urlStatus === 'onControl'
-            ? row.dateTechReturn
-            : row.dateFinishPlan,
+        header: 'Желаемый срок',
+        accessorKey: 'dateFinishPlan',
         type: 'Date',
         maxSize: 120,
         enableResizing: false,
@@ -175,9 +168,8 @@ export function SupportAllPage() {
         },
       },
       {
-        id: 'dateFinishFact',
         header: 'Дата решения',
-        accessorFn: (row) => row.dateFinishFact,
+        accessorKey: 'dateFinishFact',
         type: 'string',
         maxSize: 100,
         enableResizing: false,
@@ -197,39 +189,30 @@ export function SupportAllPage() {
         },
       },
       {
-        id: 'orderState',
         header: 'Статус',
-        accessorFn: (row) => row.orderStateName,
+        accessorKey: 'taskState',
         type: 'string',
         maxSize: 130,
         enableResizing: false,
-        enableColumnFilter: urlStatus !== 'new',
         mantineFilterTextInputProps: {
-          disabled: urlStatus === 'new',
-          readOnly: urlStatus === 'new',
           placeholder: 'Фильтр',
         },
-        mantineFilterSelectProps: {
-          disabled: urlStatus === 'new',
-          readOnly: urlStatus === 'new',
-        },
-        Cell: ({ row }) => row.original.orderStateName || 'Статуса нет'
+        Cell: ({ row }) => row.original.taskStateName || 'Статуса нет'
       },
       {
-        id: 'name',
         header: 'Заголовок',
-        accessorFn: (row) => row.name,
+        accessorKey: 'name',
         type: 'string',
         maxSize: 190,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
+        Cell: ({ row }) => row.original.orderName,
       },
       {
-        id: 'orderType',
         header: 'Тип',
-        accessorFn: (row) => row.orderTypeName,
+        accessorKey: 'orderType',
         type: 'string',
         maxSize: 50,
         enableResizing: false,
@@ -242,9 +225,8 @@ export function SupportAllPage() {
         Cell: ({ row }) => row.original.orderTypeName || ''
       },
       {
-        id: 'initiator',
         header: 'Инициатор',
-        accessorFn: (row) => row.initiatorId,
+        accessorKey: 'initiator',
         type: 'string',
         maxSize: 140,
         enableResizing: false,
@@ -252,13 +234,13 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const fullName = row.original.initiatorFio || '';
+          const fullName = row.original.creatorFio || '';
           return formatFIO(fullName);
         }
       },
       {
-        id: 'executor',
-        header: 'Пользователь',
+        id: 'dispatcher',
+        header: 'Исполнитель',
         accessorFn: (row) => row.executorId,
         type: 'string',
         maxSize: 140,
@@ -267,45 +249,46 @@ export function SupportAllPage() {
           placeholder: 'Фильтр',
         },
         Cell: ({ row }) => {
-          const fullName = row.original.dispatcherFio || '';
-          return formatFIO(fullName);
+          const user = users?.find((item: User) => item.idItUser === row.original.executorId);
+          return formatFIO(user?.fio1c || '');
         }
       },
       {
-        id: 'service',
         header: 'IT-сервис (модуль)',
-        accessorFn: (row) => row.serviceFullname,
+        accessorKey: 'service',
         type: 'string',
         maxSize: 160,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.serviceFullname || ''
+        Cell: ({ row }) => row.original.orderServiceFullname || ''
       },
       {
-        id: 'catitem',
         header: 'Услуга',
-        accessorFn: (row) => row.catalogItemName,
+        accessorKey: 'catitem',
         type: 'string',
-        maxSize: 140,
+        maxSize: 160,
         enableResizing: false,
         mantineFilterTextInputProps: {
           placeholder: 'Фильтр',
         },
-        Cell: ({ row }) => row.original.catalogItemName || ''
+        Cell: ({ row }) => row.original.orderCatItemName || ''
       },
     ],
-    [urlStatus],
+    [urlStatus, users],
   );
 
-  const colorRow = (row: MRT_Row<Order>) => {
+  // Цвет заливки строки
+  const colorRow = (row: MRT_Row<OrderTask>) => {
     if (row.getIsSelected()) {
       return 'rgba(23, 139, 241, 0.2)';
     }
 
+    // Получаем тип заявки из данных строки
     const orderType = row.original.orderTypeName;
 
+    // Цвета для разных типов заявок
     switch (orderType) {
       case 'ЗНО':
         return 'rgba(76, 175, 80, 0.1)';
@@ -334,7 +317,6 @@ export function SupportAllPage() {
       createZNTDialog();
     }
   }
-
   function createZNDDialog() {
     setIsCreateDialogZNDOpen(true);
   }
@@ -366,7 +348,7 @@ export function SupportAllPage() {
     let year = parseInt(parts[2], 10);
 
     if (year < 100) {
-      year += 2000; // 24 → 2024
+      year += 2000;
     }
 
     if (isNaN(day) || isNaN(month) || isNaN(year)) {
@@ -376,28 +358,124 @@ export function SupportAllPage() {
     return new Date(year, month, day);
   }
 
-  const isRequestOverdue = (order: Order): boolean => {
-    if (!order.dateFinishPlan) return false;
+  // Функция для проверки просрочки заявки
+  const isTaskOverdue = (task: OrderTask): boolean => {
+    if (!task.dateFinishPlan) return false;
 
-    if (order.orderStateId) {
+    // Если заявка уже завершена не считаем просроченной
+    //const completedStatuses = [TASK_STATES.CLOSED, TASK_STATES.REJECTED];
+
+    if (task.taskStateName) {
       return false;
     }
-    const temp = dayjs(order.dateFinishPlan).toString();
+    const temp = dayjs(task.dateFinishPlan).toString();
     const desiredDate = parseDate(temp.split(' ')[0]);
 
+    // Если дата не распарсилась не считаем просроченной
     if (!desiredDate) return false;
 
+    // Сравниваем с текущей датой (без времени)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     return desiredDate < today;
   };
 
-  const handleNomerClick = (row: MRT_Row<Order>) => {
-    setSelectedOrder(row.original);
+  const exportToExcel = () => {
+    try {
+      const exportData = filteredData.map((task: OrderTask) => ({
+        '№ заявки': task.orderNomer || '',
+        'Дата регистрации': task.dateCreated ? dayjs(task.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
+        'Желаемый срок': task.dateFinishPlan ? dayjs(task.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
+        'Дата решения': task.dateFinishFact ? dayjs(task.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
+        'Статус': task.taskStateName || '',
+        'Заголовок': task.orderName || '',
+        'Тип запроса': task.orderTypeName || '',
+        'Инициатор': task.creatorFio || '',
+        'Пользователь': task.executorFio || '',
+        'IT-сервис/модуль': task.orderServiceFullname || '',
+        'Услуга': task.orderCatItemName || '',
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Заявки');
+
+      const filename = `zayavki_${new Date().toLocaleDateString()}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+
+      showNotification({ title: `Файл ${filename} сохранен`, message: '', color: 'green' });
+    }
+    catch (error) {
+      showNotification({ title: 'Ошибка', message: 'Не удалось сохранить файл', color: 'red' });
+    }
+  };
+
+  const isNewTask = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const task = selectedRows[0].original;
+    return (task.taskStateName === TASK_STATES.NEW || task.taskStateName === TASK_STATES.PENDING || task.taskStateName === TASK_STATES.REJECTED) ? true : false;
+  }
+
+  const inWork = states?.find(state => state.name === TASK_STATES.IN_WORK);
+
+  const handleAcceptClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    const task = selectedRows[0].original;
+    if (task.idOrderTask == null || inWork?.idOrderState == null) return;
+
+    updateTaskMutate({ id: task.idOrderTask, data: { idTaskState: inWork.idOrderState } });
+  };
+
+  const handleDeclineClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setDeclineDialogOpen(true);
+  };
+
+  const handleDeclineClose = () => {
+    setSelectedTask(null);
+    setDeclineDialogOpen(false);
+  };
+
+  const handlePostponeClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setPostponeDialogOpen(true);
+  };
+
+  const handlePostponeClose = () => {
+    setSelectedTask(null);
+    setPostponeDialogOpen(false);
+  };
+
+  const handleCloseClick = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    setSelectedTask(selectedRows[0].original);
+    setCloseDialogOpen(true);
+  };
+
+  const handleCloseClose = () => {
+    setSelectedTask(null);
+    setCloseDialogOpen(false);
+  };
+
+  const handleNomerClick = (row: MRT_Row<OrderTask>) => {
+    setSelectedOrder(orders?.find((item: Order) => item.idOrder === row.original.orderId) || null);
     setIsDialogOpen(true);
   };
-  
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setSelectedOrder(null);
+  };
+
   const table = useMantineReactTable({
     columns: columns,
     data: filteredData,
@@ -422,8 +500,9 @@ export function SupportAllPage() {
       density: 'xs',
       columnVisibility: { 'mrt-row-select': false },
       showColumnFilters: true,
-      sorting: [{ id: 'nomer', desc: true }],
+      sorting: [{ id: 'orderNomer', desc: true }],
     },
+
     mantineTableProps: {
       fontSize: '11px',
     },
@@ -446,7 +525,7 @@ export function SupportAllPage() {
     mantineTableBodyCellProps: ({ row, cell }) => ({
       onClick: (event) => {
         // Если это не ячейка "nomer", то выделяем строку
-        if (cell.column.id === 'nomer') {
+        if (cell.column.id === 'orderNomer') {
           event.stopPropagation();
           handleNomerClick(row);
         }
@@ -457,9 +536,9 @@ export function SupportAllPage() {
       sx: {
         backgroundColor: colorRow(row),
         borderLeft: '1px solid #dde7ee !important',
-        color: isRequestOverdue(row.original) ? '#d32f2f' : 'inherit',
+        color: isTaskOverdue(row.original) ? '#d32f2f' : 'inherit',
         cursor: 'pointer',
-        fontWeight: row.original.orderStateName === 'Новая' ? 'bold' : 'normal',
+        fontWeight: row.original.taskStateName === TASK_STATES.NEW ? 'bold' : 'normal',
       }
     }),
     onColumnFiltersChange: handleFiltersChange,
@@ -473,133 +552,25 @@ export function SupportAllPage() {
   const selectedRowsCount = table.getSelectedRowModel().rows.length;
   const hasSelectedRows = !(selectedRowsCount > 0);
 
-  const showAcceptButton = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    return order.orderStateName === TASK_STATES.NEW ? true : false;
-  }
-
-  const showDeclineButton = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    return (order.orderStateName !== TASK_STATES.REJECTED && order.orderStateName !== TASK_STATES.CLOSED) ? true : false
-  }
-
-  const showCloseButton = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    return order.orderStateName !== TASK_STATES.NEW ? true : false
-  }
-
-  const showConfirmButton = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    return order.orderStateName === TASK_STATES.PENDING_CONFIRMATION ? true : false;
-  }
-
-  // Обработчики нажатия кнопок
-  const handleAcceptClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    if (order.idOrder == null || inWork?.idOrderState == null) return;
-
-    updateStatus.mutate({ id: order.idOrder, statusId: inWork.idOrderState });
-
-    setSelectedOrder(null);
-  };
-
-  const handleDeclineClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    setSelectedOrder(selectedRows[0].original);
-    setDeclineDialogOpen(true);
-  };
-
-  const handleDeclineClose = () => {
-    setSelectedOrder(null);
-    setDeclineDialogOpen(false);
-  };
-
-  const handlePostponeClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    setSelectedOrder(selectedRows[0].original);
-    setPostponeDialogOpen(true);
-  };
-
-  const handlePostponeClose = () => {
-    setSelectedOrder(null);
-    setPostponeDialogOpen(false);
-  };
-
-  const handleCloseClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    setSelectedOrder(selectedRows[0].original);
-    setCloseDialogOpen(true);
-  };
-
-  const handleCloseClose = () => {
-    setSelectedOrder(null);
-    setCloseDialogOpen(false);
-  };
-
-  const handleConfirmClick = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    if (selectedRows.length === 0) return;
-    const order = selectedRows[0].original;
-    if (order.idOrder == null || pendingConfirmation?.idOrderState == null) return;
-
-    updateStatus.mutate({ id: order.idOrder, statusId: pendingConfirmation.idOrderState });
-
-    setSelectedOrder(null);
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setSelectedOrder(null);
-  };
-
-  const exportToExcel = () => {
-    try {
-      const exportData = filteredData.map((order: Order) => ({
-        '№ заявки': order.nomer || '',
-        'Дата регистрации': order.dateCreated ? dayjs(order.dateCreated || '').format('DD.MM.YYYY HH:mm') : '',
-        'Желаемый срок': order.dateFinishPlan ? dayjs(order.dateFinishPlan).format('DD.MM.YYYY HH:mm') : '',
-        'Дата решения': order.dateFinishFact ? dayjs(order.dateFinishFact).format('DD.MM.YYYY HH:mm') : '',
-        'Статус': order.orderStateName || '',
-        'Заголовок': order.name || '',
-        'Тип запроса': order.orderTypeName || '',
-        'Инициатор': order.initiatorId || '',
-        'Пользователь': order.dispatcherFio || '',
-        'IT-сервис/модуль': order.serviceFullname || '',
-        'Услуга': order.catalogItemName || '',
-      }));
-
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Заявки');
-
-      const filename = `zayavki_${new Date().toLocaleDateString()}.xlsx`;
-
-      XLSX.writeFile(wb, filename);
-
-      showNotification({ title: `Файл ${filename} сохранен`, message: '', color: 'green' });
-    }
-    catch (error) {
-      showNotification({ title: 'Ошибка', message: 'Не удалось сохранить файл', color: 'red' });
-    }
-  };
-
   return (
     <div>
       <Box height={50}>
-        
+        <RequestCreateZNODialog
+          isOpen={isCreateDialogZNOOpen}
+          onClose={onCreateDialogClose}
+        />
+        <RequestCreateZNDDialog
+          isOpen={isCreateDialogZNDOpen}
+          onClose={onCreateDialogClose}
+        />
+        <RequestCreateZNIDialog
+          isOpen={isCreateDialogZNIOpen}
+          onClose={onCreateDialogClose}
+        />
+        <RequestCreateZNTDialog
+          isOpen={isCreateDialogZNTOpen}
+          onClose={onCreateDialogClose}
+        />
         <Grid2 container spacing={1} direction={'row'} alignItems="left" justifyContent="left" paddingBottom='15px'>
           <Grid2 size="auto">
             <SplitButton
@@ -616,7 +587,7 @@ export function SupportAllPage() {
               color="inherit"
               startIcon={<Build />}
               size={'small'}
-              disabled={hasSelectedRows || !showAcceptButton()}
+              disabled={hasSelectedRows || !isNewTask()}
               onClick={handleAcceptClick}
             >
               Принять в работу
@@ -628,10 +599,10 @@ export function SupportAllPage() {
               color="error"
               startIcon={<Clear />}
               size={'small'}
-              disabled={hasSelectedRows || !showDeclineButton()}
+              disabled={hasSelectedRows}
               onClick={handleDeclineClick}
             >
-              Отклонить заявку
+              Отклонить задачу
             </Button>
           </Grid2>
           <Grid2 size="auto">
@@ -643,7 +614,7 @@ export function SupportAllPage() {
               disabled={hasSelectedRows}
               onClick={handlePostponeClick}
             >
-              Отложить заявку
+              Отложить задачу
             </Button>
           </Grid2>
           <Grid2 size="auto">
@@ -652,23 +623,27 @@ export function SupportAllPage() {
               color="success"
               startIcon={<Check />}
               size={'small'}
-              disabled={hasSelectedRows || !showCloseButton()}
+              disabled={hasSelectedRows}
               onClick={handleCloseClick}
             >
-              Закрыть заявку
+              Закрыть задачу
             </Button>
           </Grid2>
+
+          {/** Если нужно будет - включить*/}
+          {false && (
           <Grid2 size="auto">
             <Button
               variant="contained"
               color="inherit"
               size={'small'}
-              disabled={ hasSelectedRows || !showConfirmButton() }
-              onClick={handleConfirmClick}
+              disabled={hasSelectedRows}
             >
-              Подтвердить заявку
+              На контроль
             </Button>
           </Grid2>
+          )}
+
           <Grid2 size="auto">
             <Button
               variant="contained"
@@ -681,61 +656,61 @@ export function SupportAllPage() {
               В Excel
             </Button>
           </Grid2>
+          {ADMIN_SWITCH && (
+            <Grid2 size="auto" alignContent="center">
+              <MantineProvider theme={{ cursorType: 'pointer' }}>
+                <Checkbox
+                  checked={hideAll}
+                  onChange={(event) => setHideAll(event.currentTarget.checked)}
+                  label="Только мои задачи"
+                  size="md"
+                />
+              </MantineProvider>
+            </Grid2>
+          )}
           <Grid2 size="auto" alignContent="center">
             <MantineProvider theme={{ cursorType: 'pointer' }}>
               <Checkbox
-                disabled={urlStatus === "new" ? true : false}
                 checked={hideClosed}
                 onChange={(event) => setHideClosed(event.currentTarget.checked)}
-                label="Скрыть закрытые заявки"
+                label="Скрыть закрытые задачи"
                 size="md"
               />
             </MantineProvider>
           </Grid2>
         </Grid2>
+
         <MantineReactTable key={tableKey} table={table} />
+
       </Box>
 
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         order={selectedOrder}
-        disabled={false}
+        disabled={true}
         onClose={handleDialogClose}
       />
 
-      <RequestCreateZNODialog
-        isOpen={isCreateDialogZNOOpen}
-        onClose={onCreateDialogClose}
+      <PostponeOrderTaskDialog
+        task={selectedTask}
+        open={postponeDialogOpen}
+        onClose={handlePostponeClose}
       />
-      <RequestCreateZNDDialog
-        isOpen={isCreateDialogZNDOpen}
-        onClose={onCreateDialogClose}
-      />
-      <RequestCreateZNIDialog
-        isOpen={isCreateDialogZNIOpen}
-        onClose={onCreateDialogClose}
-      />
-      <RequestCreateZNTDialog
-        isOpen={isCreateDialogZNTOpen}
-        onClose={onCreateDialogClose}
-      />
+
       <CloseDeclineOrderTaskDialog
-        order={selectedOrder}
+        task={selectedTask}
         closeOrDecline='decline'
         open={declineDialogOpen}
         onClose={handleDeclineClose}
       />
-      <PostponeOrderTaskDialog
-        order={selectedOrder}
-        open={postponeDialogOpen}
-        onClose={handlePostponeClose}
-      />
+
       <CloseDeclineOrderTaskDialog
-        order={selectedOrder}
+        task={selectedTask}
         closeOrDecline='close'
         open={closeDialogOpen}
         onClose={handleCloseClose}
       />
+
     </div>
   );
 }
