@@ -570,7 +570,7 @@ export function MyOrdersPage() {
       <SupportGeneralDialog
         isOpen={isDialogOpen}
         order={selectedOrder}
-        disabled={false}
+        disabled={selectedOrder?.orderStateName !== TASK_STATES.NEW}
         onClose={handleDialogClose}
       />
 
